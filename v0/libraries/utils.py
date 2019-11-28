@@ -26,7 +26,7 @@ class Paths():
         
 #        self.images_path = self.dataset_path + 'images/'
         self.images_path = '../../images/'
-        self.patches_path = self.dataset_path + 'patches/'
+        self.patches_path = '../../patches/'
         self.normal_patches_path = self.patches_path + 'normals/'
         self.anom_patches_path = self.patches_path + 'anomalous/'
         self.dataloaders_paths = self.dataset_path + 'dataloaders/'
