@@ -1,0 +1,9 @@
+NETWORK EXPLICATIONS
+
+- nGpu          --> number of gpu to use in order to parallelize the code
+
+- data_parallel --> process in parallel code with other gpu
+
+- nc            --> input image channels
+- isize         --> input image size
+- channel_out   --> filters number

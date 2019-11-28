@@ -1,0 +1,8 @@
+	Ganomaly_code v0:
+
+- Anom perc over patch
+- Fixed weight of multi loss
+- No augmentation
+- Validation: 20% --> half normals, half anomalies
+- Patch size = 32x32
+
