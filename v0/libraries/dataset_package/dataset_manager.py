@@ -33,12 +33,13 @@ dataloader_dir = paths.dataloaders_paths
 patched_images_dir = paths.patched_images_dir_40
 
 #normal_patches_dir = my_dataset_dir + 'patches/'
-normal_patches_dir = paths.normal_images_path_40
+#normal_patches_dir = paths.normal_images_path_40
+normal_patches_dir = paths.normal_patches_path
 
 #anomalous_patches_dir = my_dataset_dir
 anomalous_patches_dir = paths.anomalous_images_path_40
 #anomalous_patches_dir = my_dataset_dir + 'patches/Anomalous/'
-
+anomalous_patches_dir = paths.anom_patches_path
 #%% CONSTANTS
 
 MAX_SIZE_X = 1600

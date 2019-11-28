@@ -13,7 +13,8 @@ class Paths():
         self.curr_folder = os.getcwd()
         self.code_path = './'
 #        self.dataset_path = '../../Dataset/my_dataset/'
-        self.dataset_path = './data/'
+#        self.dataset_path = './data/'
+        self.dataset_path = '../dataset/'
         
         self.test_images = self.dataset_path + 'test_images/'
         self.test_labeled = self.test_images + 'labeled_images/'
@@ -24,7 +25,10 @@ class Paths():
         self.checkpoint_folder = self.code_path + 'checkpoints/'
         
 #        self.images_path = self.dataset_path + 'images/'
-        self.images_path = '../images/'
+        self.images_path = self.dataset_path + 'images/'
+        self.patches_path = self.dataset_path + 'patches/'
+        self.normal_patches_path = self.patches_path + 'normals/'
+        self.anom_patches_path = self.patches_path + 'anomalous/'
         self.dataloaders_paths = self.dataset_path + 'dataloaders/'
         
         # ANOMALY IF 0.2 OF THE PATCH
