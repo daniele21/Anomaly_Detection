@@ -25,7 +25,7 @@ class Paths():
         self.checkpoint_folder = self.code_path + 'checkpoints/'
         
 #        self.images_path = self.dataset_path + 'images/'
-        self.images_path = self.dataset_path + 'images/'
+        self.images_path = '../../images/'
         self.patches_path = self.dataset_path + 'patches/'
         self.normal_patches_path = self.patches_path + 'normals/'
         self.anom_patches_path = self.patches_path + 'anomalous/'
