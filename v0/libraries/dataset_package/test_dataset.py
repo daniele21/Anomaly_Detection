@@ -43,7 +43,7 @@ train_images_dir = paths.images_path
 
 
 shape = Shape(32,32)
-#%% GET PATCHES FOR TEST
+#%% GET PATCHES FOR ----------TEST-------------
 train = pd.read_csv('train_unique.csv', index_col=0)
 start = 1000
 end = 1022
@@ -76,7 +76,8 @@ plt.imshow(img.patchedImage)
 #a[0].show()
 #%% GET PATCHES FOR TRAINING
 #---------------------------------
-train = pd.read_csv('train_unique.csv', index_col=0)
+
+train = pd.read_csv(paths.csv_directory + 'train_unique.csv', index_col=0)
 start = 0
 end = 1000
 nPatches = 2000
