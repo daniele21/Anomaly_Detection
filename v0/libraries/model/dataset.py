@@ -15,7 +15,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as Transforms
 
-from utils import Paths
+from libraries.utils import Paths
 
 paths = Paths()
 

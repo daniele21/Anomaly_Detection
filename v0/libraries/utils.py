@@ -23,7 +23,8 @@ class Paths():
         self.csv_directory = self.library_folder + 'dataset_package/'
         self.checkpoint_folder = self.code_path + 'checkpoints/'
         
-        self.images_path = self.dataset_path + 'images/'
+#        self.images_path = self.dataset_path + 'images/'
+        self.images_path = '../images/'
         self.dataloaders_paths = self.dataset_path + 'dataloaders/'
         
         # ANOMALY IF 0.2 OF THE PATCH

@@ -18,7 +18,7 @@ from copy import deepcopy
 from time import time
 
 from libraries.model.options import Options
-from utils import Paths
+from libraries.utils import Paths
 
 paths = Paths()
 opt = Options()
@@ -27,7 +27,7 @@ curr_path = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/dat
 
 train_images_dir = paths.images_path
 
-dataloader_dir = paths.dataloaders
+dataloader_dir = paths.dataloaders_paths
 
 #patched_images_dir = my_dataset_dir + 'patched_images/'
 patched_images_dir = paths.patched_images_dir_40
