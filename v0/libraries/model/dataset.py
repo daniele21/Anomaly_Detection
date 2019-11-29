@@ -20,7 +20,7 @@ from libraries.utils import Paths
 paths = Paths()
 
 NORMAL_PATH = paths.normal_patches_path
-ANOM_PATH = paths.anomalous_patches_path
+ANOM_PATH = paths.anom_patches_path
 #%%
         
 def newLoadData(opt):
