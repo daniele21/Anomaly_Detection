@@ -19,8 +19,8 @@ from libraries.utils import Paths
 
 paths = Paths()
 
-NORMAL_PATH = paths.normal_images_path_40
-ANOM_PATH = paths.anomalous_images_path_40
+NORMAL_PATH = paths.normal_patches_path
+ANOM_PATH = paths.anomalous_patches_path
 #%%
         
 def newLoadData(opt):
