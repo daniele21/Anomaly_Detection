@@ -155,7 +155,6 @@ class AnomalyDetectionModel():
         self.trainloader        = trainloader
         self.validationloader   = validationloader
         self.opt                = opt
-        self.visualizer         = Visualizer(opt)
     
     def loadModel(self, filename):
         
