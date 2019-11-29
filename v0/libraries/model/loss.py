@@ -19,8 +19,8 @@ def adversial_loss(input, target):
 #def encoder_loss(input, target):
 #    return _l2_loss(input, target)
 
-def encoder_loss():
-    return nn.L1Loss
+def encoder_loss(input, target):
+    return _l2_loss(input, target)
 
 def contextual_loss():
     return nn.L1Loss()
