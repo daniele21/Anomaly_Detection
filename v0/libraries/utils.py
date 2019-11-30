@@ -14,7 +14,7 @@ class Paths():
         self.code_path = './'
 #        self.dataset_path = '../../Dataset/my_dataset/'
 #        self.dataset_path = './data/'
-        self.dataset_path = '../dataset/'
+        self.dataset_path = '../'
         
         self.test_images = self.dataset_path + 'test_images/'
         self.test_labeled = self.test_images + 'labeled_images/'
@@ -22,7 +22,7 @@ class Paths():
         
         self.library_folder = self.code_path + 'libraries/'
         self.csv_directory = '../data/'
-        self.checkpoint_folder = '../checkpoints/'
+        self.checkpoint_folder = self.dataset_path + 'checkpoints/'
         
 #        self.images_path = self.dataset_path + 'images/'
         self.images_path = '../../images/'
