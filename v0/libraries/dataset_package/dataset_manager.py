@@ -30,7 +30,8 @@ train_images_dir = paths.images_path
 dataloader_dir = paths.dataloaders_paths
 
 #patched_images_dir = my_dataset_dir + 'patched_images/'
-patched_images_dir = paths.patched_images_dir_40
+#patched_images_dir = paths.patched_images_dir_40
+patched_images_dir = paths.patches_path
 
 #normal_patches_dir = my_dataset_dir + 'patches/'
 #normal_patches_dir = paths.normal_images_path_40
@@ -164,6 +165,7 @@ class Image():
         path = directory + self.filename
         
         original_image = cv2.imread(path)
+        print(path)
         self.original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
         self.masked_image = None
         self.gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)

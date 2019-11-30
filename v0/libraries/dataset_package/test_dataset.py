@@ -79,7 +79,7 @@ plt.imshow(img.patchedImage)
 
 train = pd.read_csv(paths.csv_directory + 'train_unique.csv', index_col=0)
 start = 0
-end = 1000
+end = 100
 nPatches = 2000
 shape = Shape(32,32)
 

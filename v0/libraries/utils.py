@@ -21,8 +21,8 @@ class Paths():
         self.test_patched = self.test_images + 'patched_images/'
         
         self.library_folder = self.code_path + 'libraries/'
-        self.csv_directory = 'data/'
-        self.checkpoint_folder = self.code_path + 'checkpoints/'
+        self.csv_directory = '../data/'
+        self.checkpoint_folder = '../checkpoints/'
         
 #        self.images_path = self.dataset_path + 'images/'
         self.images_path = '../../images/'

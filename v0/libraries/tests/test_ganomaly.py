@@ -18,11 +18,11 @@ from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNorm
 paths = Paths()
 #%% LOAD OPTIONS
 opt = Options()
-opt.name = 'Ganom_v12.0'
+opt.name = 'Ganom_v0.0'
 opt.anom_perc = 0.4
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
-opt.nFolders = 60
+opt.nFolders = 10
 opt.patch_per_im = 500
 
 #opt.n_extra_layers=2
