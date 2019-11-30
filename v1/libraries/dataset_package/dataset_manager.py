@@ -7,47 +7,35 @@ Created on Sat Oct 12 18:48:23 2019
 """
 
 #%% IMPORTS
-#import sys
-#sys.path.append("../../")
-
 import os
-#curr_path = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/dataset_package'
-#os.chdir(curr_path)
-
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 from copy import deepcopy
 from time import time
 
-#libpath = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/libraries'
-#os.chdir(libpath)
 from libraries.model.options import Options
 from libraries.utils import Paths
 
-#os.chdir(curr_path)
 paths = Paths()
 opt = Options()
 #%% PATHS
-curr_path = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_v2/dataset_package'
+train_images_dir = paths.images_path
 
-base_path = '/media/daniele/Data/Tesi/Practice/'
-dataset_path = base_path + '/Dataset/severstal-steel-defect-detection/'
-extracted_path = base_path + 'Code/Severstal/Extracted_images/'
-train_images_dir = dataset_path + 'train_images/'
-
-my_dataset_dir = '/media/daniele/Data/Tesi/Practice/Dataset/my_dataset/'
+dataloader_dir = paths.dataloaders_paths
 
 #patched_images_dir = my_dataset_dir + 'patched_images/'
-patched_images_dir = paths.patched_images_dir_50
+#patched_images_dir = paths.patched_images_dir_40
+patched_images_dir = paths.patches_path
 
 #normal_patches_dir = my_dataset_dir + 'patches/'
-#normal_patches_dir = paths.normal_images_path_50
-normal_patches_dir = paths.patched_normal_center
+#normal_patches_dir = paths.normal_images_path_40
+normal_patches_dir = paths.normal_patches_path
+
 #anomalous_patches_dir = my_dataset_dir
-#anomalous_patches_dir = paths.anomalous_images_path_50
-anomalous_patches_dir = paths.patched_anom_center
+#anomalous_patches_dir = paths.anomalous_images_path_40
 #anomalous_patches_dir = my_dataset_dir + 'patches/Anomalous/'
+anomalous_patches_dir = paths.anom_patches_path
 
 #%% CONSTANTS
 
@@ -349,14 +337,13 @@ class Image():
         
         # ----------SAVE MODE------------
         if(save):
-            os.chdir(self.normal_dir)
+            saving_path = os.path.join(self.normal_dir , self.filename)
 #            print(patch.anomaly)
             if(patch.anomaly == True):
-                os.chdir(self.anomalous_dir)
+                saving_path = os.path.join(self.anomalous_dir , self.filename)
         
-            cv2.imwrite(self.filename + '_' + str(patch.center), patch.patch_image)      
-            
-            os.chdir(curr_path)              
+            cv2.imwrite(saving_path + '_' + str(patch.center), patch.patch_image)     
+                       
         #-------------------------------
         
         # NORMAL PATCH DRAWN ON IMAGE
@@ -412,14 +399,15 @@ class Image():
         
         if(save):
             directory = self.folder_save + '/'            
-            os.chdir(directory)
+            
             print('\n')
             print('> Saving to ..{}\n'.format(directory))
 #            cv2.imwrite('3'+ '_{}_(Simple)ANOMALIES_{}'.format(self.model_name, self.filename), self.patchedImage)
-            cv2.imwrite('3'+ '_{}_(Simple)MY_ANOMALY_MASK_stride:{}_{}_{}'.format(self.model_name, self.stride,
-                                                                        self.filename, 
-                                                                        info), img_masked)
-            os.chdir(curr_path)
+            filename = '3'+ '_{}_(Simple)MY_ANOMALY_MASK_stride:{}_{}_{}'.format(self.model_name, self.stride,
+                                                                                    self.filename, info)
+            saving_path = os.path.join(directory , filename)
+            
+            cv2.imwrite(saving_path, img_masked)
             
         mask[mask==-1]=0    
         
@@ -483,15 +471,16 @@ class Image():
         if(save):
 #            folder_name = self.filename.split('.')[0]
             directory = self.folder_save
-            os.chdir(directory)
+            
             print('\n')
             print('> Saving to ..{}\n'.format(directory))
 #            cv2.imwrite('4'+ '_(Smart)ANOMALIES_{}'.format(self.filename), self.patchedImage)
-            cv2.imwrite('5'+ '_{}_(Maj-Voting)MY_ANOMALY_MASK_stride:{}_{}_{}'.format(self.model_name,
-                                                                        self.stride,
-                                                                        self.filename,
-                                                                        info), img_masked)
-            os.chdir(curr_path)
+            filename = '5'+ '_{}_(Maj-Voting)MY_ANOMALY_MASK_stride:{}_{}_{}'.format(self.model_name,
+                                                                                        self.stride,
+                                                                                        self.filename, info)
+            saving_path = os.path.join(directory, filename)
+            
+            cv2.imwrite(saving_path, img_masked)
 #
         spent_time = end-start
         minutes = spent_time // 60
@@ -549,13 +538,15 @@ class Image():
         if(save):
 #            folder_name = self.filename.split('.')[0]
             directory = self.folder_save   
-            os.chdir(directory)
+            
             print('\n')
             print('> Saving to ..{}\n'.format(directory))
 #            cv2.imwrite('4'+ '_(Smart)ANOMALIES_{}'.format(self.filename), self.patchedImage)
-            cv2.imwrite('5'+ '_{}_(Thr.Map)MY_ANOMALY_MASK_stride:{}_{}'.format(self.model_name, self.stride,
-                                                                        self.filename), img_masked)
-            os.chdir(curr_path)
+            filename = '5'+ '_{}_(Thr.Map)MY_ANOMALY_MASK_stride:{}_{}'.format(self.model_name, self.stride,
+                                                                        self.filename)
+            saving_path = os.path.join(directory, filename)
+            
+            cv2.imwrite(saving_path, img_masked)
 #       
         spent_time = end-start
         minutes = spent_time // 60
@@ -612,15 +603,18 @@ class Image():
         if(save):
 #            folder_name = self.filename.split('.')[0]
             directory =self.folder_save + '/'            
-            os.chdir(directory)
+            
             print('\n')
             print('> Saving to ..{}\n'.format(directory))
 #            cv2.imwrite('4'+ '_(Smart)ANOMALIES_{}'.format(self.filename), self.patchedImage)
 #            cv2.imwrite('3'+ '_(Smart-model_th)MY_ANOMALY_MASK_stride:{}_{}'.format(self.stride,
 #                                                                        self.filename), img_masked_model)
-            cv2.imwrite('4'+ '_{}_(Thr.All)MY_ANOMALY_MASK_stride:{}_{}'.format(self.model_name, self.stride,
-                                                                        self.filename), img_masked_avg)
-            os.chdir(curr_path)
+            filename = '4'+ '_{}_(Thr.All)MY_ANOMALY_MASK_stride:{}_{}'.format(self.model_name, self.stride,
+                                                                        self.filename)
+            
+            saving_path = os.path.join(directory, filename)
+            
+            cv2.imwrite(saving_path, img_masked_avg)
             
 #        mask[mask > avg_threshold] = 1
         
@@ -765,10 +759,13 @@ def extractPatchesOptimized(train, start, end, nPatches, shape):
         _getPatchedImage(img, nPatches, shape, mask, output=None)
 #       partition 
         
-        os.chdir(patched_images_dir)
-        cv2.imwrite(str(count) + '.PATCHED_{}x{}_'.format(shape.x, shape.y) + img.filename, img.patchedImage)
-        cv2.imwrite(str(count) + '_MASK_' + img.filename , img.masked_image)
-        os.chdir(curr_path)
+        filename = str(count) + '.PATCHED_{}x{}_'.format(shape.x, shape.y) + img.filename
+        saving_path = os.path.join(patched_images_dir, filename)
+        cv2.imwrite(saving_path, img.patchedImage)
+        
+        filename = str(count) + '_MASK_' + img.filename 
+        saving_path = os.path.join(patched_images_dir, filename)
+        cv2.imwrite(saving_path, img.masked_image)
 
         count += 1
 #        print(count)
@@ -802,13 +799,19 @@ def extractPatchesForTest(train, index, shape, stride, model_name):
     
     patches = img._testPartition(shape, stride, mask)
     
-    os.chdir(img.folder_save)
     print('> Saving to ..{}'.format(img.folder_save))
-    cv2.imwrite('0'+ '_{}_{}_{}x{}'.format(model_name, img.filename, shape.x, shape.y), img.original_image)
-    cv2.imwrite('1'+ '_{}_PATCHED_{}x{}_stride:{}_'.format(model_name, shape.x, shape.y, stride) + img.filename, img.patchedImage)
-    cv2.imwrite('2' + '_MASK_' + img.filename , img.masked_image)
-#    cv2.imwrite('3')
-    os.chdir(curr_path)
+    
+    filename = '0'+ '_{}_{}_{}x{}'.format(model_name, img.filename, shape.x, shape.y)
+    saving_path = os.path.join(img.folder_save, filename)
+    cv2.imwrite(saving_path, img.original_image)
+    
+    filename = '1'+ '_{}_PATCHED_{}x{}_stride:{}_'.format(model_name, shape.x, shape.y, stride) + img.filename
+    saving_path = os.path.join(img.folder_save, filename)
+    cv2.imwrite(saving_path, img.patchedImage)
+    
+    filename = '2' + '_MASK_' + img.filename 
+    saving_path = os.path.join(img.folder_save, filename)
+    cv2.imwrite(saving_path, img.masked_image)
 
     return img, patches, mask
 
@@ -916,12 +919,15 @@ def extractImages(train, start, end):
         print('Salvataggio No ', count)
 #       partition 
         
-        os.chdir('/media/daniele/Data/Tesi/Practice/Dataset/my_dataset/test_images/labeled_images')
+        directory = paths.test_images
         
-        cv2.imwrite(str(count) + '.Original_Image_' + img.filename,
-                                    img.original_image)
-        cv2.imwrite(str(count) + '_MASK_' + img.filename , img.masked_image)
-        os.chdir(curr_path)
+        filename = str(count) + '.Original_Image_' + img.filename
+        saving_path = os.path.join(directory, filename)
+        cv2.imwrite(saving_path, img.original_image)
+        
+        filename = str(count) + '_MASK_' + img.filename 
+        saving_path = os.path.join(directory, filename)
+        cv2.imwrite(saving_path, img.masked_image)
         
         count += 1
         
@@ -941,7 +947,8 @@ def checkAnomaly(patch, mask):
     
     center = patch.center
     
-    check = mask[center.y, center.x]
+#    check = mask[center.y, center.x]
+    check = mask[center.x, center.y]
     
     if(check):
         return True

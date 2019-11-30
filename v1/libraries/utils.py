@@ -11,30 +11,30 @@ class Paths():
     
     def __init__(self):
         self.curr_folder = os.getcwd()
-        self.code_v1_path = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/'
-        self.code_v2_path = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_v2/'
-        self.dataset_path = '/media/daniele/Data/Tesi/Practice/Dataset/my_dataset/'
+        self.code_path = './'
+#        self.dataset_path = '../../Dataset/my_dataset/'
+#        self.dataset_path = './data/'
+        self.dataset_path = '../dataset/'
         
         self.test_images = self.dataset_path + 'test_images/'
         self.test_labeled = self.test_images + 'labeled_images/'
         self.test_patched = self.test_images + 'patched_images/'
         
-#        self.library_folder = self.code_v1_path + 'libraries/'
-        self.library_folder = self.code_v2_path + 'libraries/'
-#        self.checkpoint_folder = self.code_v1_path + 'checkpoints/'
-        self.checkpoint_folder = self.code_v2_path + 'checkpoints/'
+        self.library_folder = self.code_path + 'libraries/'
+        self.csv_directory = '../data/'
+        self.checkpoint_folder = '../checkpoints/'
         
-        self.training_set_path = self.dataset_path + 'training_set'
-        self.validation_set_path = self.dataset_path + 'validation_set'
-        self.test_set_path = self.dataset_path + 'test_set'
-        
-        self.patched_normal_center = self.dataset_path + 'center_normal_patches/'
-        self.patched_anom_center = self.dataset_path + 'center_anom_patches/'
+#        self.images_path = self.dataset_path + 'images/'
+        self.images_path = '../../images/'
+        self.patches_path = '../../patches/'
+        self.normal_patches_path = self.patches_path + 'normals/'
+        self.anom_patches_path = self.patches_path + 'anomalous/'
+        self.dataloaders_paths = self.dataset_path + 'dataloaders/'
         
         # ANOMALY IF 0.2 OF THE PATCH
         self.patched_images_dir = self.dataset_path + 'patched_images/'
-        self.normal_images_path = self.dataset_path + 'patches/Normal/'
-        self.anomalous_images_path = self.dataset_path + 'patches/Anomalous/'
+        self.normal_images_path = self.dataset_path + 'patches/Normal_0.2/'
+        self.anomalous_images_path = self.dataset_path + 'patches/Anomalous_0.2/'
         
         # ANOMALY IF 0.4 OF THE PATCH
         self.patched_images_dir_40 = self.dataset_path + 'patched_images_0.4/'

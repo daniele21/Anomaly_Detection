@@ -6,20 +6,19 @@ import time
 from PIL import Image
 import cv2
 import os
-import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as Transforms
 import random
 from tqdm import tqdm 
 from copy import deepcopy
+import sys
 
 from libraries.utils import Paths, ensure_folder
-import sys
 paths = Paths()
 
-NORMAL_PATH = paths.patched_normal_center
-ANOM_PATH = paths.patched_anom_center
+NORMAL_PATH = paths.normal_patches_path
+ANOM_PATH = paths.anom_patches_path
 #%%
 
 def loadDataset(opt, test='mixed'):

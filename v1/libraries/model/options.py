@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #%%
 #from dataset import loadData
-from libraries.dataset import loadDataNormAnon, loadDatasetAllNormals, loadDataset
+from libraries.model.dataset import loadDataNormAnon, loadDatasetAllNormals, loadDataset
 #%%
 class Options():
 

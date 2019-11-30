@@ -119,14 +119,8 @@ opt.lr_gen = 5*1e-04
 #opt.lr_discr = 5*1e-05
 
 adModel.opt.patience = 5
-optimizer_gen = Adam(adModel.model.generator.parameters(), lr=opt.lr_gen)
-optimizer_discr = Adam(adModel.model.discriminator.parameters(), lr=opt.lr_discr)
-#optimizer_discr = Adam(adModel.model.discriminator.parameters)
-
-adModel.model.init_optim(optimizer_gen, optimizer_discr)
-
-#opt.epochs=20
-#adModel.train_model()
+new_lr = 1e-04
+adModel.model.optimizer_gen.param_groups[0]['lr'] = new_lr
 
 adModel.resumeTraining(300)
 #%% RESULTS

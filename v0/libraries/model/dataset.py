@@ -159,7 +159,8 @@ def collectNormalSamples(nImages, normal_per_img=None):
     sequence = [i for i in range(len(listNormImages))]    
     folder_indexes = random.sample(sequence, len(sequence))
     
-    for index in folder_indexes[0 : nImages]:
+    for index in tqdm(folder_indexes[0 : nImages], total=nImages, file=sys.stdout,
+                      descr='Norm. Images\t:', leave=True):
         counterImage += 1
         path_anom = NORMAL_PATH + str(index) + '/'
         normImages = os.listdir(path_anom)
@@ -171,8 +172,7 @@ def collectNormalSamples(nImages, normal_per_img=None):
         
         limit = 0
 #        print(len(normImages))
-        for filename in tqdm(normImages, leave=True, desc='Anom. Images:\t', 
-                             total=normal_per_img, file=sys.stdout):
+        for filename in normImages:
             
             cond1 = normal_per_img is not None and limit < normal_per_img
             cond2 = normal_per_img is None
@@ -186,7 +186,7 @@ def collectNormalSamples(nImages, normal_per_img=None):
         
             
     
-    print('> {} anomalous images loaded'.format(n_normal))
+    print('> {} normal images loaded'.format(n_normal))
     
     return normalTest
     
@@ -203,7 +203,8 @@ def collectAnomalySamples(nImages, anom_per_img=None):
     sequence = [i for i in range(len(listAnomImages))]    
     folder_indexes = random.sample(sequence, len(sequence))
     
-    for index in folder_indexes[0 : nImages]:
+    for index in tqdm(folder_indexes[0 : nImages], leave=True, file=sys.stdout,
+                      total=nImages, descr='Anom. Images:\t'):
         counterImage += 1
         path_anom = ANOM_PATH + str(index) + '/'
         anomImages = os.listdir(path_anom)
@@ -215,8 +216,7 @@ def collectAnomalySamples(nImages, anom_per_img=None):
         
         limit = 0
         
-        for filename in tqdm(anomImages, leave=True, desc='Anom. Images:\t', 
-                             total=anom_per_img, file=sys.stdout):
+        for filename in anomImages:
             
             cond1 = anom_per_img is not None and limit < anom_per_img
             cond2 = anom_per_img is None

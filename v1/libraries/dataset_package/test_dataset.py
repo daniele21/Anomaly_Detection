@@ -15,18 +15,17 @@ shape = Shape(32,32)
 
 dm.extractPatchesOptimized(train, start, end, nPatches, shape)
 #-----------------------------------
-#%%
-import os
-#curr_path = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/dataset_package'
-#os.chdir(curr_path)
-#%% IMPORTS
-import dataset_manager as dm
-from dataset_manager import PatchClass, Image, Shape
+#%% TEST
+import unittest
+import numpy as np
+from libraries.dataset_package import dataset_manager as dm
+from libraries.dataset_package.dataset_manager import PatchClass, Shape
+
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 import cv2
-#import libraries.model_options
+
 #%% CONSTANTS
 
 MAX_SIZE_X = 1600
@@ -112,11 +111,46 @@ train = pd.read_csv('train_unique.csv', index_col=0)
 start = 1000
 end = 1500
 dm.extractImages(train, start, end)
-#%% ANOMALY TEST
-mask = np.array([[0,0,0,0], [0,1,1,0], [0,1,1,0], [0,0,0,0]])
-patch = PatchClass(dm.Point(3,3), Shape(32,32), None)
+#%% TESTS
 
-dm.checkAnomaly(patch, mask)
+class test_dataset(unittest.TestCase):    
+
+    def test_anomaly(self):
+        mask = np.zeros([5,5])
+        mask[1,0] = 1
+        mask[2,0] = 1
+        mask[1,2] = 1
+        mask[1,3] = 1
+        print(mask)
+        # ANOMALIES
+        patch1 = PatchClass(dm.Point(1,0), Shape(32,32), None)        
+        self.assertTrue(dm.checkAnomaly(patch1, mask))
+        
+        patch2 = PatchClass(dm.Point(2,0), Shape(32,32), None)        
+        self.assertTrue(dm.checkAnomaly(patch2, mask))
+        
+        patch3 = PatchClass(dm.Point(1,2), Shape(32,32), None)        
+        self.assertTrue(dm.checkAnomaly(patch3, mask))
+        
+        patch4 = PatchClass(dm.Point(1,3), Shape(32,32), None)        
+        self.assertTrue(dm.checkAnomaly(patch4, mask))
+        
+        # NORMALS
+        patch = PatchClass(dm.Point(0,0), Shape(32,32), None)
+        self.assertFalse(dm.checkAnomaly(patch, mask))
+        
+        patch = PatchClass(dm.Point(0,1), Shape(32,32), None)
+        self.assertFalse(dm.checkAnomaly(patch, mask))
+        
+        patch = PatchClass(dm.Point(0,2), Shape(32,32), None)
+        self.assertFalse(dm.checkAnomaly(patch, mask))
+        
+        patch = PatchClass(dm.Point(3,0), Shape(32,32), None)
+        self.assertFalse(dm.checkAnomaly(patch, mask))
+    
+    
+#dm.checkAnomaly(patch, mask)
+unittest.main()
 #%%
 filename = train.iloc[0].Image_Id
 img = Image(filename)
