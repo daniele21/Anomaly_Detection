@@ -60,27 +60,27 @@ def evaluateResult(model, img, mask):
     # SIMPLE METHOD
     simple_mask_1, n_anom_1 = img.drawAnomaliesSimple()
     # MAJORITY VOTING
-#    maj_mask_1 = img.drawAnomaliesMajVoting()
+    maj_mask_1 = img.drawAnomaliesMajVoting()
     
     
     # DRAWING ANOMALIES --> METHOD 2
     
     # SIMPLE METHOD
-    simple_mask_2, n_anom_1 = img.drawAnomaliesSimple(pred_patches, info='TH-PER-BATCH')
+#    simple_mask_2, n_anom_1 = img.drawAnomaliesSimple(pred_patches, info='TH-PER-BATCH')
     # MAJORITY VOTING
-    maj_mask_2 = img.drawAnomaliesMajVoting(pred_patches, info='TH-PER-BATCH')
+#    maj_mask_2 = img.drawAnomaliesMajVoting(pred_patches, info='TH-PER-BATCH')
 
 
     # EVALUATION
     info = 'Thr over data - SIMPLE'
     computeEvaluation(mask, simple_mask_1, info, img.folder_save)
-#    info = 'Thr over data - MAJORITY VOTING'
-#    computeEvaluation(mask, maj_mask_1, info, img.folder_save)
+    info = 'Thr over data - MAJORITY VOTING'
+    computeEvaluation(mask, maj_mask_1, info, img.folder_save)
     
-    info = 'Thr over batch - SIMPLE'
-    computeEvaluation(mask, simple_mask_2, info, img.folder_save)
-    info = 'Thr over batch - MAJORITY VOTING'
-    computeEvaluation(mask, maj_mask_2, info, img.folder_save)
+#    info = 'Thr over batch - SIMPLE'
+#    computeEvaluation(mask, simple_mask_2, info, img.folder_save)
+#    info = 'Thr over batch - MAJORITY VOTING'
+#    computeEvaluation(mask, maj_mask_2, info, img.folder_save)
     
 #    # SIMPLE 1
 #    prec = precision(mask.ravel(), simple_mask_1.ravel())

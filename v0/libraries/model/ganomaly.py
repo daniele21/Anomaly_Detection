@@ -210,7 +210,8 @@ class AnomalyDetectionModel():
 #        print(n_iter)
         start = time.time()
         
-        for images, labels in tqdm(self.trainloader, leave=True, total=n_iter, desc='Training', file = sys.stdout):
+#        for images, labels in tqdm(self.trainloader, leave=True, total=n_iter, desc='Training', file = sys.stdout):
+        for images, labels in self.trainloader:
             
             steps += 1
             curr_epoch += self.opt.batch_size
@@ -267,7 +268,8 @@ class AnomalyDetectionModel():
         self.model.evaluate()
         with torch.no_grad():
             
-            for images, labels in tqdm(self.validationloader, leave=True, total=n_iter, desc='Validation', file = sys.stdout):
+#            for images, labels in tqdm(self.validationloader, leave=True, total=n_iter, desc='Validation', file = sys.stdout):
+            for images, labels in self.validationloader:
                 
                 steps += 1
                 curr_epoch += self.opt.batch_size
@@ -312,7 +314,8 @@ class AnomalyDetectionModel():
             z_prime_net  = torch.zeros(size=(len(self.validationloader.dataset), self.opt.z_size), dtype=torch.float32, device=device)
 
             
-            for images, labels in tqdm(self.validationloader, leave=True, total=n_iter, desc='Test', file = sys.stdout):
+#            for images, labels in tqdm(self.validationloader, leave=True, total=n_iter, desc='Test', file = sys.stdout):
+            for images, labels in self.validationloader:
                 
                 curr_epoch += self.opt.batch_size
                 
