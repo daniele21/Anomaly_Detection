@@ -35,44 +35,15 @@ paths = Paths()
 #%% CHECKPOINT
 class Checkpoint():
     
-    
     def __init__(self, model, optimizer, trainloss, validloss, epoch,
-                 filename, save):        
+                 filename, save):   
+        
         self.model = model
-        self.optimizer = optimizer
         self.trainloss = trainloss
         self.validloss = validloss
         self.epoch = epoch
         self.filename = filename
-        self.save = save
-    
-    def _toTable(self):
-        
-        dfName = 'checkpoints.csv'
-        path_file = paths.checkpoint_folder + dfName
-        
-        if(check_existency(path_file)):
-            checkpoint = {'model'    : self.model,
-                          'optimizer': self.optimizer,
-                          'trainloss': self.trainloss,
-                          'validloss': self.validloss,
-                          'epoch'    : self.epoch,
-                          'filename' : self.filename}
-            
-            df = pd.read_csv(path_file, index_col=0)
-            df = df.append(checkpoint, ignore_index=True)
-            df.to_csv(path_file)
-            
-        else:
-            checkpoint = {'model'    : [self.model],
-                          'optimizer': [self.optimizer],
-                          'trainloss': [self.trainloss],
-                          'validloss': [self.validloss],
-                          'epoch'    : [self.epoch],
-                          'filename' : [self.filename]}
-            
-            df = pd.DataFrame(checkpoint)
-            df.to_csv(path_file)    
+        self.save = save   
 
     def saveCheckpoint(self):
         if(self.save):

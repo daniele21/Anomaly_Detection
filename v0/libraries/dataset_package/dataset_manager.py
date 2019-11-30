@@ -413,7 +413,7 @@ class Image():
             print('> Saving to ..{}\n'.format(directory))
 #            cv2.imwrite('3'+ '_{}_(Simple)ANOMALIES_{}'.format(self.model_name, self.filename), self.patchedImage)
             
-            filename = '3'+ '_{}_(Simple)MY_ANOMALY_MASK_stride:{}_{}_{}'.format(self.model_name, self.stride,
+            filename = '3'+ '_{}_(Simple)MY_ANOMALY_MASK_stride:{}_{}_{}.jpg'.format(self.model_name, self.stride,
                                                                                     self.filename, info)
             saving_path = os.path.join(directory , filename)
             
@@ -486,7 +486,7 @@ class Image():
             print('> Saving to ..{}\n'.format(directory))
 #            cv2.imwrite('4'+ '_(Smart)ANOMALIES_{}'.format(self.filename), self.patchedImage)
             
-            filename = '5'+ '_{}_(Maj-Voting)MY_ANOMALY_MASK_stride:{}_{}_{}'.format(self.model_name,
+            filename = '5'+ '_{}_(Maj-Voting)MY_ANOMALY_MASK_stride:{}_{}_{}.jpg'.format(self.model_name,
                                                                                         self.stride,
                                                                                         self.filename, info)
             saving_path = os.path.join(directory, filename)
@@ -554,7 +554,7 @@ class Image():
             print('> Saving to ..{}\n'.format(directory))
 #            cv2.imwrite('4'+ '_(Smart)ANOMALIES_{}'.format(self.filename), self.patchedImage)
             
-            filename = '5'+ '_{}_(Thr.Map)MY_ANOMALY_MASK_stride:{}_{}'.format(self.model_name, self.stride,
+            filename = '5'+ '_{}_(Thr.Map)MY_ANOMALY_MASK_stride:{}_{}.jpg'.format(self.model_name, self.stride,
                                                                         self.filename)
             saving_path = os.path.join(directory, filename)
             
@@ -622,7 +622,7 @@ class Image():
 #            cv2.imwrite('3'+ '_(Smart-model_th)MY_ANOMALY_MASK_stride:{}_{}'.format(self.stride,
 #                                                                        self.filename), img_masked_model)
             
-            filename = '4'+ '_{}_(Thr.All)MY_ANOMALY_MASK_stride:{}_{}'.format(self.model_name, self.stride,
+            filename = '4'+ '_{}_(Thr.All)MY_ANOMALY_MASK_stride:{}_{}.jpg'.format(self.model_name, self.stride,
                                                                         self.filename)
             
             saving_path = os.path.join(directory, filename)
