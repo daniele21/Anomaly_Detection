@@ -1,0 +1,10 @@
+	Ganomaly_code v1:
+
+- Anom over center patch
+- Adaptive weight of multi loss
+- Augmentation
+- Validation: 20% --> all normals
+- Test --> 20% --> normals/anom
+- Patch size = 32x32
+
+
