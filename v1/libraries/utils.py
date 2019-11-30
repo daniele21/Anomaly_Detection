@@ -29,24 +29,7 @@ class Paths():
         self.patches_path = '../../patches/'
         self.normal_patches_path = self.patches_path + 'normals/'
         self.anom_patches_path = self.patches_path + 'anomalous/'
-        self.dataloaders_paths = self.dataset_path + 'dataloaders/'
         
-        # ANOMALY IF 0.2 OF THE PATCH
-        self.patched_images_dir = self.dataset_path + 'patched_images/'
-        self.normal_images_path = self.dataset_path + 'patches/Normal_0.2/'
-        self.anomalous_images_path = self.dataset_path + 'patches/Anomalous_0.2/'
-        
-        # ANOMALY IF 0.4 OF THE PATCH
-        self.patched_images_dir_40 = self.dataset_path + 'patched_images_0.4/'
-        self.normal_images_path_40 = self.dataset_path + 'patches/Normal_0.4/'
-        self.anomalous_images_path_40 = self.dataset_path + 'patches/Anomalous_0.4/'
-        
-        # ANOMALY IF 0.5 OF THE PATCH
-        self.patched_images_dir_50 = self.dataset_path + 'patched_images_0.5/'
-        self.normal_images_path_50 = self.dataset_path + 'patches/Normal_0.5/'
-        self.anomalous_images_path_50 = self.dataset_path + 'patches/Anomalous_0.5/'
-        
-#        self.output_path = self.code_v1_path + 'results/'
 
 paths = Paths()
 #%% CHECKPOINT
