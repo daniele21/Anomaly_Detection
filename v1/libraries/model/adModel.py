@@ -88,7 +88,7 @@ class AnomalyDetectionModel():
         start = time.time()
         
 #        for images, labels in tqdm(self.trainloader, leave=True, total=n_iter, desc='Training', file = sys.stdout):
-        for images, labels in tqdm(self.trainloader, leave=True, total=n_iter, desc='Training'):
+        for images, labels in self.trainloader:
 
             x = torch.Tensor(images).cuda()
                 
@@ -147,7 +147,7 @@ class AnomalyDetectionModel():
         with torch.no_grad():
             
 #            for images, labels in tqdm(self.validationloader, leave=True, total=n_iter, desc='Validation', file = sys.stdout):
-            for images, labels in tqdm(self.validationloader, leave=True, total=n_iter, desc='Validation'):
+            for images, labels in self.validationloader:
                 
                 steps += 1
                 curr_epoch += self.opt.batch_size
@@ -197,7 +197,7 @@ class AnomalyDetectionModel():
             
             
 #            for images, labels in tqdm(test_loader, leave=True, total=n_iter, desc='Test', file = sys.stdout):
-            for images, labels in tqdm(test_loader, leave=True, total=n_iter, desc='Test'):
+            for images, labels in test_loader:
                 
                 curr_epoch += self.opt.batch_size
                 
