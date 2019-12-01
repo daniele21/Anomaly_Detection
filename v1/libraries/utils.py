@@ -200,7 +200,7 @@ def saveInfoGanomaly(opt, path, auc):
     filename = opt.name + '_lr:{}'.format(opt.lr_gen) + '_info'
     content = '\t\t' + opt.name + ' information\n\n'
     content = content + '- Dataset: {}\n'.format(opt.dataset)
-    content = content + '- Anomaly at: {}%\n'.format(opt.anom_perc*100)
+#    content = content + '- Anomaly at: {}%\n'.format(opt.anom_perc*100)
     content = content + '- Patches per image: {}\n'.format(opt.patch_per_im)
     content = content + '- Patches: {}\n'.format(opt.nFolders*opt.patch_per_im)
     content = content + '- Images: {}\n'.format(opt.nFolders)
@@ -208,9 +208,9 @@ def saveInfoGanomaly(opt, path, auc):
     content = content + '- Split: {}-{:.2f}-{:.2f}\n'.format(opt.split, (1-opt.split)*0.5, (1-opt.split)*0.5)
     content = content + '- Lr_Gen: {}\n'.format(opt.lr_gen)
     content = content + '- Lr_Discr: {}\n'.format(opt.lr_discr)
-    content = content + '- w_adv: {}\n'.format(opt.w_adv)
-    content = content + '- w_con: {}\n'.format(opt.w_con)
-    content = content + '- w_enc: {}\n'.format(opt.w_enc)
+#    content = content + '- w_adv: {}\n'.format(opt.w_adv)
+#    content = content + '- w_con: {}\n'.format(opt.w_con)
+#    content = content + '- w_enc: {}\n'.format(opt.w_enc)
     content = content + '- Batch_size: {}\n'.format(opt.batch_size)
     content = content + '- AUC: {:.2f}\n'.format(auc)
     content = content + '- Descr: {}\n\n\n\n'.format(opt.descr)
