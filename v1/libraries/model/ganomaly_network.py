@@ -40,13 +40,13 @@ class GanomalyModel():
 #        self.w_con = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
 #        self.w_enc = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
         
-        self.w_adv = torch.FloatTensor([1])
+        self.w_adv = torch.FloatTensor([opt.w_adv])
         self.w_adv.requires_grad=True
         
-        self.w_con = torch.FloatTensor([1])
+        self.w_con = torch.FloatTensor([opt.w_con])
         self.w_con.requires_grad=True
         
-        self.w_enc = torch.FloatTensor([1])
+        self.w_enc = torch.FloatTensor([opt.w_enc])
         self.w_enc.requires_grad=True
         
         

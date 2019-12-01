@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #%%
 #from dataset import loadData
-from libraries.model.dataset import loadDataNormAnon, loadDatasetAllNormals, loadDataset
+from libraries.model.dataset import loadDataset
 #%%
 class Options():
 
@@ -39,7 +39,7 @@ class Options():
                  resume         = '',
                  alpha          = 0.15,
                  w_adv          = 1,
-                 w_con          = 50,
+                 w_con          = 1,
                  w_enc          = 1,
                  
                  dataset        = '',
