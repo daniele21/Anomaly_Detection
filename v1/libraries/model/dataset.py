@@ -332,7 +332,7 @@ def generateDataloader(opt):
     dataset['validation']  = SteelDataset(opt, valid=True)
     dataset['test']        = SteelDataset(opt, test=True)
     
-    shuffle = {'train':True, 'validation':False, 'test':False}
+    shuffle = {'train':True, 'validation':True, 'test':True}
     
     dataloader = {x: DataLoader(dataset    = dataset[x],
                                 batch_size = opt.batch_size,

@@ -192,12 +192,12 @@ class GanomalyModel():
         self.optimizer_weights.zero_grad()
         
         # Calculating the gradient loss according to Eq. 2 in the GradNorm paper
-        print('\n1.')
-        print(self.gradLoss(G1, C1))
-        print('2.')
-        print(self.gradLoss(G2, C2))
-        print('3.')
-        print(self.gradLoss(G3, C3))
+#        print('\n1.')
+#        print(self.gradLoss(G1, C1))
+#        print('2.')
+#        print(self.gradLoss(G2, C2))
+#        print('3.')
+#        print(self.gradLoss(G3, C3))
         Lgrad = self.gradLoss(G1, C1) + self.gradLoss(G2, C2) + self.gradLoss(G3, C3)
         Lgrad.backward(retain_graph=True)
         
