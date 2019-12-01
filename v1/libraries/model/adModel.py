@@ -16,15 +16,12 @@ from torchvision import transforms as Transforms
 from torch.autograd import Variable
 
 from libraries.model.ganomaly_network import GanomalyModel
-from libraries.evaluate import evaluate
+from libraries.model.evaluate import evaluate
 from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR_decay
 from libraries.utils import Paths, ensure_folder, getNmeans
 paths = Paths()
 
-#os.chdir('/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/dataset_package')
-from dataset_package.dataset_manager import generatePatches
-
-#os.chdir('/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/libraries')
+from libraries.dataset_package.dataset_manager import generatePatches
 #%% CONSTANTS
 GENERATOR = 'GENERATOR'
 DISCRIMINATOR = 'DISCRIMINATOR'
@@ -42,14 +39,16 @@ def loadModel(filename):
 class AnomalyDetectionModel():
     
     def __init__(self, opt, optim_gen, optim_discr,
-                 trainloader=None, validationloader=None):
+                 trainloader=None, validationloader=None, testloader=None):
         
         self.model              = GanomalyModel(opt)
         optimizer_gen           = optim_gen(self.model.generator.parameters(), opt.lr_gen)
         optimizer_discr         = optim_discr(self.model.discriminator.parameters(), opt.lr_discr)
-        self.model.init_optim(optimizer_gen, optimizer_discr)
+        optimizer_weights       = optim_gen(self.model.params, opt.lr_gen)
+        self.model.init_optim(optimizer_gen, optimizer_discr, optimizer_weights)
         self.trainloader        = trainloader
         self.validationloader   = validationloader
+        self.testloader         = testloader
         self.opt                = opt
     
     def loadTrainloader(self, trainloader):
@@ -81,8 +80,7 @@ class AnomalyDetectionModel():
         
         adv_loss = []
         con_loss = []
-        enc_loss = []
-        
+        enc_loss = []        
         
         n_iter = len(self.trainloader)
 #        printing_freq = n_iter // self.opt.loss_per_epoch
@@ -91,7 +89,7 @@ class AnomalyDetectionModel():
         
         for images, labels in tqdm(self.trainloader, leave=True, total=n_iter, desc='Training', file = sys.stdout):
 
-            x = Variable(images).cuda()
+            x = torch.Tensor(images).cuda()
                 
             # GENERATOR FORWARD
             x_prime, z, z_prime = self.model.forward_gen(x)
@@ -102,11 +100,14 @@ class AnomalyDetectionModel():
             
             # GENERATOR LOSS
             loss_gen, losses = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real, self.opt)
+            if(self.epoch == 0):
+                l0 = loss_gen.data
+            
             # DISCRIMINATOR LOSS
             loss_discr = self.model.loss_function_discr(pred_real, pred_fake)
             
             # BACKWARDS
-            self.model.optimize_gen(loss_gen)
+            w_adv, w_con, w_enc = self.model.optimize_gen(loss_gen, l0)
             self.model.optimize_discr(loss_discr)
             
             train_loss[GENERATOR].append(loss_gen.item()*images.size(0))
@@ -116,6 +117,10 @@ class AnomalyDetectionModel():
             enc_loss.append(losses[2].item()*images.size(0))
         
         spent_time = time.time() - start
+        print('\n\n > Loss weights')
+        print('w_adv: {}'.format(w_adv[0]))
+        print('w_con: {}'.format(w_con[0]))
+        print('w_enc: {}'.format(w_enc[0]))
         
         return train_loss, [adv_loss, con_loss, enc_loss], spent_time
             
@@ -172,6 +177,11 @@ class AnomalyDetectionModel():
         
         start = time.time()
         
+        if(self.testloader is None):
+            test_loader = self.validationloader
+        else:
+            test_loader = self.testloader
+        
         with torch.no_grad():
             
             i=0
@@ -179,11 +189,11 @@ class AnomalyDetectionModel():
             times = []
             n_iter = len(self.validationloader)
 
-            anomaly_scores = torch.zeros(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
-            gt_labels = torch.zeros(size=(len(self.validationloader.dataset),), dtype=torch.long,    device=device)
+            anomaly_scores = torch.zeros(size=(len(test_loader.dataset),), dtype=torch.float32, device=device)
+            gt_labels = torch.zeros(size=(len(test_loader.dataset),), dtype=torch.long,    device=device)
             
             
-            for images, labels in tqdm(self.validationloader, leave=True, total=n_iter, desc='Test', file = sys.stdout):
+            for images, labels in tqdm(test_loader, leave=True, total=n_iter, desc='Test', file = sys.stdout):
                 
                 curr_epoch += self.opt.batch_size
                 
@@ -221,8 +231,8 @@ class AnomalyDetectionModel():
             
             _, threshold = evaluate(gt_labels, anomaly_scores)
             
-            print(np.where(gt_labels == 1.0))
-            len(np.where(gt_labels == 1.0))
+#            print(np.where(gt_labels.cpu() == 1.0))
+#            len(np.where(gt_labels.cpu() == 1.0))
             
             performance = dict({'AUC':auc,
                                 'Threshold':threshold})
@@ -282,7 +292,7 @@ class AnomalyDetectionModel():
             self.gt_labels, self.anomaly_scores = eval_data['gt_labels'], eval_data['scores']
             
             
-            if(self.epoch % self.opt.printing_freq == 0):
+            if(self.epoch % 5 == 0):
                 self.plotting()
                 self.evaluateRoc()
             

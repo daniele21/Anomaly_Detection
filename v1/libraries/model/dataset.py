@@ -35,12 +35,8 @@ def loadDataset(opt, test='mixed'):
     validation_set  = {'DATA':[], 'LABELS':[]}
     test_set        = {'DATA':[], 'LABELS':[]}
     
-#    train_data = []
-#    train_label = []
-#    validation_data = []
-#    validation_label = []
-#    test_data = []
-#    test_label = []
+    # COLOR / GRAYSCALE
+    channels = opt.in_channels
     
     patches_per_image = opt.patch_per_im
     
@@ -76,6 +72,10 @@ def loadDataset(opt, test='mixed'):
         for filename in tqdm(norm_filename[0 : training_index], leave=True, desc='Training-set\t', file=sys.stdout):
 
             image = cv2.imread(path_normal + filename)
+           
+#            if(channels == 1):
+#                image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+           
 
 #            train_data.append(image)
 #            train_label.append(NORMAL_LABEL)
@@ -87,8 +87,11 @@ def loadDataset(opt, test='mixed'):
                              file=sys.stdout):
             
             image = cv2.imread(path_normal + filename)
-        
-#            validation_data.append(image)
+            
+#            if(channels == 1):
+#                image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+           
+#             validation_data.append(image)
 #            validation_label.append(NORMAL_LABEL)
             validation_set['DATA'].append(image)
             validation_set['LABELS'].append(NORMAL_LABEL)
@@ -109,6 +112,10 @@ def loadDataset(opt, test='mixed'):
         for filename in tqdm(test_filename, leave=True, desc='Test-set\t', file=sys.stdout):
 #            print(path_anom + filename)
             image = cv2.imread(path_anom + filename)
+           
+#            if(channels == 1):
+#                image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+           
 #            print(image)
 #            test_data.append(image)
 #            test_label.append(ANOM_PATH)
@@ -121,7 +128,7 @@ def loadDataset(opt, test='mixed'):
     print('Test set:       {} images'.format(len(test_set['DATA'])))
     
     end = time.time()
-    print('Spent time : {} sec'.format(end - start))
+    print('Spent time : {:.2f} sec'.format(end - start))
     
     return training_set, validation_set, test_set
 
@@ -354,7 +361,7 @@ def generateDataloaderTest(patches, opt):
                             batch_size = opt.batch_size,
 #                            shuffle=True,
                             drop_last  = True,
-                            num_workers = 4)
+                            num_workers = 8)
     
     return dataloader
 
@@ -511,6 +518,8 @@ class SteelDataset(Dataset):
     
     def __init__(self, opt, train=False, valid=False, test=False):
         
+#        in_channels = opt.in_channels
+        
         if(train and not valid and not test):
             self.data = opt.training_set['DATA']
             self.targets = opt.training_set['LABELS']
@@ -523,10 +532,14 @@ class SteelDataset(Dataset):
             self.data = opt.test_set['DATA']
             self.targets = opt.test_set['LABELS']
         
+#        if(in_channels == 1):
+#            self.data = np.vstack(self.data).reshape(-1, 32, 32)
+#        else:
+#            self.data = np.vstack(self.data).reshape(-1, 32, 32, in_channels)
+            
         self.data = np.vstack(self.data).reshape(-1, 32, 32, 3)
         print(self.data.shape)
 
-        
         self.transforms = self._initTransforms(opt)
 
     def _initTransforms(self, opt):
@@ -537,8 +550,8 @@ class SteelDataset(Dataset):
 #                                    transforms.Resize(32, interpolation=Image.BILINEAR),
                                     Transforms.Grayscale(num_output_channels = opt.in_channels),
                                     Transforms.ToTensor(),
-                                    Transforms.Normalize((0.5, 0.5, 0.5),
-                                                         (0.5, 0.5, 0.5)),
+                                    Transforms.Normalize((0.5,),
+                                                         (0.5,)),
 #                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
 #                                    transforms.ToPILImage()
                                 ]
@@ -560,8 +573,8 @@ class SteelDataset(Dataset):
                                     
                                     Transforms.Grayscale(num_output_channels = opt.in_channels),
                                     Transforms.ToTensor(),
-                                    Transforms.Normalize((0.5, 0.5, 0.5),
-                                                         (0.5, 0.5, 0.5))   
+                                    Transforms.Normalize((0.5,),
+                                                         (0.5,))   
                                         
                                 ]
                             )                                
@@ -577,13 +590,15 @@ class SteelDataset(Dataset):
             index = index.tolist()
             
         image, target = self.data[index], self.targets[index]
+
+#        image = Image.convert('RGB')
         image = Image.fromarray(image)
         
         # GRAYSCALE
 #        image = image.convert('LA')
            
         image = self.transforms(image)
-#        print(image.shape)
+        
         return image, target
     
     def __len__(self):

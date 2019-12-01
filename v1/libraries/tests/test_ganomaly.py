@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
 #%%
 from libraries.model.options import Options
-from libraries.dataset import generateDataloader, getCifar10
-from libraries.dataset import collectAnomalySamples, collectNormalSamples
+from libraries.model.dataset import generateDataloader, getCifar10
+from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.adModel import AnomalyDetectionModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
 paths = Paths()
 
 from matplotlib import pyplot as plt
 import numpy as np
+import pickle
 
 import torch
 from torch.optim import Adam
 from torchvision import transforms as Transforms
 from torch.autograd import Variable
-
+import sys
 #%% LOAD OPTIONS
 opt = Options()
-opt.name = 'Ganom_v2_v1.0'
-#opt.anom_perc = 0.4
-#opt.in_channels = 1 # GRAYSCALE
-opt.in_channels = 3 # RGB
+opt.name = 'Ganom_1_v0.0'
+
+opt.in_channels = 1 # GRAYSCALE
+#opt.in_channels = 3 # RGB
 
 opt.nFolders = 60
 opt.patch_per_im = 500
@@ -37,35 +38,42 @@ opt.batch_size = 64
 #opt.out_channels = 128
 
 opt.descr = '-----'
-opt.descr = 'validation con norm - ' + ' no weighting losses'
+opt.descr = 'augmentation - validation con norm - no weighting losses - thr over norm/anom'
 
-#%% DATASET
+#%% GENERATE DATASET
 
 #cifar_dataloader = getCifar10(opt)
 my_dataloader = generateDataloader(opt)
 
+#%% LOAD DATASET
+
+with open(paths.dataloaders + 'v1_60_500_30k.pickle', 'rb') as data:
+    my_dataloader = pickle.load(data)
+
+#%% SAVE DATASET
+filename = 'v1_b&w_60-500-30k.pickle'
+with open(paths.dataloaders + '/v1' + filename, 'wb') as f:
+    pickle.dump(my_dataloader, f)
 #%%
 
 dataloader = my_dataloader
 opt.dataset = 'steel dataset'
-
+opt.augmentation = True
 #dataloader = cifar_dataloader
 #opt.dataset = 'cifar dataset'
 #%%
 trainloader = dataloader['train']
-
-try:
-    validLoader = dataloader['test']
-except:    
-    validLoader = dataloader['validation']
+validLoader = dataloader['validation']
+testloader = dataloader['test']
     
 #%% MODEL
 optimizer_gen = Adam
 optimizer_discr = Adam
 
-opt.lr_gen = 1*1e-05
-opt.lr_discr = 1*1e-05
-adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, trainloader, validLoader) 
+opt.lr_gen = 1*1e-04
+opt.lr_discr = 1*1e-04
+adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr,
+                                trainloader, validLoader, testloader) 
 
 #%% TUNING MODEL
 tuning = adModel.tuneLearningRate(-6, -7, -6, -7)
@@ -115,14 +123,14 @@ adModel.train_model(epochs)
 ##adModel.loadCheckPoint(path_file)
 #adModel = torch.load(path_file)
 #%%
-opt.lr_gen = 5*1e-04
+opt.lr_gen = 1*1e-04
 #opt.lr_discr = 5*1e-05
 
 adModel.opt.patience = 5
 new_lr = 1e-04
 adModel.model.optimizer_gen.param_groups[0]['lr'] = new_lr
 
-adModel.resumeTraining(300)
+adModel.resumeTraining(100)
 #%% RESULTS
 adModel.plotting()
 adModel.evaluateRoc()

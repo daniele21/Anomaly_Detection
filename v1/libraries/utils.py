@@ -22,7 +22,8 @@ class Paths():
         
         self.library_folder = self.code_path + 'libraries/'
         self.csv_directory = '../data/'
-        self.checkpoint_folder = '../checkpoints/'
+        self.checkpoint_folder = '../../ckp_v1/'
+        self.dataloaders = '../../variables'
         
 #        self.images_path = self.dataset_path + 'images/'
         self.images_path = '../../images/'

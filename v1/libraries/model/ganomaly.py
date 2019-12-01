@@ -18,16 +18,14 @@ import torchvision.utils as vutils
 from torchvision import transforms as Transforms
 from torch.autograd import Variable
 
-from ganomaly_network import GanomalyModel
-from evaluate import evaluate
-from utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR_decay
-from utils import Paths, ensure_folder, getNmeans
+from libraries.model.ganomaly_network import GanomalyModel
+from libraries.model.evaluate import evaluate
+from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR_decay
+from libraries.utils import Paths, ensure_folder, getNmeans
 paths = Paths()
 
-os.chdir('/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/dataset_package')
-from dataset_manager import generatePatches
+from libraries.dataset_package.dataset_manager import generatePatches
 
-os.chdir('/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/libraries')
 #%% CONSTANTS
 GENERATOR = 'GENERATOR'
 DISCRIMINATOR = 'DISCRIMINATOR'

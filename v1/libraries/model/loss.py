@@ -25,6 +25,9 @@ def contextual_loss():
 def binaryCrossEntropy_loss():
     return nn.BCELoss()
 
+def gradientLoss():
+    return nn.L1Loss()
+
 #%% TEST
     
 #a = torch.Tensor([10])

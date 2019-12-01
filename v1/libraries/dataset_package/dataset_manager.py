@@ -22,8 +22,6 @@ opt = Options()
 #%% PATHS
 train_images_dir = paths.images_path
 
-dataloader_dir = paths.dataloaders_paths
-
 #patched_images_dir = my_dataset_dir + 'patched_images/'
 #patched_images_dir = paths.patched_images_dir_40
 patched_images_dir = paths.patches_path
@@ -51,8 +49,6 @@ GRAY_IMAGE = 'gray_image'
 
 BLACK_THRESHOLD_MEDIAN_PATCH = 30
 WHITE_THRESHOLD_MEDIAN_PATCH = 220
-
-THRESHOLD_ANOMALY = opt.anom_perc
 
 # BGR COLORS
 RED         = (0,0,255)
