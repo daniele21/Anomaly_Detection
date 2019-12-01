@@ -229,8 +229,8 @@ class AnomalyDetectionModel():
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
             # auc, eer = roc(self.gt_labels, self.anomaly_scores)
             auc, threshold_norm = evaluate(gt_labels, anomaly_scores_norm)
-#            print('\nAnom_Score Shape:')
-#            print(anomaly_scores_norm.shape)
+            print('\nAnom_Score Shape:')
+            print(anomaly_scores_norm.shape)
             _, threshold = evaluate(gt_labels, anomaly_scores)
             
 #            print(np.where(gt_labels.cpu() == 1.0))
