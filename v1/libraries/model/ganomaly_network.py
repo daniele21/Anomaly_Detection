@@ -11,6 +11,7 @@ from libraries.model import loss
 from libraries.model.options import Options
 
 import torch
+import torch.nn as nn
 
 #%%
 device = torch.device('cuda:0')
@@ -51,7 +52,7 @@ class GanomalyModel():
         
         
         self.params = [self.w_adv, self.w_con, self.w_enc]
-        self.shared_layer = self.generator.decoder.net[-2:]
+        self.shared_layer = nn.Sequential(self.generator.decoder.net[-2:])
         self.alpha = opt.alpha
         
         # INIZIALIZATION INPUT TENSOR
