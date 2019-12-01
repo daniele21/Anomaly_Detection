@@ -23,8 +23,8 @@ opt.name = 'Ganom_1_v0.0'
 opt.in_channels = 1 # GRAYSCALE
 #opt.in_channels = 3 # RGB
 
-opt.nFolders = 60
-opt.patch_per_im = 500
+opt.nFolders = 30
+opt.patch_per_im = 100
 
 #opt.nFolders = 30
 #opt.patch_per_im = 1000
@@ -42,7 +42,7 @@ opt.descr = 'augmentation - validation con norm - no weighting losses - thr over
 
 #%% GENERATE DATASET
 
-#cifar_dataloader = getCifar10(opt)
+opt.augmentation = True
 my_dataloader = generateDataloader(opt)
 
 #%% LOAD DATASET
@@ -58,7 +58,7 @@ with open(paths.dataloaders + '/v1' + filename, 'wb') as f:
 
 dataloader = my_dataloader
 opt.dataset = 'steel dataset'
-opt.augmentation = True
+
 #dataloader = cifar_dataloader
 #opt.dataset = 'cifar dataset'
 #%%

@@ -101,13 +101,13 @@ class AnomalyDetectionModel():
             # GENERATOR LOSS
             loss_gen, losses = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real, self.opt)
             if(self.epoch == 0):
-                l0 = loss_gen.data
+                self.l0 = loss_gen.data
             
             # DISCRIMINATOR LOSS
             loss_discr = self.model.loss_function_discr(pred_real, pred_fake)
             
             # BACKWARDS
-            w_adv, w_con, w_enc = self.model.optimize_gen(loss_gen, l0)
+            w_adv, w_con, w_enc = self.model.optimize_gen(loss_gen, self.l0)
             self.model.optimize_discr(loss_discr)
             
             train_loss[GENERATOR].append(loss_gen.item()*images.size(0))
@@ -117,11 +117,12 @@ class AnomalyDetectionModel():
             enc_loss.append(losses[2].item()*images.size(0))
         
         spent_time = time.time() - start
-        print('\n\n > Loss weights')
+        print('\n------------------------\n')
+        print('> Loss weights')
         print('w_adv: {}'.format(w_adv[0]))
         print('w_con: {}'.format(w_con[0]))
         print('w_enc: {}'.format(w_enc[0]))
-        
+        print('----------------------------')
         return train_loss, [adv_loss, con_loss, enc_loss], spent_time
             
     def _validation(self):
@@ -228,7 +229,8 @@ class AnomalyDetectionModel():
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
             # auc, eer = roc(self.gt_labels, self.anomaly_scores)
             auc, threshold_norm = evaluate(gt_labels, anomaly_scores_norm)
-            
+#            print('\nAnom_Score Shape:')
+#            print(anomaly_scores_norm.shape)
             _, threshold = evaluate(gt_labels, anomaly_scores)
             
 #            print(np.where(gt_labels.cpu() == 1.0))
