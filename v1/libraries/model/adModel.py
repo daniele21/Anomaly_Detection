@@ -44,7 +44,7 @@ class AnomalyDetectionModel():
         self.model              = GanomalyModel(opt)
         optimizer_gen           = optim_gen(self.model.generator.parameters(), opt.lr_gen)
         optimizer_discr         = optim_discr(self.model.discriminator.parameters(), opt.lr_discr)
-        optimizer_weights       = optim_gen(self.model.params, opt.lr_gen)
+        optimizer_weights       = optim_gen(self.model.w_losses, opt.lr_gen)
         self.model.init_optim(optimizer_gen, optimizer_discr, optimizer_weights)
         self.trainloader        = trainloader
         self.validationloader   = validationloader
@@ -414,11 +414,12 @@ class AnomalyDetectionModel():
         
         saveInfoGanomaly(self.opt, folder_save, self.auc)
     
-#    def addInfo(self, info):
-#        folder_save = paths.checkpoint_folder + self.opt.name + '/'
-#        ensure_folder(folder_save)
-#        
-#        addInfoGanomaly(self.opt, folder_save, info)
+    def addInfo(self, info):
+        folder_save = paths.checkpoint_folder + self.opt.name + '/'
+        ensure_folder(folder_save)
+        
+        addInfoGanomaly(self.opt, folder_save, info)
+    
     
     def predict(self, image, target=None, info=None, verbose=0):
 #        image_tensor = torch.FloatTensor(image)

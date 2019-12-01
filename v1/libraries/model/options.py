@@ -38,8 +38,9 @@ class Options():
                  phase          = 'train', 
                  resume         = '',
                  alpha          = 0.15,
+                 weightedLosses = False,
                  w_adv          = 1,
-                 w_con          = 1,
+                 w_con          = 50,
                  w_enc          = 1,
                  
                  dataset        = '',
@@ -87,6 +88,7 @@ class Options():
         self.output_dir     = output_dir
         self.resume         = resume
         self.alpha          = alpha
+        self.weightedLosses = weightedLosses
         self.w_adv          = w_adv
         self.w_con          = w_con
         self.w_enc          = w_enc

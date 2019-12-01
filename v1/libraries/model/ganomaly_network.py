@@ -37,29 +37,38 @@ class GanomalyModel():
         self.gradLoss = loss.gradientLoss()
     
         # ADAPTIVE WEIGHT LOSSES
-#        self.w_adv = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
-#        self.w_con = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
-#        self.w_enc = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
+        self.weightedLosses = opt.weightedLosses
         
-        self.w_adv = torch.FloatTensor([opt.w_adv])
-        self.w_adv.requires_grad=True
+        if(self.weightedLosses):
+            
+#            self.w_adv = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
+#            self.w_con = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
+#            self.w_enc = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
+            
+            self.w_adv = torch.FloatTensor([opt.w_adv])
+            self.w_adv.requires_grad=True
+            
+            self.w_con = torch.FloatTensor([opt.w_con])
+            self.w_con.requires_grad=True
+            
+            self.w_enc = torch.FloatTensor([opt.w_enc])
+            self.w_enc.requires_grad=True
+            
+            
+            self.w_losses = [self.w_adv, self.w_con, self.w_enc]
+            self.shared_layer = nn.Sequential(self.generator.decoder.net[-2:])
+            self.alpha = opt.alpha
         
-        self.w_con = torch.FloatTensor([opt.w_con])
-        self.w_con.requires_grad=True
-        
-        self.w_enc = torch.FloatTensor([opt.w_enc])
-        self.w_enc.requires_grad=True
-        
-        
-        self.params = [self.w_adv, self.w_con, self.w_enc]
-        self.shared_layer = nn.Sequential(self.generator.decoder.net[-2:])
-        self.alpha = opt.alpha
-        
+        else:
+            self.w_adv = opt.w_adv
+            self.w_con = opt.w_con
+            self.w_enc = opt.w_enc
+            
         # INIZIALIZATION INPUT TENSOR
         self.real_label = torch.ones (size=(opt.batch_size,), dtype=torch.float32, device=device)
         self.fake_label = torch.zeros(size=(opt.batch_size,), dtype=torch.float32, device=device)
     
-    def init_optim(self, optim_gen, optim_discr, optimizer_weights):
+    def init_optim(self, optim_gen, optim_discr, optimizer_weights=None):
         self.optimizer_gen = optim_gen
         self.optimizer_discr = optim_discr
         self.optimizer_weights = optimizer_weights
@@ -103,9 +112,9 @@ class GanomalyModel():
         con_loss = self.l_con(x_prime, x)
         enc_loss = self.l_enc(z_prime, z)
         
-        self.w_adv_loss = self.params[0].cuda() * adv_loss
-        self.w_con_loss = self.params[1].cuda() * con_loss
-        self.w_enc_loss = self.params[2].cuda() * enc_loss
+        self.w_adv_loss = self.w_losses[0].cuda() * adv_loss
+        self.w_con_loss = self.w_losses[1].cuda() * con_loss
+        self.w_enc_loss = self.w_losses[2].cuda() * enc_loss
         
         loss_gen = self.w_adv_loss + self.w_con_loss + self.w_enc_loss
         
@@ -156,7 +165,7 @@ class GanomalyModel():
     
     def weighting_losses(self, l0):
     
-        nTasks = len(self.params)
+        nTasks = len(self.w_losses)
         param = list(self.shared_layer.parameters())
         
         G1R = torch.autograd.grad(self.w_adv_loss, param[0], retain_graph=True, create_graph=True)
@@ -212,20 +221,23 @@ class GanomalyModel():
         loss_gen.backward(retain_graph=True)
         
         # ADAPTING WEIGHT LOSSES
-        self.weighting_losses(l0)
-        # --------------------
+        if(self.weightedLosses):
+            self.weighting_losses(l0)
+            # --------------------
+            
+            # Updating the model weights
+            self.optimizer_gen.step()
+            
+            # ADAPTING WEIGHT LOSSES
+            
+            # Renormalizing the losses weights
+            coef = 3/(self.w_adv + self.w_con + self.w_enc)
+            self.w_losses = [coef*self.w_adv, coef*self.w_con, coef*self.w_enc]
         
-        # Updating the model weights
-        self.optimizer_gen.step()
-        
-        # ADAPTING WEIGHT LOSSES
-        
-        # Renormalizing the losses weights
-        coef = 3/(self.w_adv + self.w_con + self.w_enc)
-        self.params = [coef*self.w_adv, coef*self.w_con, coef*self.w_enc]
-        
-        return self.w_adv, self.w_con, self.w_enc
-        # --------------------
+            return self.w_adv, self.w_con, self.w_enc
+         # --------------------
+        else:
+            self.optimizer_gen.step()       
         
     
     def optimize_discr(self, loss_discr):
