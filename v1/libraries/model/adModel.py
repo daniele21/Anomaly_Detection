@@ -254,6 +254,7 @@ class AnomalyDetectionModel():
         plotUnit = 1
         start_epoch = self.epoch
         end_epochs = epochs
+        
         self.es = EarlyStopping(self.opt)
         self.lrDecay = LR_decay(self.opt.lr_gen)
         
@@ -361,8 +362,7 @@ class AnomalyDetectionModel():
         self.valid_con_loss = []
         self.valid_enc_loss = []
         
-        self.folder_save = paths.chself.es = EarlyStopping(self.opt)
-        self.lrDecay = LR_decay(self.opt.lr_gen)eckpoint_folder + self.opt.name + '/'
+        self.folder_save = paths.checkpoint_folder + self.opt.name + '/'
         ensure_folder(self.folder_save)
         
         self.best_auc = {'AUC':0, 'Loss':0, 'Threshold':0}
