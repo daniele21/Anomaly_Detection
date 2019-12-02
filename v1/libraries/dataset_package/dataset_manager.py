@@ -15,7 +15,7 @@ from copy import deepcopy
 from time import time
 
 from libraries.model.options import Options
-from libraries.utils import Paths
+from libraries.utils import Paths, ensure_folder
 
 paths = Paths()
 opt = Options()
@@ -744,8 +744,10 @@ def extractPatchesOptimized(train, start, end, nPatches, shape):
         mask = computeMask(enc_pixels, img)    
         img = applyMask(img, mask)
         
-        os.mkdir(normal_patches_dir + str(count) + '/')
-        os.mkdir(anomalous_patches_dir + str(count) + '/')
+        ensure_folder(normal_patches_dir + str(count) + '/')
+        ensure_folder(anomalous_patches_dir + str(count) + '/')
+#        os.mkdir(normal_patches_dir + str(count) + '/')
+#        os.mkdir(anomalous_patches_dir + str(count) + '/')
         
         print('Salvataggio No ', count)
         

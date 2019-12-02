@@ -195,7 +195,7 @@ class AnomalyDetectionModel():
             i=0
             curr_epoch = 0
             times = []
-            n_iter = len(self.validationloader)
+#            n_iter = len(self.validationloader)
 
             anomaly_scores = torch.zeros(size=(len(test_loader.dataset),), dtype=torch.float32, device=device)
             gt_labels = torch.zeros(size=(len(test_loader.dataset),), dtype=torch.long,    device=device)
