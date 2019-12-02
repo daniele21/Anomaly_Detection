@@ -105,7 +105,7 @@ def loadDataset(opt, test='mixed'):
 
         # TEST
         if(test=='mixed'):
-            test_filename = anom_filename[0:n_test_samples]
+            test_filename = anom_filename[0:len(validation_set['DATA'])]
             LABEL = ANOMALY_LABEL
 #            test_set = deepcopy(validation_set)
             path_images = path_anom
