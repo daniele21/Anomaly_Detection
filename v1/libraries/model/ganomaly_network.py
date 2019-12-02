@@ -130,27 +130,27 @@ class GanomalyModel():
             self.w_enc_loss = self.w_losses[2] * enc_loss
         
         loss_gen = self.w_adv_loss + self.w_con_loss + self.w_enc_loss
-        print('--------CHECK----------')
-        print('-----------------------')
-        print('adv_loss: {}'.format(adv_loss))
-        print('con_loss: {}'.format(con_loss))
-        print('enc_loss: {}'.format(enc_loss))
-        print('-----------------------')
-        print('w_adv: {}'.format(self.w_losses[0]))
-        print('w_con: {}'.format(self.w_losses[1]))
-        print('w_enc: {}'.format(self.w_losses[2]))
-        print('-----------------------')
-        print('w_adv_loss: {}'.format(self.w_adv_loss[0]))
-        print('w_con_loss: {}'.format(self.w_con_loss[0]))
-        print('w_enc_loss: {}'.format(self.w_enc_loss[0]))
-#        print('w_adv_loss: {}'.format(self.w_adv_loss))
-#        print('w_con_loss: {}'.format(self.w_con_loss))
-#        print('w_enc_loss: {}'.format(self.w_enc_loss))
-        
-        print('-----------------------')
-        print('> Loss gen:')
-        print(loss_gen.item())
-        print('-----------------------')
+#        print('--------CHECK----------')
+#        print('-----------------------')
+#        print('adv_loss: {}'.format(adv_loss))
+#        print('con_loss: {}'.format(con_loss))
+#        print('enc_loss: {}'.format(enc_loss))
+#        print('-----------------------')
+#        print('w_adv: {}'.format(self.w_losses[0]))
+#        print('w_con: {}'.format(self.w_losses[1]))
+#        print('w_enc: {}'.format(self.w_losses[2]))
+#        print('-----------------------')
+#        print('w_adv_loss: {}'.format(self.w_adv_loss[0]))
+#        print('w_con_loss: {}'.format(self.w_con_loss[0]))
+#        print('w_enc_loss: {}'.format(self.w_enc_loss[0]))
+##        print('w_adv_loss: {}'.format(self.w_adv_loss))
+##        print('w_con_loss: {}'.format(self.w_con_loss))
+##        print('w_enc_loss: {}'.format(self.w_enc_loss))
+#        
+#        print('-----------------------')
+#        print('> Loss gen:')
+#        print(loss_gen.item())
+#        print('-----------------------')
         return loss_gen, [adv_loss, con_loss, enc_loss]
                        
     def loss_function_discr(self, pred_real, pred_fake):
