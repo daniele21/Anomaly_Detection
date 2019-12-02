@@ -46,7 +46,10 @@ def loadDataset(opt, test='mixed'):
     training_index = int(patches_per_image * opt.split)
     validation_index = training_index + int(patches_per_image*(1-opt.split))
     n_test_samples = int(training_index * (1-opt.split))
-
+#    print(training_index)
+#    print(validation_index)
+#    print(n_test_samples)
+    
     counter = 0
     start = time.time()
     
@@ -95,23 +98,29 @@ def loadDataset(opt, test='mixed'):
 #            validation_label.append(NORMAL_LABEL)
             validation_set['DATA'].append(image)
             validation_set['LABELS'].append(NORMAL_LABEL)
+            
+            if(test=='mixed'):
+                test_set['DATA'].append(image)
+                test_set['LABELS'].append(NORMAL_LABEL)
 
         # TEST
         if(test=='mixed'):
             test_filename = anom_filename[0:n_test_samples]
             LABEL = ANOMALY_LABEL
-            test_set = deepcopy(validation_set)
+#            test_set = deepcopy(validation_set)
+            path_images = path_anom
             
         elif(test=='normal'):
             test_filename = norm_filename[validation_index : validation_index+n_test_samples]
             LABEL = NORMAL_LABEL
+            path_images = path_normal
             
         else:
             raise Exception('>>> ERROR Load Dataset: wrong test_type   <<<')
             
         for filename in tqdm(test_filename, leave=True, desc='Test-set\t', file=sys.stdout):
 #            print(path_anom + filename)
-            image = cv2.imread(path_anom + filename)
+            image = cv2.imread(path_images + filename)
            
 #            if(channels == 1):
 #                image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
