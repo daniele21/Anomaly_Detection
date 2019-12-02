@@ -1,46 +1,161 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Dec  1 00:06:41 2019
+Created on Sun Dec  1 12:22:14 2019
 
 @author: daniele
 """
+#%%
 
-#%% IMPORTS
 import torch
 import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
+import math
+import random
 
-from libraries.model.network import Encoder, Decoder
-#%%
+seed = 42
+random.seed(seed)
+torch.cuda.manual_seed_all(seed)
 
-class MultiTaskLoss(nn.Module):
-    
-    def __init__(self, opt):
-        super().__init__()
-        
-        self.encoder_enc = Encoder(opt)
-        self.decoder_con = Decoder(opt)
-        
-        decoder_layers = list(self.decoder_con.net.children())
-        self.shared_layer = nn.Sequential(*decoder_layers[:-1])
-        
-        encoder = Encoder(opt, 1)
-        layers_adv = list(encoder.net.children())
-        self.encoder_adv = nn.Sequential(*layers_adv[:-1])
-        
-        
+N = 10000
+M = 100
+c = 0.5
+p = 0.9
+k = np.random.randn(M)
+u1 = np.random.randn(M)
+u1 -= u1.dot(k) * k / np.linalg.norm(k)**2
+u1 /= np.linalg.norm(u1) 
+k /= np.linalg.norm(k) 
+u2 = k
+w1 = c*u1
+w2 = c*(p*u1+np.sqrt((1-p**2))*u2)
+X = np.random.normal(0, 1, (N, M))
+eps1 = np.random.normal(0, 0.01)
+eps2 = np.random.normal(0, 0.01)
+Y1 = np.matmul(X, w1) + np.sin(np.matmul(X, w1))+eps1
+Y2 = np.matmul(X, w2) + np.sin(np.matmul(X, w2))+eps2
+split = list(np.random.permutation(N))
+
+X_train = X[split[0:8000],:]
+Y1_train = Y1[split[0:8000]]
+Y2_train = Y2[split[0:8000]]
+X_valid = X[8000:9000,:]
+Y1_valid = Y1[8000:9000]
+Y2_valid = Y2[8000:9000]
+X_test = X[9000:10000,:]
+Y1_test = Y1[9000:10000]
+Y2_test = Y2[9000:10000]
+#print(X_train.shape)
+#print(X_valid.shape)
+#print(X_test.shape)
+#print(Y1_train.shape)
+#print(Y2_train.shape)
+#print(Y1_valid.shape)
+#print(Y2_valid.shape)
+#print(Y1_test.shape)
+#print(Y2_test.shape)
+
+X_train = torch.from_numpy(X_train)
+X_train = X_train.float()
+Y1_train = torch.tensor(Y1_train)
+Y1_train = Y1_train.float()
+Y2_train = torch.tensor(Y2_train)
+Y2_train = Y2_train.float()
+
+X_valid = torch.from_numpy(X_valid)
+X_valid = X_valid.float()
+Y1_valid = torch.tensor(Y1_valid)
+Y1_valid = Y1_valid.float()
+Y2_valid = torch.tensor(Y2_valid)
+Y2_valid = Y2_valid.float()
+
+X_test = torch.from_numpy(X_test)
+X_test = X_test.float()
+Y1_test = torch.tensor(Y1_test)
+Y1_test = Y1_test.float()
+Y2_test = torch.tensor(Y2_test)
+Y2_test = Y2_test.float()
+
+#print(X_train.shape)
+#print(X_valid.shape)
+#print(X_test.shape)
+#print(Y1_train.shape)
+#print(Y2_train.shape)
+#print(Y1_valid.shape)
+#print(Y2_valid.shape)
+#print(Y1_test.shape)
+#print(Y2_test.shape)
+
+(8000, 100)
+(1000, 100)
+(1000, 100)
+(8000,)
+(8000,)
+(1000,)
+(1000,)
+(1000,)
+(1000,)
+torch.Size([8000, 100])
+torch.Size([1000, 100])
+torch.Size([1000, 100])
+torch.Size([8000])
+torch.Size([8000])
+torch.Size([1000])
+torch.Size([1000])
+torch.Size([1000])
+torch.Size([1000])
+
+input_size, feature_size = X.shape
+shared_layer_size = 64
+tower_h1 = 32
+tower_h2 = 16
+output_size = 1
+LR = 0.001
+epoch = 50
+mb_size = 100
+cost1tr = []
+cost2tr = []
+cost1D = []
+cost2D = []
+cost1ts = []
+cost2ts = []
+costtr = []
+costD = []
+costts = []
+
+class MTLnet(nn.Module):
+    def __init__(self):
+        super(MTLnet, self).__init__()
+        self.sharedlayer = nn.Sequential(
+            nn.Linear(feature_size, shared_layer_size),
+            nn.ReLU(),
+            nn.Dropout()
+        )
+        self.tower1 = nn.Sequential(
+            nn.Linear(shared_layer_size, tower_h1),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(tower_h1, tower_h2),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(tower_h2, output_size)
+        )
+        self.tower2 = nn.Sequential(
+            nn.Linear(shared_layer_size, tower_h1),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(tower_h1, tower_h2),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(tower_h2, output_size)
+        )        
+
     def forward(self, x):
-        # OUTPUT DECODER OF GENERATOR
-        x_prime = self.shared_layer(x)
-        # OUTPUT LAST ENCODER
-        z_prime = self.encoder_enc(x_prime)
-        # OUTPUTS ADVERSARIAL ENCODER
-        feat_real = self.encoder_adv(x)
-        feat_fake = self.encoder_adv(x_prime)
-        
-        return x_prime, z_prime, feat_real, feat_fake
+        h_shared = self.sharedlayer(x)
+        out1 = self.tower1(h_shared)
+        out2 = self.tower2(h_shared)
+        return out1, out2
 
 def random_mini_batches(XE, R1E, R2E, mini_batch_size = 10, seed = 42): 
     # Creating the mini-batches
@@ -73,14 +188,11 @@ Weightloss1 = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
 Weightloss2 = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
 
 params = [Weightloss1, Weightloss2]
-nTasks = len(params)
-MTL = MultiTaskLoss()
+MTL = MTLnet()
 opt1 = torch.optim.Adam(MTL.parameters(), lr=LR)
 opt2 = torch.optim.Adam(params, lr=LR)
-
 loss_func = nn.MSELoss()
 Gradloss = nn.L1Loss()
-
 
 alph = 0.16
 for it in range(epoch):
@@ -91,52 +203,45 @@ for it in range(epoch):
     num_minibatches = int(input_size / mb_size) 
     minibatches = random_mini_batches(X_train, Y1_train, Y2_train, mb_size)
     for minibatch in minibatches:
+        MTL.train()
         XE, YE1, YE2  = minibatch 
         
         Yhat1, Yhat2 = MTL(XE)
-        
-        # l1 = w1 * loss_func1
         l1 = params[0]*loss_func(Yhat1, YE1.view(-1,1))    
-        # l2 = w2 * loss_func2
         l2 = params[1]*loss_func(Yhat2, YE2.view(-1,1))
-        
-#        loss = torch.div(torch.add(l1,l2), 2)
-        loss = torch.add(l1,l2)
+        loss = torch.div(torch.add(l1,l2), 2)
 
         # for the first epoch with no l0
         if it == 0:
-            l0 = loss.data        
+            l01 = l1.data  
+            l02 = l2.data
         
         opt1.zero_grad()
         
         loss.backward(retain_graph=True)   
         
         # Getting gradients of the first layers of each tower and calculate their l2-norm 
-        
         param = list(MTL.parameters())
-        # ------------------(param[0])----------------
+        print(MTL.parameters)
+        for param in MTL.parameters():
+            print(param.shape)
+
+        break
+       
         G1R = torch.autograd.grad(l1, param[0], retain_graph=True, create_graph=True)
         G1 = torch.norm(G1R[0], 2)
-        
-        # ------------------(param[0])----------------
         G2R = torch.autograd.grad(l2, param[0], retain_graph=True, create_graph=True)
         G2 = torch.norm(G2R[0], 2)
-        
-#        G3R = torch.autograd.grad(l2, param[0], retain_graph=True, create_graph=True)
-#        G3 = torch.norm(G2R[0], 2)
-        
-        G_avg = torch.div(torch.add(G1, G2), nTasks)
+        G_avg = torch.div(torch.add(G1, G2), 2)
         
         # Calculating relative losses 
-        lhat1 = torch.div(l1,l0)
-        lhat2 = torch.div(l2,l0)
-#        lhat3
-        lhat_avg = torch.div(torch.add(lhat1, lhat2), nTasks)
+        lhat1 = torch.div(l1,l01)
+        lhat2 = torch.div(l2,l02)
+        lhat_avg = torch.div(torch.add(lhat1, lhat2), 2)
         
         # Calculating relative inverse training rates for tasks 
         inv_rate1 = torch.div(lhat1,lhat_avg)
         inv_rate2 = torch.div(lhat2,lhat_avg)
-#        inv_rate3
         
         # Calculating the constant target for Eq. 2 in the GradNorm paper
         C1 = G_avg*(inv_rate1)**alph
@@ -169,13 +274,14 @@ for it in range(epoch):
     cost2tr.append(torch.mean(epoch_cost2))
     
     with torch.no_grad():
+        MTL.eval()
         Yhat1D, Yhat2D = MTL(X_valid)
         l1D = params[0]*loss_func(Yhat1D, Y1_valid.view(-1,1))
         l2D = params[1]*loss_func(Yhat2D, Y2_valid.view(-1,1))
         cost1D.append(l1D)
         cost2D.append(l2D)
-        costD.append(torch.add(l1D,l2D)/2)
-        print('Iter-{}; MTL loss: {:.4}'.format(it, loss.item()))
+        costD.append(torch.div(torch.add(l1D,l2D),2))
+#        print('Iter-{}; MTL loss: {:.4}'.format(it, loss.item()))
         #print('Iter-{}; Grad loss: {:.4}'.format(it, Lgrad.item()))
     
 plt.plot(np.squeeze(costtr),'-r',np.squeeze(costD), '-b')

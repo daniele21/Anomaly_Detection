@@ -38,14 +38,14 @@ def loadModel(filename):
 
 class AnomalyDetectionModel():
     
-    def __init__(self, opt, optim_gen, optim_discr,
+    def __init__(self, opt, optim_gen, optim_discr, optim_weights,
                  trainloader=None, validationloader=None, testloader=None):
         
         self.model              = GanomalyModel(opt)
-        optimizer_gen           = optim_gen(self.model.generator.parameters(), opt.lr_gen)
-        optimizer_discr         = optim_discr(self.model.discriminator.parameters(), opt.lr_discr)
-        optimizer_weights       = optim_gen(self.model.w_losses, opt.lr_gen)
-        self.model.init_optim(optimizer_gen, optimizer_discr, optimizer_weights)
+#        optimizer_gen           = optim_gen(self.model.generator.parameters(), opt.lr_gen)
+#        optimizer_discr         = optim_discr(self.model.discriminator.parameters(), opt.lr_discr)
+#        optimizer_weights       = optim_gen(self.model.w_losses, opt.lr_gen)
+        self.model.init_optim(optim_gen, optim_discr, optim_weights)
         self.trainloader        = trainloader
         self.validationloader   = validationloader
         self.testloader         = testloader
@@ -108,7 +108,7 @@ class AnomalyDetectionModel():
             loss_discr = self.model.loss_function_discr(pred_real, pred_fake)
             
             # BACKWARDS
-            w_adv, w_con, w_enc = self.model.optimize_gen(loss_gen, self.l0)
+            self.model.optimize_gen(loss_gen, self.l0)
             self.model.optimize_discr(loss_discr)
             
             train_loss[GENERATOR].append(loss_gen.item()*images.size(0))
@@ -120,9 +120,14 @@ class AnomalyDetectionModel():
         spent_time = time.time() - start
         print('\n------------------------\n')
         print('> Loss weights')
-        print('w_adv: {}'.format(w_adv[0]))
-        print('w_con: {}'.format(w_con[0]))
-        print('w_enc: {}'.format(w_enc[0]))
+        try:
+            print('w_adv: {}'.format(self.model.w_adv[0]))
+            print('w_con: {}'.format(self.model.w_con[0]))
+            print('w_enc: {}'.format(self.model.w_enc[0]))
+        except:
+            print('w_adv: {}'.format(self.model.w_adv))
+            print('w_con: {}'.format(self.model.w_con))
+            print('w_enc: {}'.format(self.model.w_enc))
         print('----------------------------')
         return train_loss, [adv_loss, con_loss, enc_loss], spent_time
             

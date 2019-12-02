@@ -25,6 +25,9 @@ class GanomalyModel():
         self.generator = Generator(opt).to(device)
         self.discriminator = Discriminator(opt).to(device)
         
+        self.lr_gen = opt.lr_gen
+        self.lr_discr = opt.lr_discr
+        
         # WEIGHT INITIALIZATION
         self.generator.apply(weights_init)
         self.discriminator.apply(weights_init)
@@ -64,14 +67,18 @@ class GanomalyModel():
             self.w_con = opt.w_con
             self.w_enc = opt.w_enc
             
+            self.w_losses = [self.w_adv, self.w_con, self.w_enc]
+            
         # INIZIALIZATION INPUT TENSOR
         self.real_label = torch.ones (size=(opt.batch_size,), dtype=torch.float32, device=device)
         self.fake_label = torch.zeros(size=(opt.batch_size,), dtype=torch.float32, device=device)
     
-    def init_optim(self, optim_gen, optim_discr, optimizer_weights=None):
-        self.optimizer_gen = optim_gen
-        self.optimizer_discr = optim_discr
-        self.optimizer_weights = optimizer_weights
+    def init_optim(self, optim_gen, optim_discr, optimizer_weights):
+        self.optimizer_gen = optim_gen(self.generator.parameters(), self.lr_gen)
+        self.optimizer_discr = optim_discr(self.discriminator.parameters(), self.lr_discr)
+        
+        if(self.weightedLosses):
+            self.optimizer_weights = optimizer_weights(self.w_losses, self.lr_gen)
     
     def train(self):
         self.generator.train()
@@ -112,12 +119,38 @@ class GanomalyModel():
         con_loss = self.l_con(x_prime, x)
         enc_loss = self.l_enc(z_prime, z)
         
-        self.w_adv_loss = self.w_losses[0].cuda() * adv_loss
-        self.w_con_loss = self.w_losses[1].cuda() * con_loss
-        self.w_enc_loss = self.w_losses[2].cuda() * enc_loss
+        if(self.weightedLosses):
+            self.w_adv_loss = self.w_losses[0].cuda() * adv_loss
+            self.w_con_loss = self.w_losses[1].cuda() * con_loss
+            self.w_enc_loss = self.w_losses[2].cuda() * enc_loss
+            
+        else:
+            self.w_adv_loss = self.w_losses[0] * adv_loss
+            self.w_con_loss = self.w_losses[1] * con_loss
+            self.w_enc_loss = self.w_losses[2] * enc_loss
         
         loss_gen = self.w_adv_loss + self.w_con_loss + self.w_enc_loss
+        print('--------CHECK----------')
+        print('-----------------------')
+        print('adv_loss: {}'.format(adv_loss))
+        print('con_loss: {}'.format(con_loss))
+        print('enc_loss: {}'.format(enc_loss))
+        print('-----------------------')
+        print('w_adv: {}'.format(self.w_losses[0]))
+        print('w_con: {}'.format(self.w_losses[1]))
+        print('w_enc: {}'.format(self.w_losses[2]))
+        print('-----------------------')
+        print('w_adv_loss: {}'.format(self.w_adv_loss[0]))
+        print('w_con_loss: {}'.format(self.w_con_loss[0]))
+        print('w_enc_loss: {}'.format(self.w_enc_loss[0]))
+#        print('w_adv_loss: {}'.format(self.w_adv_loss))
+#        print('w_con_loss: {}'.format(self.w_con_loss))
+#        print('w_enc_loss: {}'.format(self.w_enc_loss))
         
+        print('-----------------------')
+        print('> Loss gen:')
+        print(loss_gen.item())
+        print('-----------------------')
         return loss_gen, [adv_loss, con_loss, enc_loss]
                        
     def loss_function_discr(self, pred_real, pred_fake):
@@ -231,10 +264,17 @@ class GanomalyModel():
             # ADAPTING WEIGHT LOSSES
             
             # Renormalizing the losses weights
-            coef = 3/(self.w_adv + self.w_con + self.w_enc)
+#            coef = 3/(self.w_adv + self.w_con + self.w_enc)
+            coef = 1
             self.w_losses = [coef*self.w_adv, coef*self.w_con, coef*self.w_enc]
-        
-            return self.w_adv, self.w_con, self.w_enc
+            
+            print('\n------------------------\n')
+            print('> Loss weights')
+            print('w_adv: {}'.format(self.w_adv[0]))
+            print('w_con: {}'.format(self.w_con[0]))
+            print('w_enc: {}'.format(self.w_enc[0]))
+            print('----------------------------')
+#            return self.w_adv, self.w_con, self.w_enc
          # --------------------
         else:
             self.optimizer_gen.step()       
