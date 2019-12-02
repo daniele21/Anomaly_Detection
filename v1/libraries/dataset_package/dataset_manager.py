@@ -944,7 +944,7 @@ def checkAnomaly(patch, mask):
     '''
     
     center = patch.center
-    print(center)
+#    print(center)
     check = mask[center.y, center.x]
 #    check = mask[center.x, center.y]
     
