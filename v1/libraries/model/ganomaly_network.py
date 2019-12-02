@@ -264,8 +264,8 @@ class GanomalyModel():
             # ADAPTING WEIGHT LOSSES
             
             # Renormalizing the losses weights
-#            coef = 3/(self.w_adv + self.w_con + self.w_enc)
-            coef = 1
+            coef = 3/(self.w_adv + self.w_con + self.w_enc)
+#            coef = 1
             self.w_losses = [coef*self.w_adv, coef*self.w_con, coef*self.w_enc]
             
 #            print('\n------------------------\n')
