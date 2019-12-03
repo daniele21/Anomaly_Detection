@@ -249,7 +249,7 @@ class Generator(nn.Module):
         # INITIALIZATION
         if(xavier_init):
             self.encoder1.apply(weights_init)
-            self.encoder.apply(weights_init)
+            self.decoder.apply(weights_init)
             self.encoder2.apply(weights_init)
         
     def forward(self, x):
