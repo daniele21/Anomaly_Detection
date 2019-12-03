@@ -97,6 +97,7 @@ path_file = paths.checkpoint_folder + opt.name + '/' + nome_ckp
 print(path_file)
 #adModel.loadCheckPoint(path_file)
 adModel = torch.load(path_file)
+
 #%% MULTI TASK LOSS WEIGHTS
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
                                 trainloader, validLoader, testloader) 
@@ -104,6 +105,7 @@ adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_ge
 mtl = MultiLossWrapper(adModel, trainloader, 3)
 optim = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
 mtl.train(10, optim)
+
 #%% TRAINING MODEL
 epochs = 30
 

@@ -64,7 +64,7 @@ class MultiLossWrapper():
         self.multiTaskLoss = MultiTaskLoss(model, n_losses).to(device)
         self.data = dataloader
         
-    def train(self, epochs, optimizer, patience=2):
+    def train(self, epochs, optimizer, patience=2, verbose=0):
         self.multiTaskLoss.train()
         self.es = EarlyStopping(patience)
         self.loss = []
@@ -96,13 +96,14 @@ class MultiLossWrapper():
             if(self.es.early_stop):
                 break
             
-            print('\n')
-            print('loss_model: \t{:.2f}\n'.format(loss_mean))
-            
-            print('Loss Weights:')
-            print('w_adv: \t{:.2f}'.format(self.factors['ADV']))
-            print('w_con: \t{:.2f}'.format(self.factors['CON']))
-            print('w_enc: \t{:.2f}'.format(self.factors['ENC']))
+            if(verbose):
+                print('\n')
+                print('loss_model: \t{:.2f}\n'.format(loss_mean))
+                
+                print('Loss Weights:')
+                print('w_adv: \t{:.2f}'.format(self.factors['ADV']))
+                print('w_con: \t{:.2f}'.format(self.factors['CON']))
+                print('w_enc: \t{:.2f}'.format(self.factors['ENC']))
         
         end = time()
         
@@ -117,7 +118,9 @@ class MultiLossWrapper():
         
         minutes = (end - start) / 60
         print('Spent time: {:.3f}'.format(minutes))
-        self.plotLoss()
+#        self.plotLoss()
+        
+        return self.factors['ADV'], self.factors['CON'], self.factors['ENC']
         
     def plotLoss(self):
         pylab.plot(self.loss)

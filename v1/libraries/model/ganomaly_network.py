@@ -82,6 +82,10 @@ class GanomalyModel():
         else:
             self.optimizer_weights = None
     
+    def setWeights(self, w_adv, w_con, w_enc):
+        
+        self.w_losses = [w_adv, w_con, w_enc]
+    
     def train(self):
         self.generator.train()
         self.discriminator.train()
