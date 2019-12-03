@@ -10,8 +10,8 @@ Created on Tue Oct 15 12:34:32 2019
 
 #import torch
 import torch.nn as nn
-from torch.nn.init import xavier_uniform_ as xavier
-from torch.nn.init import kaiming_uniform as kaiming
+from torch.nn.init import xavier_uniform_, xavier_normal_ as xavier_unif, xavier_norm
+from torch.nn.init import kaiming_uniform, kaiming_normal_ as he_unifm, he_norm
 from libraries.torchsummary import summary
 #%% CONSTANTS
 
@@ -28,15 +28,25 @@ def weights_init(mod):
     :param m:
     :return:
     """
-    classname = mod.__class__.__name__
-    if classname.find('Conv') != -1:
-#        mod.weight.data.normal_(0.0, 0.02)
-        xavier(mod.weight.data)
-        if(mod.bias is not None):
-            xavier(mod.bias.data)
-#    elif classname.find('BatchNorm') != -1:
-#        mod.weight.data.normal_(1.0, 0.02)
-#        mod.bias.data.fill_(0)
+#    classname = mod.__class__.__name__
+#    if classname.find('Conv') != -1:
+#        xavier(mod.weight.data)
+#        if(mod.bias is not None):
+#            xavier(mod.bias.data)
+
+    # XAVIER NORMAL INITIALIZATION
+#    if isinstance(mod, nn.Conv2d):
+#        xavier_norm(mod.weight.data)
+#        if(mod.bias):
+#            xavier_norm(mod.bias.data)
+            
+    # HE NORMAL INITIALIZATION --> better with relu / leaky_relu activations
+    if isinstance(mod, nn.Conv2d):
+        he_norm(mod.weight.data)
+        if(mod.bias):
+            he_norm(mod.bias.data)
+
+#model.apply(weights_init)
         
 #%% NETWORK
 
@@ -229,19 +239,20 @@ class Decoder(nn.Module):
 #%%
 class Generator(nn.Module):
     
-    def __init__(self, opt):
+    def __init__(self, opt, xavier_init=True):
         super().__init__()
         
         self.encoder1 = Encoder(opt)
-        
         self.decoder  = Decoder(opt)
-        
         self.encoder2 = Encoder(opt)
         
-    def forward(self, x):
+        # INITIALIZATION
+        if(xavier_init):
+            self.encoder1.apply(weights_init)
+            self.encoder.apply(weights_init)
+            self.encoder2.apply(weights_init)
         
-#        print('--> Input to the generator: ', x.shape)
-#        print(x.shape)
+    def forward(self, x):
 
         # LATENT REPRESENTATION
         z       = self.encoder1(x)
@@ -256,10 +267,13 @@ class Generator(nn.Module):
     
 class Discriminator(nn.Module):
     
-    def __init__(self, opt):
+    def __init__(self, opt, xavier_init=True):
         super().__init__()
         
         model = Encoder(opt, 1)
+        
+        if(xavier_init):
+            model.apply(weights_init)
         
         layers = list(model.net.children())
         

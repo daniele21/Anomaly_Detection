@@ -5,16 +5,14 @@ from collections import OrderedDict
 import numpy as np
 from tqdm import tqdm
 from matplotlib import pyplot as plt
-import sys
 from PIL import Image
 import pandas as pd
 
-import torch.optim as optim
 import torch.utils.data
-import torchvision.utils as vutils
 from torchvision import transforms as Transforms
 from torch.autograd import Variable
 
+from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.ganomaly_network import GanomalyModel
 from libraries.model.evaluate import evaluate
 from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR_decay
@@ -298,13 +296,14 @@ class AnomalyDetectionModel():
                                                                     step_size=20, gamma=1)
             self.lr_scheduler_discr = torch.optim.lr_scheduler.StepLR(self.model.optimize_discr,
                                                                       step_size=20, gamma=1)
-        elif(lr_scheduler_type == LR_DECAY and arg is not None):
+            
+        elif(lr_scheduler_type == LR_DECAY and arg is not None and epochs is not None):
             print('LR SCHEDULING: Decay')
             self.lr_policy = LR_DECAY
             self.lr_scheduler_gen = torch.optim.lr_scheduler.StepLR(self.model.optimizer_gen,
-                                                                    step_size=20, gamma=arg)
-            self.lr_scheduler_discr = torch.optim.lr_scheduler.StepLR(self.model.optimize_discr,
-                                                                      step_size=20, gamma=arg)
+                                                                    step_size=epochs, gamma=arg)
+            self.lr_scheduler_discr = torch.optim.lr_scheduler.StepLR(self.model.optimizer_discr,
+                                                                      step_size=epochs, gamma=arg)
         
         elif(lr_scheduler_type == LR_ONECYCLE, arg is not None and epochs is not None):
             print('LR SCHEDULING: OneCycle')
@@ -317,6 +316,8 @@ class AnomalyDetectionModel():
                                                                         steps_per_epoch=len(self.trainloader),
                                                                         max_lr=arg,
                                                                         epochs = epochs)
+        else:
+            raise Exception('LR type non VALID')
         
     def _training_step(self, epochs, one_cycle_maxLR=None, decay=None, save=True, lr_decay_value=None):
         
