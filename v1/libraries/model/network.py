@@ -10,8 +10,8 @@ Created on Tue Oct 15 12:34:32 2019
 
 #import torch
 import torch.nn as nn
-from torch.nn.init import xavier_uniform_, xavier_normal_ as xavier_unif, xavier_norm
-from torch.nn.init import kaiming_uniform, kaiming_normal_ as he_unifm, he_norm
+from torch.nn.init import xavier_uniform_, xavier_normal_
+from torch.nn.init import kaiming_uniform, kaiming_normal_
 from libraries.torchsummary import summary
 #%% CONSTANTS
 
@@ -42,9 +42,9 @@ def weights_init(mod):
             
     # HE NORMAL INITIALIZATION --> better with relu / leaky_relu activations
     if isinstance(mod, nn.Conv2d):
-        he_norm(mod.weight.data)
+        kaiming_normal_(mod.weight.data)
         if(mod.bias):
-            he_norm(mod.bias.data)
+            kaiming_normal_(mod.bias.data)
 
 #model.apply(weights_init)
         
