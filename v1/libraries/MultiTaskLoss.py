@@ -77,7 +77,7 @@ class MultiLossWrapper():
             
             loss_list = []
             
-            for images, labels in tqdm(self.data, total=len(self.data)):
+            for images, labels in self.data:
                 
                 x = torch.Tensor(images).cuda()
                 labels = torch.Tensor(labels).cuda()
