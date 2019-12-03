@@ -26,6 +26,9 @@ from libraries.dataset_package.dataset_manager import generatePatches
 GENERATOR = 'GENERATOR'
 DISCRIMINATOR = 'DISCRIMINATOR'
 
+LR_DECAY = 'decay'
+LR_ONECYCLE = 'oneCycle'
+
 device = torch.device('cuda:0')
 #%%
 
@@ -134,19 +137,27 @@ class AnomalyDetectionModel():
             adv_loss.append(losses[0].item()*images.size(0))
             con_loss.append(losses[1].item()*images.size(0))
             enc_loss.append(losses[2].item()*images.size(0))
+            
+            # UPDATE LR SCHEDULER
+            if(self.lr_policy == LR_ONECYCLE):
+                self.lr_scheduler_gen.step()
+                self.lr_scheduler_discr.step()
         
         spent_time = time.time() - start
-        print('\n------------------------\n')
-        print('> Loss weights')
-        try:
-            print('w_adv: {}'.format(self.model.w_adv[0]))
-            print('w_con: {}'.format(self.model.w_con[0]))
-            print('w_enc: {}'.format(self.model.w_enc[0]))
-        except:
-            print('w_adv: {}'.format(self.model.w_adv))
-            print('w_con: {}'.format(self.model.w_con))
-            print('w_enc: {}'.format(self.model.w_enc))
-        print('----------------------------')
+        
+        if(self.opt.weightedLosses):
+            print('\n------------------------\n')
+            print('> Loss weights')
+            try:
+                print('w_adv: {}'.format(self.model.w_adv[0]))
+                print('w_con: {}'.format(self.model.w_con[0]))
+                print('w_enc: {}'.format(self.model.w_enc[0]))
+            except:
+                print('w_adv: {}'.format(self.model.w_adv))
+                print('w_con: {}'.format(self.model.w_con))
+                print('w_enc: {}'.format(self.model.w_enc))
+            print('----------------------------')
+            
         return train_loss, [adv_loss, con_loss, enc_loss], spent_time
             
     def _validation(self):
@@ -196,6 +207,11 @@ class AnomalyDetectionModel():
                 enc_loss.append(losses[2].item()*images.size(0))
         
             spent_time = time.time() - start
+            
+            # UPDATE LR SCHEDULER
+            if(self.lr_policy == LR_DECAY):
+                self.lr_scheduler_gen.step()
+                self.lr_scheduler_discr.step()
                 
         return valid_loss, [adv_loss, con_loss, enc_loss], spent_time
         
@@ -275,11 +291,64 @@ class AnomalyDetectionModel():
                 
             return performance, eval_data, spent_time
         
-    def _training_step(self, epochs, save=True, lr_decay_value=None):
+    def setLRscheduler(self, lr_scheduler_type=None, arg=None, epochs=None):
+        if(lr_scheduler_type is None):
+            self.lr_policy = None
+            self.lr_scheduler_gen = torch.optim.lr_scheduler.StepLR(self.model.optimizer_gen,
+                                                                    step_size=20, gamma=1)
+            self.lr_scheduler_discr = torch.optim.lr_scheduler.StepLR(self.model.optimize_discr,
+                                                                      step_size=20, gamma=1)
+        elif(lr_scheduler_type == LR_DECAY and arg is not None):
+            print('LR SCHEDULING: Decay')
+            self.lr_policy = LR_DECAY
+            self.lr_scheduler_gen = torch.optim.lr_scheduler.StepLR(self.model.optimizer_gen,
+                                                                    step_size=20, gamma=arg)
+            self.lr_scheduler_discr = torch.optim.lr_scheduler.StepLR(self.model.optimize_discr,
+                                                                      step_size=20, gamma=arg)
+        
+        elif(lr_scheduler_type == LR_ONECYCLE, arg is not None and epochs is not None):
+            print('LR SCHEDULING: OneCycle')
+            self.lr_policy = LR_ONECYCLE
+            self.lr_scheduler_gen = torch.optim.lr_scheduler.OneCycleLR(self.model.optimizer_gen, 
+                                                                        steps_per_epoch=len(self.trainloader),
+                                                                        max_lr=arg,
+                                                                        epochs = epochs)
+            self.lr_scheduler_discr = torch.optim.lr_scheduler.OneCycleLR(self.model.optimizer_discr, 
+                                                                        steps_per_epoch=len(self.trainloader),
+                                                                        max_lr=arg,
+                                                                        epochs = epochs)
+        
+    def _training_step(self, epochs, one_cycle_maxLR=None, decay=None, save=True, lr_decay_value=None):
         
         plotUnit = 1
         start_epoch = self.epoch
         end_epochs = epochs
+        
+        self.lr_policy = None
+        
+#        if(decay is not None and one_cycle_maxLR is None) :
+#            self.lr_policy = 'decay'
+#            self.lr_scheduler_gen = torch.optim.lr_scheduler.StepLR(self.model.optimizer_gen,
+#                                                                    step_size=20, gamma=decay)
+#            self.lr_scheduler_discr = torch.optim.lr_scheduler.StepLR(self.model.optimizer_discr,
+#                                                                      step_size=20, gamma=decay)
+#        elif(decay is None and one_cycle_maxLR is not None):
+#            self.lr_policy = 'oneCycle'
+#            self.lr_scheduler_gen = torch.optim.lr_scheduler.OneCycleLR(self.model.optimizer_gen, 
+#                                                                        steps_per_epoch=len(self.trainloader),
+#                                                                        max_lr=one_cycle_maxLR,
+#                                                                        epochs = epochs)
+#            self.lr_scheduler_discr = torch.optim.lr_scheduler.OneCycleLR(self.model.optimizer_discr, 
+#                                                                        steps_per_epoch=len(self.trainloader),
+#                                                                        max_lr=one_cycle_maxLR,
+#                                                                        epochs = epochs)
+#        else:
+#            self.lr_policy = None
+#            self.lr_scheduler_gen = torch.optim.lr_scheduler.StepLR(self.model.optimizer_gen,
+#                                                                    step_size=20, gamma=1)
+#            self.lr_scheduler_discr = torch.optim.lr_scheduler.StepLR(self.model.optimizer_discr,
+#                                                                      step_size=20, gamma=1)
+            
         
         self.es = EarlyStopping(self.opt.patience)
         self.lrDecay = LR_decay(self.opt.lr_gen)
@@ -398,9 +467,9 @@ class AnomalyDetectionModel():
         return performance
     
     
-    def resumeTraining(self, epochs, save=True, lr_decay_value=None):
+    def resumeTraining(self, epochs, save=True, one_cycle_maxLR=None, decay=None):
         
-        performance = self._training_step(epochs, save)
+        performance = self._training_step(epochs, one_cycle_maxLR, decay, save)
         
         return performance
     

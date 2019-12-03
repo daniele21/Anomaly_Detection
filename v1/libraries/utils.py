@@ -99,7 +99,7 @@ class EarlyStopping():
         """
         PARAMS:
             
-            - opt.patience : patience (int): How long to wait after last time validation loss improved.
+            - patience : patience (int): How long to wait after last time validation loss improved.
                             Default: 7
             - verbose (bool): If True, prints a message for each validation loss improvement. 
                             Default: False

@@ -4,7 +4,7 @@ from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.options import Options
 from libraries.model.dataset import generateDataloader, getCifar10
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
-from libraries.model.adModel import AnomalyDetectionModel
+from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
 paths = Paths()
 
@@ -16,7 +16,7 @@ import torch
 from torch.optim import Adam
 from torchvision import transforms as Transforms
 from torch.autograd import Variable
-import sys
+
 #%% LOAD OPTIONS
 opt = Options()
 opt.name = 'Ganom_1_prova'
@@ -105,11 +105,21 @@ mtl = MultiLossWrapper(adModel, trainloader, 3)
 optim = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
 mtl.train(10, optim)
 #%% TRAINING MODEL
+epochs = 30
+
+opt.weightedLosses=False
+optimizer_weights = None
+
+#opt.weightedLosses=True
+#optimizer_weights = optimizer_gen
+
 
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
                                 trainloader, validLoader, testloader) 
 
-adModel.train_model(1)
+adModel.setLRscheduler(LR_ONECYCLE, 1e-04, epochs)
+
+adModel.train_model(epochs)
 
 
 #%%

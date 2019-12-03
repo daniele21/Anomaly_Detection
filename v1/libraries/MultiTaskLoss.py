@@ -13,6 +13,7 @@ import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 import pylab
+from time import time
 
 from libraries.utils import EarlyStopping
 
@@ -69,7 +70,7 @@ class MultiLossWrapper():
         self.loss = []
         
 #        optimizer = torch.optim.Adam(self.multiTaskLoss.parameters(), lr=1e-3)
-
+        start = time()
         for epoch in range(epochs):
             print('\n\nEpoch {}/{}'.format(epoch, epochs))
             
@@ -96,13 +97,14 @@ class MultiLossWrapper():
                 break
             
             print('\n')
-            print('loss_model: \t{:.2f}'.format(loss_mean))
+            print('loss_model: \t{:.2f}\n'.format(loss_mean))
             
+            print('Loss Weights:')
             print('w_adv: \t{:.2f}'.format(self.factors['ADV']))
             print('w_con: \t{:.2f}'.format(self.factors['CON']))
             print('w_enc: \t{:.2f}'.format(self.factors['ENC']))
-            
-            print('\nloss_wrapper: {:.2f}'.format(loss_mean))
+        
+        end = time()
         
         print('\n')
         print('loss_model: \t{:.2f}'.format(loss_mean))
@@ -112,6 +114,9 @@ class MultiLossWrapper():
         print('w_enc: \t{:.2f}'.format(self.factors['ENC']))
         
         print('\nloss_wrapper: {:.2f}'.format(loss_mean))
+        
+        minutes = (end - start) / 60
+        print('Spent time: {:.3f}'.format(minutes))
         self.plotLoss()
         
     def plotLoss(self):
