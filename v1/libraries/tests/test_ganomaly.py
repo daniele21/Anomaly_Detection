@@ -23,8 +23,8 @@ opt.name = 'Ganom_1_prova.1'
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
 
-opt.nFolders = 30
-opt.patch_per_im = 100
+opt.nFolders = 60
+opt.patch_per_im = 500
 
 #opt.nFolders = 30
 #opt.patch_per_im = 1000
@@ -47,11 +47,11 @@ my_dataloader = generateDataloader(opt)
 
 #%% LOAD DATASET
 
-with open(paths.dataloaders + 'v1_60-500-30k.pickle', 'rb') as data:
+with open(paths.dataloaders + 'v1_b&w_60-500-30k.pickle', 'rb') as data:
     my_dataloader = pickle.load(data)
 
 #%% SAVE DATASET
-filename = 'v1_b&w_60-500-30k.pickle'
+filename = 'v1_60-500-30k.pickle'
 with open(paths.dataloaders + '/v1' + filename, 'wb') as f:
     pickle.dump(my_dataloader, f)
 #%%
@@ -77,7 +77,7 @@ opt.w_adv = 1
 opt.w_con = 50
 opt.w_enc = 1
 
-opt.weightedLosses = True
+opt.weightedLosses = False
 
 epochs = 30
 
@@ -102,7 +102,7 @@ adModel = torch.load(path_file)
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
                                 trainloader, validLoader, testloader) 
 
-adModel.train_model(epochs)
+adModel.train_model(1)
 
 #%% RESUME LEARNING
 ##

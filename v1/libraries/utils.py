@@ -36,21 +36,49 @@ paths = Paths()
 #%% CHECKPOINT
 class Checkpoint():
     
-    def __init__(self, model, optimizer, trainloss, validloss, epoch,
-                 filename, save):   
+#    def __init__(self, model, optimizer_gen, optimizer_discr, optimizer_weights,
+#                 trainloss, validloss, folder_save, auc, threshold,
+#                 scores, gt_labels, epoch, filename, save, opt):   
+    def __init__(self, model):   
         
         self.model = model
-        self.trainloss = trainloss
-        self.validloss = validloss
-        self.epoch = epoch
-        self.filename = filename
-        self.save = save   
+#        self.trainloss = trainloss
+#        self.validloss = validloss
+#        self.optimizer_gen = optimizer_gen
+#        self.optimizer_discr = optimizer_discr
+#        self.optimizer_weights = optimizer_weights
+#        self.folder_save = folder_save
+#        self.auc = auc
+#        self.threshold = threshold
+#        self.scores = scores
+#        self.gt_labels = gt_labels
+#        self.epoch = epoch
+#        self.filename = filename
+#        self.save = save   
+#        
+        self.trainloss = model.train_loss
+        self.validloss = model.val_loss
+        self.optimizer_gen = model.model.optimizer_gen
+        self.optimizer_discr = model.model.optimizer_discr
+        self.optimizer_weights = model.model.optimizer_weights
+        self.folder_save = model.folder_save
+        self.auc = model.auc
+        self.threshold = model.threshold
+        self.scores = model.scores
+        self.gt_labels = model.gt_labels
+        self.epoch = model.epoch
+        self.opt = model.opt
 
-    def saveCheckpoint(self):
-        if(self.save):
-            torch.save(self, self.filename)
-            self._toTable()
-
+    def saveCheckpoint(self, valid_loss):
+        
+        path_file = '{0}/CKP_{1}_lr:{2}|Epoch:{3}|Auc:{4:.3f}|Loss:{5:.4f}.pth.tar'.format(self.folder_save,
+                                                                             self.opt.name,
+                                                                             self.opt.lr_gen,
+                                                                             self.epoch,
+                                                                             self.auc,
+                                                                             valid_loss)
+        
+        torch.save(self, path_file)
     
 
     def __repr__(self):

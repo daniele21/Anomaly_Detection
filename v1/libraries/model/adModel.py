@@ -18,7 +18,7 @@ from torch.autograd import Variable
 from libraries.model.ganomaly_network import GanomalyModel
 from libraries.model.evaluate import evaluate
 from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR_decay
-from libraries.utils import Paths, ensure_folder, getNmeans
+from libraries.utils import Paths, ensure_folder, getNmeans, Checkpoint
 paths = Paths()
 
 from libraries.dataset_package.dataset_manager import generatePatches
@@ -29,16 +29,37 @@ DISCRIMINATOR = 'DISCRIMINATOR'
 device = torch.device('cuda:0')
 #%%
 
-def loadModel(filename):
+#def loadModel(filename):
+#        
+#    model_name = filename.split('_')[0] + '_' + filename.split('_')[1]
+#    path_file = paths.checkpoint_folder + model_name + '/' + filename
+#    
+#    return torch.load(path_file)
+
+def loadModel(filename, trainloader, validloader, testloader):
         
-    model_name = filename.split('_')[0] + '_' + filename.split('_')[1]
+    model_name = filename.split('_')[1] + '_' + filename.split('_')[2]
     path_file = paths.checkpoint_folder + model_name + '/' + filename
     
-    return torch.load(path_file)
+    ckp = torch.load(path_file)
+    
+    adModel = AnomalyDetectionModel(ckp.opt, ckp.optimizer_gen, ckp.optimizer_discr,
+                                    ckp.optimizer_weights)
+    adModel.initLoaders(trainloader, validloader, testloader)
+    adModel.folder_save = ckp.folder_save
+    adModel.train_loss = ckp.trainloss
+    adModel.val_loss = ckp.validloss
+    adModel.epoch = ckp.epoch
+    adModel.auc = ckp.auc
+    adModel.threshold = ckp.threshold
+    adModel.gt_labels = ckp.gt_labels
+    adModel.scores = ckp.scores
+    
+    return adModel
 
 class AnomalyDetectionModel():
     
-    def __init__(self, opt, optim_gen, optim_discr, optim_weights,
+    def __init__(self, opt, optim_gen, optim_discr, optim_weights=None,
                  trainloader=None, validationloader=None, testloader=None):
         
         self.model              = GanomalyModel(opt)
@@ -46,16 +67,13 @@ class AnomalyDetectionModel():
 #        optimizer_discr         = optim_discr(self.model.discriminator.parameters(), opt.lr_discr)
 #        optimizer_weights       = optim_gen(self.model.w_losses, opt.lr_gen)
         self.model.init_optim(optim_gen, optim_discr, optim_weights)
-        self.trainloader        = trainloader
-        self.validationloader   = validationloader
-        self.testloader         = testloader
+        self.initLoaders(trainloader, validationloader, testloader)
         self.opt                = opt
     
-    def loadTrainloader(self, trainloader):
-        self.trainloader = trainloader
-        
-    def loadValidationLoader(self, validationloader):
-        self.validationloader = validationloader
+    def initLoaders(self, trainloader, validloader, testloader):
+        self.trainloader        = trainloader
+        self.validationloader   = validloader
+        self.testloader         = testloader
     
     def get_loss(self):
         
@@ -564,7 +582,7 @@ class AnomalyDetectionModel():
         self.folder_save = paths.checkpoint_folder + self.opt.name + '/'
         ensure_folder(self.folder_save)
         
-        path_file = '{0}/{1}_lr:{2}|Epoch:{3}|Auc:{4:.3f}|Loss:{5:.4f}.pth.tar'.format(self.folder_save,
+        path_file = '{0}/MODEL_{1}_lr:{2}|Epoch:{3}|Auc:{4:.3f}|Loss:{5:.4f}.pth.tar'.format(self.folder_save,
                                                                              self.opt.name,
                                                                              self.opt.lr_gen,
                                                                              self.epoch,
@@ -572,7 +590,10 @@ class AnomalyDetectionModel():
                                                                              valid_loss)
         
         torch.save(self, path_file)
-#        print('3.Model: ', self.model)
+        
+        # SAVE JUST A CHECKPOINT
+        ckp = Checkpoint(self)
+        ckp.saveCheckpoint(valid_loss)
         
     def tuneLearningRate(self, inf_bound_gen, sup_bound_gen, inf_bound_discr, sup_bound_discr):
         
