@@ -781,17 +781,18 @@ def extractPatchesForTest(train, index, shape, stride, model_name):
     img.model_name = model_name
     
     father_folder = paths.test_patched + model_name + '/'
-    if(os.path.exists(father_folder) == False):
-        print('Creating directory ..{}'.format(father_folder))
-        os.mkdir(father_folder)
+#    if(os.path.exists(father_folder) == False):
+#        print('Creating directory ..{}'.format(father_folder))
+#        os.mkdir(father_folder)
+    ensure_folder(father_folder)
     
     img.folder_save = father_folder + str(index) + '_' + filename.split('.')[0] + '/'
 #    directory = paths.test_patched + img.folder_save + '/'
     
-    if(os.path.exists(img.folder_save) == False):
-        print('Creating directory ..{}'.format(img.folder_save))
-        os.mkdir(img.folder_save)
-    
+#    if(os.path.exists(img.folder_save) == False):
+#        print('Creating directory ..{}'.format(img.folder_save))
+#        os.mkdir(img.folder_save)
+    ensure_folder(img.folder_save)
     
     print('Salvataggio')
     
