@@ -426,10 +426,13 @@ class AnomalyDetectionModel():
                 else:
                     break
         
-            
+            print('Multi loss task weighting')
             steps = 30
             mlt = MultiLossWrapper(self, self.trainloader, 3)
             w_adv, w_con, w_enc = mlt.train(steps, self.model.optimizer_gen)
+            print(w_adv)
+            print(w_con)
+            print(w_enc)
             self.model.setWeights(w_adv, w_con, w_enc)
         
         
