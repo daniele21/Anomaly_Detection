@@ -426,9 +426,10 @@ class AnomalyDetectionModel():
                 else:
                     break
         
-            epochs = 30
+            
+            steps = 30
             mlt = MultiLossWrapper(self, self.trainloader, 3)
-            w_adv, w_con, w_enc = mlt.train(epochs, self.model.optimizer_gen)
+            w_adv, w_con, w_enc = mlt.train(steps, self.model.optimizer_gen)
             self.model.setWeights(w_adv, w_con, w_enc)
         
         

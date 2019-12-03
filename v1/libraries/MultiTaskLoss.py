@@ -65,6 +65,7 @@ class MultiLossWrapper():
         self.data = dataloader
         
     def train(self, epochs, optimizer, patience=2, verbose=0):
+        print('Multi loss weighting')
         self.multiTaskLoss.train()
         self.es = EarlyStopping(patience)
         self.loss = []
