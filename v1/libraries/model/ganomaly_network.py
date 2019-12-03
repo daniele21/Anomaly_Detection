@@ -79,6 +79,8 @@ class GanomalyModel():
         
         if(self.weightedLosses):
             self.optimizer_weights = optimizer_weights(self.w_losses, self.lr_gen)
+        else:
+            self.optimizer_weights = None
     
     def train(self):
         self.generator.train()

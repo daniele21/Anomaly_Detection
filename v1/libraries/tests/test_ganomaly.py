@@ -114,7 +114,7 @@ optimizer_weights = None
 #optimizer_weights = optimizer_gen
 
 
-adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
+adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_weights,
                                 trainloader, validLoader, testloader) 
 
 adModel.setLRscheduler(LR_ONECYCLE, 1e-04, epochs)

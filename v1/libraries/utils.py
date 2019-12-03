@@ -64,7 +64,7 @@ class Checkpoint():
         self.folder_save = model.folder_save
         self.auc = model.auc
         self.threshold = model.threshold
-        self.scores = model.scores
+        self.scores = model.anomaly_scores
         self.gt_labels = model.gt_labels
         self.epoch = model.epoch
         self.opt = model.opt
