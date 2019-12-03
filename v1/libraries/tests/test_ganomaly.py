@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #%%
+from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.options import Options
 from libraries.model.dataset import generateDataloader, getCifar10
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
@@ -18,7 +19,7 @@ from torch.autograd import Variable
 import sys
 #%% LOAD OPTIONS
 opt = Options()
-opt.name = 'Ganom_1_prova.1'
+opt.name = 'Ganom_1_prova'
 
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
@@ -47,7 +48,7 @@ my_dataloader = generateDataloader(opt)
 
 #%% LOAD DATASET
 
-with open(paths.dataloaders + 'v1_b&w_60-500-30k.pickle', 'rb') as data:
+with open(paths.dataloaders + 'v1_aug_60-500-30k.pickle', 'rb') as data:
     my_dataloader = pickle.load(data)
 
 #%% SAVE DATASET
@@ -96,7 +97,13 @@ path_file = paths.checkpoint_folder + opt.name + '/' + nome_ckp
 print(path_file)
 #adModel.loadCheckPoint(path_file)
 adModel = torch.load(path_file)
+#%% MULTI TASK LOSS WEIGHTS
+adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
+                                trainloader, validLoader, testloader) 
 
+mtl = MultiLossWrapper(adModel, trainloader, 3)
+optim = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
+mtl.train(10, optim)
 #%% TRAINING MODEL
 
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
@@ -104,18 +111,7 @@ adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_ge
 
 adModel.train_model(1)
 
-#%% RESUME LEARNING
-##
-##adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr) 
-##adModel.loadTrainloader(trainloader)
-##adModel.loadValidationLoader(validLoader)
-#
-#opt.name = 'Ganom_v6.0'
-#nome_ckp = 'Ganom_v6.0_lr:1e-07|Epoch:87|Auc:0.879|Loss:228.2375.pth.tar'
-#path_file = paths.checkpoint_folder + opt.name + '/' + nome_ckp
-#print(path_file)
-##adModel.loadCheckPoint(path_file)
-#adModel = torch.load(path_file)
+
 #%%
 opt.lr_gen = 1*1e-04
 #opt.lr_discr = 5*1e-05

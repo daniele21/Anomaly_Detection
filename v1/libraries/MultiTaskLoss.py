@@ -11,9 +11,10 @@ import torch
 import torch.nn as nn
 
 import numpy as np
+from tqdm import tqdm
 import pylab
 
-from tqdm import tqdm
+from libraries.utils import EarlyStopping
 
 device = torch.device('cuda:0')
 #%%
@@ -62,12 +63,12 @@ class MultiLossWrapper():
         self.multiTaskLoss = MultiTaskLoss(model, n_losses).to(device)
         self.data = dataloader
         
-    def train(self, epochs, optimizer):
+    def train(self, epochs, optimizer, patience=2):
         self.multiTaskLoss.train()
-        
+        self.es = EarlyStopping(patience)
         self.loss = []
         
-        optimizer = torch.optim.Adam(self.multiTaskLoss.parameters(), lr=1e-3)
+#        optimizer = torch.optim.Adam(self.multiTaskLoss.parameters(), lr=1e-3)
 
         for epoch in range(epochs):
             print('\n\nEpoch {}/{}'.format(epoch, epochs))
@@ -89,21 +90,36 @@ class MultiLossWrapper():
         
             loss_mean = np.mean(loss_list)
             self.loss.append(loss_mean)
+            self.es(loss_mean)
+            
+            if(self.es.early_stop):
+                break
             
             print('\n')
-            print('loss: \t{}'.format(loss_mean))
+            print('loss_model: \t{:.2f}'.format(loss_mean))
             
-            print('w_adv: \t{}'.format(self.factors['ADV']))
-            print('w_con: \t{}'.format(self.factors['CON']))
-            print('w_enc: \t{}'.format(self.factors['ENC']))
+            print('w_adv: \t{:.2f}'.format(self.factors['ADV']))
+            print('w_con: \t{:.2f}'.format(self.factors['CON']))
+            print('w_enc: \t{:.2f}'.format(self.factors['ENC']))
             
+            print('\nloss_wrapper: {:.2f}'.format(loss_mean))
+        
+        print('\n')
+        print('loss_model: \t{:.2f}'.format(loss_mean))
+        
+        print('w_adv: \t{:.2f}'.format(self.factors['ADV']))
+        print('w_con: \t{:.2f}'.format(self.factors['CON']))
+        print('w_enc: \t{:.2f}'.format(self.factors['ENC']))
+        
+        print('\nloss_wrapper: {:.2f}'.format(loss_mean))
+        self.plotLoss()
         
     def plotLoss(self):
         pylab.plot(self.loss)
         pylab.show()
 
     def get_LogVars(self):
-        return self.multiTaskLoss.log_vars        
+        return self.multiTaskLoss.log_vars
         
         
         

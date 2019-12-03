@@ -281,7 +281,7 @@ class AnomalyDetectionModel():
         start_epoch = self.epoch
         end_epochs = epochs
         
-        self.es = EarlyStopping(self.opt)
+        self.es = EarlyStopping(self.opt.patience)
         self.lrDecay = LR_decay(self.opt.lr_gen)
         
         for self.epoch in range(self.epoch, epochs):
