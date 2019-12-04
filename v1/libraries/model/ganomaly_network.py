@@ -299,7 +299,7 @@ class GanomalyModel():
     def optimize_discr(self, loss_discr):
         
         self.optimizer_discr.zero_grad()
-        loss_discr.backward()
+        loss_discr.backward(retain_graph=True)
         self.optimizer_discr.step()
         
         if(loss_discr.item() < 1e-5):
