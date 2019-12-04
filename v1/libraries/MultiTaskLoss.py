@@ -51,7 +51,7 @@ class MultiTaskLoss(nn.Module):
         factor_enc = torch.exp(-self.log_vars[2])
         loss += torch.sum(factor_enc * loss_enc + self.log_vars[2], -1)
         
-        loss = torch.mean(loss)
+#        loss = torch.mean(loss)
         
         factors = {'ADV':factor_adv, 'CON':factor_con, 'ENC':factor_enc}
         

@@ -267,7 +267,7 @@ class GanomalyModel():
     def optimize_gen(self, loss_gen, l0):
         
         self.optimizer_gen.zero_grad()
-        loss_gen.backward(retain_graph=True)
+        loss_gen.backward()
         
         # ADAPTING WEIGHT LOSSES
         if(self.weightedLosses):
