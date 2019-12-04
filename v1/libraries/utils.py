@@ -56,11 +56,16 @@ class Checkpoint():
 #        self.filename = filename
 #        self.save = save   
 #        
-        self.trainloss = model.train_loss
-        self.validloss = model.val_loss
-        self.optimizer_gen = model.model.optimizer_gen
-        self.optimizer_discr = model.model.optimizer_discr
-        self.optimizer_weights = model.model.optimizer_weights
+        self.train_loss = model.train_loss
+        self.train_adv_loss = model.train_adv_loss
+        self.train_con_loss = model.train_con_loss
+        self.train_enc_loss = model.train_enc_loss
+        
+        self.valid_loss = model.val_loss
+        self.valid_adv_loss = model.valid_adv_loss
+        self.valid_con_loss = model.valid_con_loss
+        self.valid_enc_loss = model.valid_enc_loss
+        
         self.folder_save = model.folder_save
         self.auc = model.auc
         self.threshold = model.threshold

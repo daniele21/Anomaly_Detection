@@ -116,7 +116,8 @@ optimizer_weights = None
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_weights,
                                 trainloader, validLoader, testloader) 
 
-adModel.setLRscheduler(LR_ONECYCLE, 1e-04, epochs)
+#adModel.setLRscheduler(LR_ONECYCLE, 1e-04, epochs)
+adModel.setLRscheduler('decay', 0.3, epochs)
 
 adModel.train_model(epochs)
 
@@ -136,7 +137,15 @@ adModel.evaluateRoc()
 
 #%% TEST SET ERROR
 anom_set = collectAnomalySamples(100)
-norm_set = collectNormalSamples(90, 80)
+norm_set = collectNormalSamples(100, 200)
+
+filename = 'v1_anom-set_22k.pickle'
+with open(paths.dataloaders + '/v1' + filename, 'wb') as f:
+    pickle.dump(anom_set, f)
+    
+filename = 'v1_norm-set_20k.pickle'
+with open(paths.dataloaders + '/v1' + filename, 'wb') as f:
+    pickle.dump(norm_set, f)
 #%% PREDICT
 
 i = 0

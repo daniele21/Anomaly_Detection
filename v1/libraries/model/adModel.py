@@ -45,8 +45,7 @@ def loadModel(filename, trainloader, validloader, testloader):
     path_file = filename
     ckp = torch.load(path_file)
     
-    adModel = AnomalyDetectionModel(ckp.opt, ckp.optimizer_gen, ckp.optimizer_discr,
-                                    ckp.optimizer_weights)
+    adModel = AnomalyDetectionModel(ckp.opt)
     adModel.initLoaders(trainloader, validloader, testloader)
     adModel.folder_save = ckp.folder_save
     adModel.train_loss = ckp.trainloss
@@ -61,7 +60,7 @@ def loadModel(filename, trainloader, validloader, testloader):
 
 class AnomalyDetectionModel():
     
-    def __init__(self, opt, optim_gen, optim_discr, optim_weights=None,
+    def __init__(self, opt, optim_gen=None, optim_discr=None, optim_weights=None,
                  trainloader=None, validationloader=None, testloader=None):
         
         self.model              = GanomalyModel(opt)

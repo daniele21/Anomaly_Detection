@@ -74,6 +74,9 @@ class GanomalyModel():
         self.fake_label = torch.zeros(size=(opt.batch_size,), dtype=torch.float32, device=device)
     
     def init_optim(self, optim_gen, optim_discr, optimizer_weights):
+        if(optim_gen is None and optim_discr is None and optimizer_weights is None):
+            return 
+    
         self.optimizer_gen = optim_gen(self.generator.parameters(), self.lr_gen)
         self.optimizer_discr = optim_discr(self.discriminator.parameters(), self.lr_discr)
         
@@ -81,6 +84,13 @@ class GanomalyModel():
             self.optimizer_weights = optimizer_weights(self.w_losses, self.lr_gen)
         else:
             self.optimizer_weights = None
+    
+    def setLR(self, lr):
+        self.optimizer_gen.param_groups[0]['lr']=lr
+        self.optimizer_discr.param_groups[0]['lr']=lr
+        
+        if(self.weightedLosses):
+            self.optimizer_weights.param_groups[0]['lr']=lr
     
     def setWeights(self, w_adv, w_con, w_enc):
         
