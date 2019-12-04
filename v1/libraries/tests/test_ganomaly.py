@@ -4,7 +4,7 @@ from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.options import Options
 from libraries.model.dataset import generateDataloader, getCifar10
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
-from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE
+from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE, loadModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
 paths = Paths()
 
@@ -86,18 +86,15 @@ epochs = 30
 tuning = adModel.tuneLearningRate(-6, -7, -6, -7)
 
 #%% LOAD MODEL
-optimizer_gen = Adam
-optimizer_discr = Adam
-
-adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr) 
-
-opt.name = 'Ganom_v12.0'
-nome_ckp = 'Ganom_v12.0_lr:1e-06|Epoch:201|Auc:0.901|Loss:178.0066.pth.tar'
+#opt = Options()
+opt.name = 'Ganom_v1_v3.0'
+nome_ckp = 'CKP_Ganom_v1_v3.0_lr_5e-05_Epoch_36_Auc_0.783_Loss_155.4654.pth.tar'
 path_file = paths.checkpoint_folder + opt.name + '/' + nome_ckp
 print(path_file)
-#adModel.loadCheckPoint(path_file)
-adModel = torch.load(path_file)
 
+#adModel = torch.load(path_file)
+ckp = loadModel(path_file, trainloader, validLoader, testloader)
+#ckp = loadModel(, trainloader, validLoader, testloader)
 #%% MULTI TASK LOSS WEIGHTS
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
                                 trainloader, validLoader, testloader) 

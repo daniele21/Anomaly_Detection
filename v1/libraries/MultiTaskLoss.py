@@ -73,7 +73,7 @@ class MultiLossWrapper():
 #        optimizer = torch.optim.Adam(self.multiTaskLoss.parameters(), lr=1e-3)
         start = time()
         for epoch in range(epochs):
-            print('\n\nEpoch {}/{}'.format(epoch, epochs))
+            print('\n\nMulti-loss Epoch {}/{}'.format(epoch, epochs))
             
             loss_list = []
             

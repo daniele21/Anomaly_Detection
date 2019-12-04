@@ -42,6 +42,7 @@ class Options():
                  w_adv          = 1,
                  w_con          = 50,
                  w_enc          = 1,
+                 multiTaskLoss  = False,
                  
                  dataset        = '',
                  descr          = '',

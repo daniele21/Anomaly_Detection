@@ -39,9 +39,10 @@ device = torch.device('cuda:0')
 
 def loadModel(filename, trainloader, validloader, testloader):
         
-    model_name = filename.split('_')[1] + '_' + filename.split('_')[2]
-    path_file = paths.checkpoint_folder + model_name + '/' + filename
-    
+#    model_name = filename.split('_')[1] + '_' + filename.split('_')[3]
+#    path_file = paths.checkpoint_folder + model_name + '/' + filename
+       
+    path_file = filename
     ckp = torch.load(path_file)
     
     adModel = AnomalyDetectionModel(ckp.opt, ckp.optimizer_gen, ckp.optimizer_discr,
@@ -427,13 +428,16 @@ class AnomalyDetectionModel():
                     break
         
 #            print('Multi loss task weighting')
-            steps = 30
-            mlt = MultiLossWrapper(self, self.trainloader, 3)
-            w_adv, w_con, w_enc = mlt.train(steps, torch.optim.Adam(mlt.multiTaskLoss.parameters(), lr=1e-03))
-#            print(w_adv)
-#            print(w_con)
-#            print(w_enc)
-            self.model.setWeights(w_adv, w_con, w_enc)
+            if(self.opt.multiTaskLoss):
+                print('\n')
+                print('Multi Task Losses\n')
+                steps = 30
+                mlt = MultiLossWrapper(self, self.trainloader, 3)
+                w_adv, w_con, w_enc = mlt.train(steps, torch.optim.Adam(mlt.multiTaskLoss.parameters(), lr=1e-03))
+    #            print(w_adv)
+    #            print(w_con)
+    #            print(w_enc)
+                self.model.setWeights(w_adv, w_con, w_enc)
         
         
         self.saveCheckPoint(valid_loss)
