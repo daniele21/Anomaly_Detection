@@ -93,6 +93,7 @@ class Options():
         self.w_adv          = w_adv
         self.w_con          = w_con
         self.w_enc          = w_enc
+        self.multiTaskLoss = multiTaskLoss
         
         self.dataset        = dataset
         self.descr          = descr
