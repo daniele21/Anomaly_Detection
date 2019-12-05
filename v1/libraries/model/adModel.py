@@ -48,8 +48,8 @@ def loadModel(filename, trainloader, validloader, testloader):
     adModel = AnomalyDetectionModel(ckp.opt)
     adModel.initLoaders(trainloader, validloader, testloader)
     adModel.folder_save = ckp.folder_save
-    adModel.train_loss = ckp.trainloss
-    adModel.val_loss = ckp.validloss
+#    adModel.train_loss = ckp.trainloss
+#    adModel.val_loss = ckp.validloss
     adModel.epoch = ckp.epoch
     adModel.auc = ckp.auc
     adModel.threshold = ckp.threshold
