@@ -258,7 +258,7 @@ class GanomalyModel():
 #        print('3.')
 #        print(self.gradLoss(G3, C3))
         Lgrad = self.gradLoss(G1, C1) + self.gradLoss(G2, C2) + self.gradLoss(G3, C3)
-        Lgrad.backward(retain_graph=True)
+        Lgrad.backward()
         
         # Updating loss weights
         self.optimizer_weights.step()
@@ -269,37 +269,37 @@ class GanomalyModel():
         self.optimizer_gen.zero_grad()
         loss_gen.backward()
         
-        # ADAPTING WEIGHT LOSSES
-        if(self.weightedLosses):
-            self.weighting_losses(l0)
-            # --------------------
-            
-            # Updating the model weights
-            self.optimizer_gen.step()
-            
-            # ADAPTING WEIGHT LOSSES
-            
-            # Renormalizing the losses weights
-            coef = 3/(self.w_adv + self.w_con + self.w_enc)
-#            coef = 1
-            self.w_losses = [coef*self.w_adv, coef*self.w_con, coef*self.w_enc]
-            
-#            print('\n------------------------\n')
-#            print('> Loss weights')
-#            print('w_adv: {}'.format(self.w_adv[0]))
-#            print('w_con: {}'.format(self.w_con[0]))
-#            print('w_enc: {}'.format(self.w_enc[0]))
-#            print('----------------------------')
-#            return self.w_adv, self.w_con, self.w_enc
-         # --------------------
-        else:
-            self.optimizer_gen.step()       
+#        # ADAPTING WEIGHT LOSSES
+#        if(self.weightedLosses):
+#            self.weighting_losses(l0)
+#            # --------------------
+#            
+#            # Updating the model weights
+#            self.optimizer_gen.step()
+#            
+#            # ADAPTING WEIGHT LOSSES
+#            
+#            # Renormalizing the losses weights
+#            coef = 3/(self.w_adv + self.w_con + self.w_enc)
+##            coef = 1
+#            self.w_losses = [coef*self.w_adv, coef*self.w_con, coef*self.w_enc]
+#            
+##            print('\n------------------------\n')
+##            print('> Loss weights')
+##            print('w_adv: {}'.format(self.w_adv[0]))
+##            print('w_con: {}'.format(self.w_con[0]))
+##            print('w_enc: {}'.format(self.w_enc[0]))
+##            print('----------------------------')
+##            return self.w_adv, self.w_con, self.w_enc
+#         # --------------------
+#        else:
+#            self.optimizer_gen.step()       
         
     
     def optimize_discr(self, loss_discr):
         
         self.optimizer_discr.zero_grad()
-        loss_discr.backward(retain_graph=True)
+        loss_discr.backward()
         self.optimizer_discr.step()
         
         if(loss_discr.item() < 1e-5):
