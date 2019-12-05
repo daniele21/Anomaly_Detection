@@ -81,8 +81,6 @@ class MultiLossWrapper():
         self.es = EarlyStopping(patience)
         self.loss = []
         
-        optimizer = self.multiTaskLoss.optimizer
-        
         start = time()
         for epoch in range(epochs):
             print('\n\nMulti-loss Epoch {}/{}'.format(epoch, epochs))
@@ -96,9 +94,9 @@ class MultiLossWrapper():
         
                 loss, log_vars, self.factors = self.multiTaskLoss(x)
                 
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
                 loss.backward(retain_graph=True)
-                optimizer.step()
+                self.optimizer.step()
                 
                 loss_list.append(loss.item() * x.size(0))
         
