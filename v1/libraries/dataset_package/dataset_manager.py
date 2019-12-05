@@ -362,8 +362,6 @@ class Image():
     def drawAnomalies(self, method='simple', patches=None, save=True):
         
         return
-        
-        
     
     def drawAnomaliesSimple(self, patches=None, save=True, info=''):
         '''
