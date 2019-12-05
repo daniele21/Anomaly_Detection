@@ -432,8 +432,8 @@ class AnomalyDetectionModel():
                 print('Multi Task Losses\n')
                 steps = 30
                 mtl = MultiLossWrapper(self, self.trainloader, 3)
-                optimizer = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
-#                optimizer = torch.optim.SGD(mtl.multiTaskLoss.parameters(), lr=1e-01)
+#                optimizer = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
+                optimizer = torch.optim.SGD(mtl.multiTaskLoss.parameters(), lr=1e-01)
                 w_adv, w_con, w_enc = mtl.train(steps, optimizer)
                 self.model.setWeights(w_adv, w_con, w_enc)
         
