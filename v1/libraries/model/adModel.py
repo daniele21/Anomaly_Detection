@@ -129,6 +129,15 @@ class AnomalyDetectionModel():
             if(self.epoch == 0):
                 self.l0 = loss_gen.data
             
+            #---------------CHECK------------------
+            print('>----- CHECK--------')
+            print('LOSS GEN: {}'.format(loss_gen))
+            print('w_adv: {}'.format(losses[0]))
+            print('w_con: {}'.format(losses[1]))
+            print('w_enc: {}'.format(losses[2]))
+            #--------------------------------------
+            
+            
             # DISCRIMINATOR LOSS
             loss_discr = self.model.loss_function_discr(pred_real, pred_fake)
             
