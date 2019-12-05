@@ -38,10 +38,10 @@ class MultiTaskLoss(nn.Module):
         
     def forward(self, x):
         
-        x_prime, z, z_prime = self.forward_gen(x)
-        _, feat_real, _, feat_fake = self.forward_discr(x, x_prime)
+        x_prime, z, z_prime = self.model.forward_gen(x)
+        _, feat_real, _, feat_fake = self.model.forward_discr(x, x_prime)
         
-        _, [loss_adv, loss_con, loss_enc] = self.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real)
+        _, [loss_adv, loss_con, loss_enc] = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real)
         
         factor_adv = torch.exp(-self.log_vars[0])
         weighted_loss_adv = factor_adv * loss_adv + self.log_vars[0]
