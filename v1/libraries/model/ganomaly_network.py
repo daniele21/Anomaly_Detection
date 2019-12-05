@@ -267,34 +267,33 @@ class GanomalyModel():
     def optimize_gen(self, loss_gen, l0):
         
         self.optimizer_gen.zero_grad()
-        loss_gen.backward()
-        self.optimizer_gen.step()   
+        loss_gen.backward(retain_graph=True)
         
-#        # ADAPTING WEIGHT LOSSES
-#        if(self.weightedLosses):
-#            self.weighting_losses(l0)
-#            # --------------------
-#            
-#            # Updating the model weights
-#            self.optimizer_gen.step()
-#            
-#            # ADAPTING WEIGHT LOSSES
-#            
-#            # Renormalizing the losses weights
-#            coef = 3/(self.w_adv + self.w_con + self.w_enc)
-##            coef = 1
-#            self.w_losses = [coef*self.w_adv, coef*self.w_con, coef*self.w_enc]
-#            
-##            print('\n------------------------\n')
-##            print('> Loss weights')
-##            print('w_adv: {}'.format(self.w_adv[0]))
-##            print('w_con: {}'.format(self.w_con[0]))
-##            print('w_enc: {}'.format(self.w_enc[0]))
-##            print('----------------------------')
-##            return self.w_adv, self.w_con, self.w_enc
-#         # --------------------
-#        else:
-#            self.optimizer_gen.step()       
+        # ADAPTING WEIGHT LOSSES
+        if(self.weightedLosses):
+            self.weighting_losses(l0)
+            # --------------------
+            
+            # Updating the model weights
+            self.optimizer_gen.step()
+            
+            # ADAPTING WEIGHT LOSSES
+            
+            # Renormalizing the losses weights
+            coef = 3/(self.w_adv + self.w_con + self.w_enc)
+#            coef = 1
+            self.w_losses = [coef*self.w_adv, coef*self.w_con, coef*self.w_enc]
+            
+#            print('\n------------------------\n')
+#            print('> Loss weights')
+#            print('w_adv: {}'.format(self.w_adv[0]))
+#            print('w_con: {}'.format(self.w_con[0]))
+#            print('w_enc: {}'.format(self.w_enc[0]))
+#            print('----------------------------')
+#            return self.w_adv, self.w_con, self.w_enc
+         # --------------------
+        else:
+            self.optimizer_gen.step()       
         
     
     def optimize_discr(self, loss_discr):
