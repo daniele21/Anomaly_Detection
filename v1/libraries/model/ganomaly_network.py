@@ -44,23 +44,20 @@ class GanomalyModel():
         
         if(self.weightedLosses):
             
-#            self.w_adv = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
-#            self.w_con = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
-#            self.w_enc = torch.tensor(torch.FloatTensor([1]), requires_grad=True)
-            
-            self.w_adv = torch.FloatTensor([opt.w_adv])
-            self.w_adv.requires_grad=True
-            
-            self.w_con = torch.FloatTensor([opt.w_con])
-            self.w_con.requires_grad=True
-            
-            self.w_enc = torch.FloatTensor([opt.w_enc])
-            self.w_enc.requires_grad=True
-            
-            
-            self.w_losses = [self.w_adv, self.w_con, self.w_enc]
-            self.shared_layer = nn.Sequential(self.generator.decoder.net[-2:])
-            self.alpha = opt.alpha
+#            self.w_adv = torch.FloatTensor([opt.w_adv])
+#            self.w_adv.requires_grad=True
+#            
+#            self.w_con = torch.FloatTensor([opt.w_con])
+#            self.w_con.requires_grad=True
+#            
+#            self.w_enc = torch.FloatTensor([opt.w_enc])
+#            self.w_enc.requires_grad=True
+#            
+#            
+#            self.w_losses = [self.w_adv, self.w_con, self.w_enc]
+#            self.shared_layer = nn.Sequential(self.generator.decoder.net[-2:])
+#            self.alpha = opt.alpha
+            pass
         
         else:
             self.w_adv = opt.w_adv

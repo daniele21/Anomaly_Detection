@@ -113,6 +113,7 @@ class AnomalyDetectionModel():
         if(self.opt.multiTaskLoss):
             w_adv, w_con, w_enc = self.mtl.train(20, patience=1)
             self.model.setWeights(w_adv, w_con, w_enc)
+            print(self.model.w_losses)
         
         for images, labels in self.trainloader:
 
@@ -128,14 +129,6 @@ class AnomalyDetectionModel():
             loss_gen, losses = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real, self.opt)
             if(self.epoch == 0):
                 self.l0 = loss_gen.data
-            
-            #---------------CHECK------------------
-            print('>----- CHECK--------')
-            print('LOSS GEN: {}'.format(loss_gen))
-            print('w_adv: {}'.format(losses[0]))
-            print('w_con: {}'.format(losses[1]))
-            print('w_enc: {}'.format(losses[2]))
-            #--------------------------------------
             
             
             # DISCRIMINATOR LOSS
@@ -162,13 +155,13 @@ class AnomalyDetectionModel():
             print('\n------------------------\n')
             print('> Loss weights')
             try:
-                print('w_adv: {}'.format(self.model.w_adv[0]))
-                print('w_con: {}'.format(self.model.w_con[0]))
-                print('w_enc: {}'.format(self.model.w_enc[0]))
+                print('w_adv: {}'.format(self.model.w_losses[0]))
+                print('w_con: {}'.format(self.model.w_losses[0]))
+                print('w_enc: {}'.format(self.model.w_losses[0]))
             except:
-                print('w_adv: {}'.format(self.model.w_adv))
-                print('w_con: {}'.format(self.model.w_con))
-                print('w_enc: {}'.format(self.model.w_enc))
+                print('w_adv: {}'.format(self.model.w_losses[0]))
+                print('w_con: {}'.format(self.model.w_losses[0]))
+                print('w_enc: {}'.format(self.model.w_losses[0]))
             print('----------------------------')
             
         return train_loss, [adv_loss, con_loss, enc_loss], spent_time
