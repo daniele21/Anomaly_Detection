@@ -43,18 +43,27 @@ class MultiTaskLoss(nn.Module):
         _, [loss_adv, loss_con, loss_enc] = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real)
         
         factor_adv = torch.exp(-self.log_vars[0])
-        loss = torch.sum(factor_adv * loss_adv + self.log_vars[0], -1)
+        weighted_loss_adv = factor_adv * loss_adv + self.log_vars[0]
+        loss = torch.sum(weighted_loss_adv , -1)
         
         factor_con = torch.exp(-self.log_vars[1])
-        loss += torch.sum(factor_con * loss_con + self.log_vars[1], -1)
+        weighted_loss_con = factor_con * loss_con + self.log_vars[1]
+        loss += torch.sum(weighted_loss_con , -1)
         
         factor_enc = torch.exp(-self.log_vars[2])
-        loss += torch.sum(factor_enc * loss_enc + self.log_vars[2], -1)
+        weighted_loss_enc = factor_enc * loss_enc + self.log_vars[2]
+        loss += torch.sum(weighted_loss_enc, -1)
         
 #        loss = torch.mean(loss)
         
         factors = {'ADV':factor_adv, 'CON':factor_con, 'ENC':factor_enc}
         
+        print('Log vars')
+        print(self.log_vars.data.tolist())
+        print('\n')
+        print('w_loss_adv: {}'.format(weighted_loss_adv))
+        print('w_loss_con: {}'.format(weighted_loss_con))
+        print('w_loss_enc: {}'.format(weighted_loss_enc))
         return loss, self.log_vars.data.tolist(), factors
 
 
