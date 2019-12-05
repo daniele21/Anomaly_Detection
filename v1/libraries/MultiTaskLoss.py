@@ -158,12 +158,12 @@ class MultiLossWrapper():
         return self.multiTaskLoss.log_vars
     
 #%% 
-a = MultiLossWrapper(adModel.model, trainloader, 3)
-    
-a.freezeParams()
-a.activeParams()
-
-a.train(20)
+#a = MultiLossWrapper(adModel.model, trainloader, 3)
+#    
+#a.freezeParams()
+#a.activeParams()
+#
+#a.train(20)
 
 
 
