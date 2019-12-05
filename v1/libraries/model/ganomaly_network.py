@@ -69,9 +69,17 @@ class GanomalyModel():
             
             self.w_losses = [self.w_adv, self.w_con, self.w_enc]
             
+            print('Init:')
+            self.printOutLossWeights()
+            
         # INIZIALIZATION INPUT TENSOR
         self.real_label = torch.ones (size=(opt.batch_size,), dtype=torch.float32, device=device)
         self.fake_label = torch.zeros(size=(opt.batch_size,), dtype=torch.float32, device=device)
+    
+    def printOutLossWeights(self):
+        print('w_adv: {}'.format(self.w_losses[0]))
+        print('w_con: {}'.format(self.w_losses[1]))
+        print('w_enc: {}'.format(self.w_losses[2]))
     
     def init_optim(self, optim_gen, optim_discr, optimizer_weights):
         if(optim_gen is None and optim_discr is None and optimizer_weights is None):
