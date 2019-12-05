@@ -7,28 +7,16 @@ Created on Mon Nov 11 10:33:05 2019
 """
 
 #%% IMPORTS 
-import sys
-pkg_lib = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/libraries'
-pkg_dat = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master/dataset_package'
-sys.path.append(pkg_dat)
-sys.path.append(pkg_lib)
-
-import os
-curr_path = '/media/daniele/Data/Tesi/Practice/Code/ganomaly/ganomaly_master'
-
-
-
-from ganomaly import loadModel, outputSample
-from utils import Paths, writeDataResults
-from evaluate import evaluate, accuracy, precision, recall
+from libraries.model.adModel import loadModel, outputSample
+from libraries.utils import Paths, writeDataResults
+from libraries.model.evaluate import evaluate, accuracy, precision, recall
 paths = Paths()
 
 import pandas as pd
 
-os.chdir(curr_path)
-from dataset_package import dataset_manager as dm
-from dataset_package.dataset_manager import Shape
-from dataset import generateDataloaderTest
+from libraries.dataset_package import dataset_manager as dm
+from libraries.dataset_package.dataset_manager import Shape
+from libraries.model.dataset import generateDataloaderTest
 
 from matplotlib import pyplot as plt
 from tqdm import tqdm
@@ -127,7 +115,7 @@ def automaticEvaluation(model, start, end, stride):
     
     shape = Shape(32,32)
     model_name = model.opt.name
-    os.chdir(pkg_dat)
+#    os.chdir(pkg_dat)
     train = pd.read_csv('./train_unique.csv', index_col=0)
     
     for index in range(start, end):        
