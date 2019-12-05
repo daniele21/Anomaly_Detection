@@ -70,6 +70,8 @@ class AnomalyDetectionModel():
         self.model.init_optim(optim_gen, optim_discr, optim_weights)
         self.initLoaders(trainloader, validationloader, testloader)
         self.opt                = opt
+        self.mtl = MultiLossWrapper(self.model, trainloader, 3)
+        
     
     def initLoaders(self, trainloader, validloader, testloader):
         self.trainloader        = trainloader
@@ -117,6 +119,9 @@ class AnomalyDetectionModel():
             # DISCRIMINATOR FORWARD
             pred_real, feat_real, pred_fake, feat_fake = self.model.forward_discr(x, x_prime) 
             
+            if(self.opt.multiTaskLoss):
+                w_adv, w_con, w_enc = self.mtl.train(20, patience=1)
+                self.model.setWeights(w_adv, w_con, w_enc)
             
             # GENERATOR LOSS
             loss_gen, losses = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real, self.opt)
@@ -427,15 +432,15 @@ class AnomalyDetectionModel():
                     break
         
 #            print('Multi loss task weighting')
-            if(self.opt.multiTaskLoss):
-                print('\n')
-                print('Multi Task Losses\n')
-                steps = 30
-                mtl = MultiLossWrapper(self, self.trainloader, 3)
-#                optimizer = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
-                optimizer = torch.optim.SGD(mtl.multiTaskLoss.parameters(), lr=1e-01)
-                w_adv, w_con, w_enc = mtl.train(steps, optimizer)
-                self.model.setWeights(w_adv, w_con, w_enc)
+#            if(self.opt.multiTaskLoss):
+#                print('\n')
+#                print('Multi Task Losses\n')
+#                steps = 30
+#                mtl = MultiLossWrapper(self, self.trainloader, 3)
+##                optimizer = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
+#                optimizer = torch.optim.SGD(mtl.multiTaskLoss.parameters(), lr=1e-01)
+#                w_adv, w_con, w_enc = mtl.train(steps, optimizer)
+#                self.model.setWeights(w_adv, w_con, w_enc)
         
         
         self.saveCheckPoint(valid_loss)

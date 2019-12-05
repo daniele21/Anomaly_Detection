@@ -146,6 +146,7 @@ class GanomalyModel():
             self.w_enc_loss = self.w_losses[2] * enc_loss
         
         loss_gen = self.w_adv_loss + self.w_con_loss + self.w_enc_loss
+        
 #        print('--------CHECK----------')
 #        print('-----------------------')
 #        print('adv_loss: {}'.format(adv_loss))
@@ -167,6 +168,7 @@ class GanomalyModel():
 #        print('> Loss gen:')
 #        print(loss_gen.item())
 #        print('-----------------------')
+        
         return loss_gen, [adv_loss, con_loss, enc_loss]
                        
     def loss_function_discr(self, pred_real, pred_fake):

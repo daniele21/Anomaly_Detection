@@ -30,18 +30,18 @@ class MultiTaskLoss(nn.Module):
     
     '''
     
-    def __init__(self, adModel, n_losses):
+    def __init__(self, model, n_losses):
         super().__init__()
-        self.model = adModel.model
+        self.model = model
 #        self.log_vars = nn.Parameter(torch.zeros( (n_losses) ) )
         self.log_vars = nn.Parameter(torch.Tensor( [1., 1., 1.]) )
         
     def forward(self, x):
         
-        x_prime, z, z_prime = self.model.forward_gen(x)
-        _, feat_real, _, feat_fake = self.model.forward_discr(x, x_prime)
+        x_prime, z, z_prime = self.forward_gen(x)
+        _, feat_real, _, feat_fake = self.forward_discr(x, x_prime)
         
-        _, [loss_adv, loss_con, loss_enc] = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real)
+        _, [loss_adv, loss_con, loss_enc] = self.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real)
         
         factor_adv = torch.exp(-self.log_vars[0])
         weighted_loss_adv = factor_adv * loss_adv + self.log_vars[0]
@@ -73,14 +73,16 @@ class MultiLossWrapper():
     def __init__(self, model, dataloader, n_losses):
         self.multiTaskLoss = MultiTaskLoss(model, n_losses).to(device)
         self.data = dataloader
+        self.optimizer = torch.optim.Adam(self.multiTaskLoss.parameters(), lr=1e-3)
         
-    def train(self, epochs, optimizer, patience=2, verbose=1):
+    def train(self, epochs, patience=2, verbose=1):
         print('Multi loss weighting')
         self.multiTaskLoss.train()
         self.es = EarlyStopping(patience)
         self.loss = []
         
-#        optimizer = torch.optim.Adam(self.multiTaskLoss.parameters(), lr=1e-3)
+        optimizer = self.multiTaskLoss.optimizer
+        
         start = time()
         for epoch in range(epochs):
             print('\n\nMulti-loss Epoch {}/{}'.format(epoch, epochs))
