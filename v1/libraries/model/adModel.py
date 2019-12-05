@@ -431,11 +431,10 @@ class AnomalyDetectionModel():
                 print('\n')
                 print('Multi Task Losses\n')
                 steps = 30
-                mlt = MultiLossWrapper(self, self.trainloader, 3)
-                w_adv, w_con, w_enc = mlt.train(steps, torch.optim.Adam(mlt.multiTaskLoss.parameters(), lr=1e-03))
-    #            print(w_adv)
-    #            print(w_con)
-    #            print(w_enc)
+                mtl = MultiLossWrapper(self, self.trainloader, 3)
+                optimizer = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
+#                optimizer = torch.optim.SGD(mtl.multiTaskLoss.parameters(), lr=1e-01)
+                w_adv, w_con, w_enc = mtl.train(steps, optimizer)
                 self.model.setWeights(w_adv, w_con, w_enc)
         
         
@@ -672,7 +671,7 @@ class AnomalyDetectionModel():
                                                                              self.auc,
                                                                              valid_loss)
         
-        torch.save(self, path_file)
+#        torch.save(self, path_file)
         
         # SAVE JUST A CHECKPOINT
         ckp = Checkpoint(self)

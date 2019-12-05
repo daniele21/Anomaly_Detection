@@ -83,7 +83,7 @@ class Checkpoint():
                                                                              self.auc,
                                                                              valid_loss)
         
-        torch.save(self, path_file)
+#        torch.save(self, path_file)
     
 
     def __repr__(self):

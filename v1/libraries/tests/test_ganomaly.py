@@ -106,18 +106,21 @@ mtl.train(10, optim)
 #%% TRAINING MODEL
 epochs = 30
 
+# NORM GRAD
 opt.weightedLosses=False
 optimizer_weights = None
 
 #opt.weightedLosses=True
 #optimizer_weights = optimizer_gen
 
-
+# WEIGHTED LOSS TRAINING
+opt.multiTaskLoss = True
+opt.multiTaskLoss = False
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_weights,
                                 trainloader, validLoader, testloader) 
 
 #adModel.setLRscheduler(LR_ONECYCLE, 1e-04, epochs)
-adModel.setLRscheduler('decay', 0.3, epochs)
+#adModel.setLRscheduler('decay', 0.3, epochs)
 
 adModel.train_model(epochs)
 

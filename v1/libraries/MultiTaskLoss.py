@@ -33,7 +33,8 @@ class MultiTaskLoss(nn.Module):
     def __init__(self, adModel, n_losses):
         super().__init__()
         self.model = adModel.model
-        self.log_vars = nn.Parameter(torch.zeros( (n_losses) ) )
+#        self.log_vars = nn.Parameter(torch.zeros( (n_losses) ) )
+        self.log_vars = nn.Parameter(torch.Tensor( [1., 1., 1.]) )
         
     def forward(self, x):
         
@@ -58,12 +59,12 @@ class MultiTaskLoss(nn.Module):
         
         factors = {'ADV':factor_adv, 'CON':factor_con, 'ENC':factor_enc}
         
-        print('Log vars')
-        print(self.log_vars.data.tolist())
-        print('\n')
-        print('w_loss_adv: {}'.format(weighted_loss_adv))
-        print('w_loss_con: {}'.format(weighted_loss_con))
-        print('w_loss_enc: {}'.format(weighted_loss_enc))
+#        print('Log vars')
+#        print(self.log_vars.data.tolist())
+#        print('\n')
+#        print('w_loss_adv: {}'.format(weighted_loss_adv))
+#        print('w_loss_con: {}'.format(weighted_loss_con))
+#        print('w_loss_enc: {}'.format(weighted_loss_enc))
         return loss, self.log_vars.data.tolist(), factors
 
 
@@ -94,7 +95,7 @@ class MultiLossWrapper():
                 loss, log_vars, self.factors = self.multiTaskLoss(x)
                 
                 optimizer.zero_grad()
-                loss.backward()
+                loss.backward(retain_graph=True)
                 optimizer.step()
                 
                 loss_list.append(loss.item() * x.size(0))
@@ -141,9 +142,48 @@ class MultiLossWrapper():
 
     def get_LogVars(self):
         return self.multiTaskLoss.log_vars
-        
-        
-        
+    
+#%% 
+#class MultiTaskLoss(nn.Module):
+#    def __init__(self, model, loss_fn, eta):
+#        super(MultiTaskLoss, self).__init__()
+#        self.model = model
+##        self.loss_fn = loss_fn
+#        self.eta = nn.Parameter(torch.Tensor(eta))
+#
+#    def forward(self, input, targets):
+#        outputs = self.model(input)
+#        loss = [l(o,y).sum() for l, o, y in zip(self.loss_fn, outputs, targets)]
+#        total_loss = torch.Tensor(loss) * torch.exp(-self.eta) + self.eta
+#        return loss, total_loss.sum() # omit 1/2
+#
+#class MultiTaskModel(nn.Module):
+#    def __init__(self):
+#        super(MultiTaskModel, self).__init__()
+#        self.f1 = nn.Linear(5, 1, bias=False)
+#        self.f2 = nn.Linear(5, 1, bias=False)
+#
+#    def forward(self, input):
+#        outputs = [self.f1(x).squeeze(), self.f2(x).squeeze()]
+#        return outputs
+#
+#mtl = MultiTaskLoss(model=MultiTaskModel(),
+#                    loss_fn=[nn.MSELoss(), nn.MSELoss()],
+#                    eta=[2.0, 1.0])
+#
+#print(list(mtl.parameters()))
+#
+#x = torch.randn(3, 5)
+#y1 = torch.randn(3)
+#y2 = torch.randn(3)
+#
+#optimizer = optim.SGD(mtl.parameters(), lr=0.1)
+#optimizer.zero_grad()
+#loss, total_loss = mtl(x, [y1, y2])
+#print(loss, total_loss)
+#total_loss.backward()
+#optimizer.step()
+#        
         
         
         
