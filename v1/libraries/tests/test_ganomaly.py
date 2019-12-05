@@ -24,7 +24,7 @@ opt.name = 'Ganom_1_prova'
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
 
-opt.nFolders = 60
+opt.nFolders = 2
 opt.patch_per_im = 500
 
 #opt.nFolders = 30
@@ -101,7 +101,7 @@ adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_ge
 
 mtl = MultiLossWrapper(adModel, trainloader, 3)
 optim = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
-mtl.train(10, optim)
+mtl.train(40, optim)
 
 #%% TRAINING MODEL
 epochs = 30
@@ -115,7 +115,8 @@ optimizer_weights = None
 
 # WEIGHTED LOSS TRAINING
 opt.multiTaskLoss = True
-opt.multiTaskLoss = False
+#opt.multiTaskLoss = False
+
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_weights,
                                 trainloader, validLoader, testloader) 
 
