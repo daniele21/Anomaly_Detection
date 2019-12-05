@@ -105,6 +105,9 @@ class MultiLossWrapper():
                 print('w_adv: \t{:.2f}'.format(self.factors['ADV']))
                 print('w_con: \t{:.2f}'.format(self.factors['CON']))
                 print('w_enc: \t{:.2f}'.format(self.factors['ENC']))
+                
+                print('\nLog Vars:')
+                print(log_vars)
         
         end = time()
         
