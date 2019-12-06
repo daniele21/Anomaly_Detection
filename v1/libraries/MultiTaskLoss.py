@@ -73,10 +73,11 @@ class MultiLossWrapper():
     def __init__(self, model, dataloader, n_losses):
         self.multiTaskLoss = MultiTaskLoss(model, n_losses).to(device)
         self.data = dataloader
-        self.optimizer = torch.optim.Adam(self.multiTaskLoss.parameters(), lr=1e-3)
+        self.optimizer = torch.optim.SGD(self.multiTaskLoss.parameters(), lr=0.1)
+        
         
     def train(self, epochs, patience=2, verbose=1):
-        print('Multi loss weighting')
+        print('\n-->Multi loss weighting')
         self.multiTaskLoss.train()
         self.es = EarlyStopping(patience)
         self.loss = []
@@ -117,8 +118,8 @@ class MultiLossWrapper():
                 print('w_con: \t{:.2f}'.format(self.factors['CON']))
                 print('w_enc: \t{:.2f}'.format(self.factors['ENC']))
                 
-                print('\nLog Vars:')
-                print(log_vars)
+#                print('\nLog Vars:')
+#                print(log_vars)
         
         end = time()
         

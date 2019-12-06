@@ -19,7 +19,7 @@ from torch.autograd import Variable
 
 #%% LOAD OPTIONS
 opt = Options()
-opt.name = 'Ganom_1_prova'
+opt.name = 'Ganom_v1_v4.0'
 
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
@@ -69,13 +69,13 @@ testloader = dataloader['test']
 optimizer_gen = Adam
 optimizer_discr = Adam
 
-opt.lr_gen = 1*1e-04
-opt.lr_discr = 1*1e-04
+opt.lr_gen = 5*1e-05
+opt.lr_discr = 5*1e-05
 
 opt.patience = 5
 
 opt.w_adv = 1
-opt.w_con = 50
+opt.w_con = 1
 opt.w_enc = 1
 
 opt.weightedLosses = False
@@ -93,7 +93,7 @@ path_file = paths.checkpoint_folder + opt.name + '/' + nome_ckp
 print(path_file)
 
 #adModel = torch.load(path_file)
-ckp = loadModel(path_file, trainloader, validLoader, testloader)
+adModel = loadModel(path_file, trainloader, validLoader, testloader)
 #ckp = loadModel(, trainloader, validLoader, testloader)
 #%% MULTI TASK LOSS WEIGHTS
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,

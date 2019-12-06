@@ -110,10 +110,16 @@ class AnomalyDetectionModel():
         
 #        for images, labels in tqdm(self.trainloader, leave=True, total=n_iter, desc='Training', file = sys.stdout):
         
+#        for param in self.model.generator.parameters():
+#            param.requires_grad=False
+        
         if(self.opt.multiTaskLoss):
             w_adv, w_con, w_enc = self.mtl.train(20, patience=1)
             self.model.setWeights(w_adv, w_con, w_enc)
             print(self.model.w_losses)
+        
+#        for param in self.model.generator.parameters():
+#            param.requires_grad=True
         
         for images, labels in self.trainloader:
 
