@@ -13,6 +13,7 @@ import random
 from tqdm import tqdm 
 from copy import deepcopy
 import sys
+import math
 
 from libraries.utils import Paths, ensure_folder
 paths = Paths()
@@ -36,55 +37,40 @@ def _setupDataset(opt, train='normal', valid='normal', test='mixed'):
     n_images = opt.nFolders
     n_patches = n_images * patch_x_img
     
-    n_training_imgs = n_patches * opt.split
-    n_validation_imgs = n_patches * (1-opt.split)
-    n_test_imgs = n_patches * (1-opt.split)
+    n_training_imgs = math.ceil(n_patches * opt.split)
+    n_validation_imgs = math.ceil(n_patches * (1-opt.split))
+    n_test_imgs = math.ceil(n_patches * (1-opt.split))
+    
+    print(n_training_imgs)
+    print(n_validation_imgs)
+    print(n_test_imgs)
     
     training_set    = {'DATA':[], 'LABELS':[]}
     validation_set  = {'DATA':[], 'LABELS':[]}
     test_set        = {'DATA':[], 'LABELS':[]}
     
-    counter = 0
-    
-    folders = os.listdir(NORMAL_PATH)
-    random_folders = random.sample(folders, opt.nFolders)
-    
     start = time.time()
     
-    for index in random_folders:
-        counter += 1
-        print('\n')
-        print('Image n.', counter)
-        
-        path_normal = NORMAL_PATH + str(index) + '/'
-        path_anom = ANOM_PATH + str(index) + '/'
-        
-        norm_filename = os.listdir(path_normal)
-        random.shuffle(norm_filename)
-        
-        anom_filename = os.listdir(path_anom)
-        random.shuffle(anom_filename)
+    n_anom_patches = int((n_training_imgs + n_validation_imgs + n_test_imgs)/2)
+    anom_patches = createAnomalousPatches(n_anom_patches)
+    
+    n_norm_patches = int(n_training_imgs + n_validation_imgs + n_test_imgs)
+    norm_patches = createNormalPatches(n_norm_patches)
                     
-        # TRAINING SET
-        training_set = fillSet(train, norm_filename,
-                                      anom_filename, path_normal,
-                                                     path_anom, 
-                                                      
-                                                     n_training_imgs)
-        
-        # VALIDATION
-        validation_set = fillSet(valid, norm_filename[int(n_training_imgs):],
-                                        anom_filename[int(n_training_imgs):], path_normal, 
-                                                                              path_anom,
-                                                        
-                                                                              n_validation_imgs)
-        
-        # TEST
-        test_set = fillSet(test, norm_filename[int(n_training_imgs + n_validation_imgs):],
-                                 anom_filename[int(n_training_imgs + n_validation_imgs):], path_normal,
-                                                                                           path_anom,
-                                                                           
-                                                                                           n_test_imgs)
+    # TRAINING SET
+    training_set = fillSet(train, norm_patches, anom_patches, int(n_training_imgs))
+    
+    # VALIDATION
+    validation_set = fillSet(train, norm_patches[int(n_training_imgs):],
+                                    anom_patches[int(n_training_imgs//2) : ],
+                                    
+                                    int(n_validation_imgs))
+    
+    # TEST
+    test_set = fillSet(train, norm_patches[int(n_training_imgs + n_validation_imgs):],
+                              anom_patches[int(n_training_imgs//2) + int(n_validation_imgs//2): ],
+                              
+                              int(n_validation_imgs))
         
 
     print('\n')
@@ -98,7 +84,7 @@ def _setupDataset(opt, train='normal', valid='normal', test='mixed'):
     return training_set, validation_set, test_set
 
  
-def fillSet(set_type, norm_filename, anom_filename, path_normal, path_anom, n_images):
+def fillSet(set_type, norm_patches, anom_patches, n_images):
     '''
     DESCRIPTION:
             Automatic dataset filling for training, validation and testing sets
@@ -108,31 +94,73 @@ def fillSet(set_type, norm_filename, anom_filename, path_normal, path_anom, n_im
     
     '''
     dataset = {'DATA':[], 'LABELS':[]}
+#    anoms = 0
     
     if(set_type == 'normal'):
         # NORMALS
-        patches = norm_filename[0: n_images]
-        for filename in tqdm(patches, leave=True, desc='Training-set\t', file=sys.stdout):
-            image = cv2.imread(path_normal + filename)           
-            dataset['DATA'].append(image)
-            dataset['LABELS'].append(NORMAL_LABEL)
-        
+        dataset['DATA'] = norm_patches[0:n_images]
+        dataset['LABELS'] = np.zeros([n_images]).fill(NORMAL_LABEL)
+    
     elif(set_type == 'mixed'):
         # NORMALS
-        patches = norm_filename[0 : int(n_images//2)]
-        for filename in tqdm(patches, leave=True, desc='Training-set\t', file=sys.stdout):
-            image = cv2.imread(path_normal + filename)           
-            dataset['DATA'].append(image)
-            dataset['LABELS'].append(NORMAL_LABEL)
-        # ANOMALIES    
-        patches = anom_filename[0 : int(n_images//2)]
-        for filename in tqdm(patches, leave=True, desc='Training-set\t', file=sys.stdout):
-            image = cv2.imread(path_anom + filename)           
-            dataset['DATA'].append(image)
-            dataset['LABELS'].append(ANOMALY_LABEL)
+        dataset['DATA'] = norm_patches[0:int(n_images//2)]
+        dataset['LABELS'] = np.zeros([n_images//2])
+        dataset['LABELS'].fill(NORMAL_LABEL)
+        
+        # ANOMALOUS
+        dataset['DATA'] = np.concatenate((dataset['DATA'], anom_patches[0:int(n_images//2)]))
+        temp = np.zeros([n_images//2])
+        temp.fill(ANOMALY_LABEL)
+        dataset['LABELS'] = np.concatenate((dataset['LABELS'], temp))
             
     return dataset
 
+def createAnomalousPatches(N):
+    
+    anom_patches = []
+    i=0
+    for index in os.listdir(ANOM_PATH):
+        if(len(anom_patches) >= N):
+            break
+        
+        path_anom = ANOM_PATH + str(index) + '/'
+        anom_filename = os.listdir(path_anom)
+        
+        for filename in anom_filename:
+            if(len(anom_patches) < N):
+                image = cv2.imread(path_anom + filename)           
+                anom_patches.append(image)
+                i += 1
+#                print(i)
+            else:
+                break
+            
+    random.shuffle(anom_patches)
+    return anom_patches
+
+def createNormalPatches(N):
+    
+    norm_patches = []
+    i=0
+    for index in os.listdir(NORMAL_PATH):
+        if(len(norm_patches) >= N):
+            break
+        
+        path_norm = NORMAL_PATH + str(index) + '/'
+        norm_filename = os.listdir(path_norm)
+        
+        for filename in norm_filename:
+            if(len(norm_patches) < N):
+                image = cv2.imread(path_norm + filename)           
+                norm_patches.append(image)
+                i += 1
+#                print(i)
+            else:
+                break
+            
+    random.shuffle(norm_patches)
+    return norm_patches
+        
 
 def loadDataset(opt, test='mixed'):
     '''
@@ -252,191 +280,6 @@ def loadDataset(opt, test='mixed'):
     return training_set, validation_set, test_set
 
 
-#def loadDatasetAllNormals(opt):
-#    '''
-#    DESCRIPTION:
-#        Load data in train, validation and test set, in the following way
-#        
-#        - Training set:     70 %   NORMAL SAMPLES
-#        - Validation set:   15 %   NORMAL SAMPLES
-#        - Test set:         15 %   NORMAL SAMPLES
-#    
-#    '''
-#    training_set    = {'DATA':[], 'LABELS':[]}
-#    validation_set  = {'DATA':[], 'LABELS':[]}
-#    test_set        = {'DATA':[], 'LABELS':[]}
-#    
-##    train_data = []
-##    train_label = []
-##    validation_data = []
-##    validation_label = []
-##    test_data = []
-##    test_label = []
-#    
-#    patches_per_image = opt.patch_per_im
-#    
-#    NORMAL_LABEL = np.float64(0)
-#    
-#    sequence = [i for i in range(0, opt.endFolder)]    
-#    folder_indexes = random.sample(sequence, len(sequence))
-#    
-#    training_index = int(patches_per_image * opt.split)
-#    validation_index = training_index + int(patches_per_image*(1-opt.split))
-#    n_test_samples = training_index * (1-opt.split)
-#
-#    counter = 0
-#    start = time.time()
-#    sequence = [i for i in range(0, opt.endFolder)]    
-#    folder_indexes = random.sample(sequence, len(sequence))
-#    
-#    print('\nPatches per image: ', patches_per_image)
-#    for index in folder_indexes[0: opt.nFolders]:
-#        counter += 1
-#        print('\n')
-#        print('Image n.', counter)
-#        
-#        path_normal = NORMAL_PATH + str(index) + '/'
-#        
-#        norm_filename = os.listdir(path_normal)
-#        random.shuffle(norm_filename)
-#                    
-#        # TRAINING SET
-#        for filename in tqdm(norm_filename[0 : training_index], leave=True, desc='Training-set', file=sys.stdout):
-#
-#            image = cv2.imread(path_normal + filename)
-#
-##            train_data.append(image)
-##            train_label.append(NORMAL_LABEL)
-#            training_set['DATA'].append(image)
-#            training_set['LABELS'].append(NORMAL_LABEL)
-#        
-#        # VALIDATION
-#        for filename in tqdm(norm_filename[training_index : validation_index], leave=True, desc='Validation-set',
-#                             file=sys.stdout):
-#            
-#            image = cv2.imread(path_normal + filename)
-#        
-##            validation_data.append(image)
-##            validation_label.append(NORMAL_LABEL)
-#            validation_set['DATA'].append(image)
-#            validation_set['LABELS'].append(NORMAL_LABEL)
-#            
-#        # TEST
-#        for filename in tqdm(norm_filename[validation_index : validation_index+n_test_samples], leave=True, desc='Test-set',
-#                             file=sys.stdout):
-#            
-#            image = cv2.imread(path_normal + filename)
-#        
-##            test_data.append(image)
-##            test_label.append(ANOM_PATH)
-#            test_set['DATA'].append(image)
-#            test_set['LABELS'].append(NORMAL_LABEL)
-#
-#    print('\n')
-#    print('Training set:   {} images'.format(len(training_set)))
-#    print('Validation set: {} images'.format(len(validation_set)))
-#    print('Test set:       {} images'.format(len(test_set)))
-#    
-#    end = time.time()
-#    print('Spent time : {} sec'.format(end - start))
-#    
-#    return training_set, validation_set, test_set
-#     
-#def loadDataNormAnon(opt):
-#    '''
-#    DESCRIPTION:
-#        Load data in train, validation and test set, in the following way
-#        
-#        - Training set:     70 %   NORMAL SAMPLES
-#        - Validation set:   15 %   NORMAL SAMPLES
-#        - Test set:         15 %   NORMAL/ANOMALOUS SAMPLES
-#    
-#    '''
-#    training_set    = {'DATA':[], 'LABELS':[]}
-#    validation_set  = {'DATA':[], 'LABELS':[]}
-#    test_set        = {'DATA':[], 'LABELS':[]}
-#    
-##    train_data = []
-##    train_label = []
-##    validation_data = []
-##    validation_label = []
-##    test_data = []
-##    test_label = []
-#    
-#    patches_per_image = opt.patch_per_im
-#    
-#    NORMAL_LABEL = np.float64(0)
-#    ANOMALY_LABEL = np.float64(1)
-#    
-#    sequence = [i for i in range(0, opt.endFolder)]    
-#    folder_indexes = random.sample(sequence, len(sequence))
-#    
-#    training_index = int(patches_per_image * opt.split)
-#    normal_val_index = training_index + int(patches_per_image*(1-opt.split))
-#    
-#    n_test_samples = training_index * (1-opt.split)
-#
-#    counter = 0
-#    start = time.time()
-#    sequence = [i for i in range(0, opt.endFolder)]    
-#    folder_indexes = random.sample(sequence, len(sequence))
-#    
-#    print('\nPatches per image: ', patches_per_image)
-#    for index in folder_indexes[0: opt.nFolders]:
-#        counter += 1
-#        print('\n')
-#        print('Image n.', counter)
-#        
-#        path_normal = NORMAL_PATH + str(index) + '/'
-#        path_anom = ANOM_PATH + str(index) + '/'
-#        
-#        norm_filename = os.listdir(path_normal)
-#        random.shuffle(norm_filename)
-#        
-#        anom_filename = os.listdir(path_anom)
-#        random.shuffle(anom_filename)
-#                    
-#        # TRAINING SET
-#        for filename in tqdm(norm_filename[0 : training_index], leave=True, desc='Training-set', file=sys.stdout):
-#
-#            image = cv2.imread(path_normal + filename)
-#
-##            train_data.append(image)
-##            train_label.append(NORMAL_LABEL)
-#            training_set['DATA'].append(image)
-#            training_set['LABELS'].append(NORMAL_LABEL)
-#        
-#        # VALIDATION
-#        for filename in tqdm(norm_filename[training_index : normal_val_index], leave=True, desc='Validation-set',
-#                             file=sys.stdout):
-#            
-#            image = cv2.imread(path_normal + filename)
-#        
-##            validation_data.append(image)
-##            validation_label.append(NORMAL_LABEL)
-#            validation_set['DATA'].append(image)
-#            validation_set['LABELS'].append(NORMAL_LABEL)
-#        
-#        # TEST
-#        test_set = deepcopy(validation_set)
-#        
-#        for filename in tqdm(anom_filename[0 : n_test_samples], leave=True, desc='Test-set',file=sys.stdout):
-#            image = cv2.imread(path_normal + filename)
-#        
-##            test_data.append(image)
-##            test_label.append(ANOM_PATH)
-#            test_set['DATA'].append(image)
-#            test_set['LABELS'].append(ANOMALY_LABEL)
-#        
-#    print('\n')
-#    print('Training set:   {} images'.format(len(training_set)))
-#    print('Validation set: {} images'.format(len(validation_set)))
-#    print('Test set:       {} images'.format(len(test_set)))
-#    
-#    end = time.time()
-#    print('Spent time : {:.3f} sec'.format(end - start))
-#
-#    return training_set, validation_set, test_set
 
 #%%
     
@@ -450,6 +293,27 @@ def generateDataloader(opt):
     dataset['train']       = SteelDataset(opt, train=True)
     dataset['validation']  = SteelDataset(opt, valid=True)
     dataset['test']        = SteelDataset(opt, test=True)
+    
+    shuffle = {'train':True, 'validation':True, 'test':True}
+    
+    dataloader = {x: DataLoader(dataset    = dataset[x],
+                                batch_size = opt.batch_size,
+                                drop_last  = True,
+                                shuffle = shuffle[x],
+                                num_workers= opt.n_workers
+                                )
+                  
+                  for x in ['train', 'validation', 'test']}
+    
+    return dataloader
+
+def generateDataloaderFromDatasets(opt, training_set, validation_set, test_set):
+    print('\n>Loading Steel Dataset')
+    
+    dataset = {}
+    dataset['train']       = SteelDataset(opt, training_set, train=True)
+    dataset['validation']  = SteelDataset(opt, validation_set, valid=True)
+    dataset['test']        = SteelDataset(opt, test_set, test=True)
     
     shuffle = {'train':True, 'validation':True, 'test':True}
     
@@ -635,22 +499,36 @@ class TestDataset(Dataset):
 
 class SteelDataset(Dataset):
     
-    def __init__(self, opt, train=False, valid=False, test=False):
+    def __init__(self, opt, dataset=None, train=False, valid=False, test=False):
         
 #        in_channels = opt.in_channels
-        
-        if(train and not valid and not test):
-            self.data = opt.training_set['DATA']
-            self.targets = opt.training_set['LABELS']
-        
-        elif(valid and not train and not test):
-            self.data = opt.validation_set['DATA']
-            self.targets = opt.validation_set['LABELS']
-        
-        elif(test and not train and not valid):
-            self.data = opt.test_set['DATA']
-            self.targets = opt.test_set['LABELS']
-        
+        if(dataset is None):
+            if(train and not valid and not test):
+                self.data = opt.training_set['DATA']
+                self.targets = opt.training_set['LABELS']
+            
+            elif(valid and not train and not test):
+                self.data = opt.validation_set['DATA']
+                self.targets = opt.validation_set['LABELS']
+            
+            elif(test and not train and not valid):
+                self.data = opt.test_set['DATA']
+                self.targets = opt.test_set['LABELS']
+                
+        else:
+            if(train and not valid and not test):
+                self.data = dataset['DATA']
+                self.targets = dataset['LABELS']
+            
+            elif(valid and not train and not test):
+                self.data = dataset['DATA']
+                self.targets = dataset['LABELS']
+            
+            elif(test and not train and not valid):
+                self.data = dataset['DATA']
+                self.targets = dataset['LABELS']
+                
+                
 #        if(in_channels == 1):
 #            self.data = np.vstack(self.data).reshape(-1, 32, 32)
 #        else:

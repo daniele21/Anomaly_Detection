@@ -7,8 +7,9 @@ Created on Thu Oct 17 18:20:04 2019
 """
 #%% IMPORTS
 
-from libraries.model.dataset import generateDataloader, loadDataset, SteelDataset, _setupDataset
+from libraries.model.dataset import generateDataloader, loadDataset, SteelDataset, _setupDataset, generateDataloaderFromDatasets
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
+from libraries.model import dataset
 from libraries.model.options import Options
 from libraries.utils import Paths
 paths = Paths()
@@ -111,6 +112,13 @@ train = SteelDataset(opt, train=True)
 image = train.__getitem__(3)
 
 #%%
+opt = Options()
+opt.patch_per_im = 100
+opt.nFolders = 10
+training, validation, test = _setupDataset(opt, train='mixed', valid='mixed', test='mixed')
+#training, validation, test = _setupDataset(opt, train='normal', valid='normal', test='mixed')
 
+a = generateDataloaderFromDatasets(opt, training, validation, test)
+#%%
 
-
+a = dataset.createAnomalousPatches(100)
