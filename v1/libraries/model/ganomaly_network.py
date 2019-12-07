@@ -44,20 +44,20 @@ class GanomalyModel():
         
         if(self.weightedLosses):
             
-#            self.w_adv = torch.FloatTensor([opt.w_adv])
-#            self.w_adv.requires_grad=True
-#            
-#            self.w_con = torch.FloatTensor([opt.w_con])
-#            self.w_con.requires_grad=True
-#            
-#            self.w_enc = torch.FloatTensor([opt.w_enc])
-#            self.w_enc.requires_grad=True
-#            
-#            
-#            self.w_losses = [self.w_adv, self.w_con, self.w_enc]
-#            self.shared_layer = nn.Sequential(self.generator.decoder.net[-2:])
-#            self.alpha = opt.alpha
-            pass
+            self.w_adv = torch.FloatTensor([opt.w_adv])
+            self.w_adv.requires_grad=True
+            
+            self.w_con = torch.FloatTensor([opt.w_con])
+            self.w_con.requires_grad=True
+            
+            self.w_enc = torch.FloatTensor([opt.w_enc])
+            self.w_enc.requires_grad=True
+            
+            
+            self.w_losses = [self.w_adv, self.w_con, self.w_enc]
+            self.shared_layer = nn.Sequential(self.generator.decoder.net[-2:])
+            self.alpha = opt.alpha
+#            pass
         
         else:
             self.w_adv = opt.w_adv
@@ -265,7 +265,7 @@ class GanomalyModel():
 #        print('3.')
 #        print(self.gradLoss(G3, C3))
         Lgrad = self.gradLoss(G1, C1) + self.gradLoss(G2, C2) + self.gradLoss(G3, C3)
-        Lgrad.backward()
+        Lgrad.backward(retain_graph=True)
         
         # Updating loss weights
         self.optimizer_weights.step()

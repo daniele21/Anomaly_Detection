@@ -79,7 +79,7 @@ class Wrapper():
     def __init__(self, model, dataloader, initLog):
         self.multiLoss = multiLoss(model, initLog).to(device)
         self.data = dataloader
-        self.optimizer = torch.optim.Adam(self.multiLoss.parameters(), lr=1e-3)
+        self.optimizer = torch.optim.Adam(self.multiLoss.parameters(), lr=0.1)
     
     def initLogs(self, logs):
         self.multiLoss.initLogs(logs)

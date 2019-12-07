@@ -7,7 +7,7 @@ Created on Thu Oct 17 18:20:04 2019
 """
 #%% IMPORTS
 
-from libraries.model.dataset import generateDataloader, loadDataset, SteelDataset
+from libraries.model.dataset import generateDataloader, loadDataset, SteelDataset, _setupDataset
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.options import Options
 from libraries.utils import Paths
@@ -109,4 +109,8 @@ len(np.where(labels_loader)[0])
 train = SteelDataset(opt, train=True)
 
 image = train.__getitem__(3)
+
+#%%
+
+
 

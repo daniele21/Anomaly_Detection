@@ -24,7 +24,7 @@ opt.name = 'Ganom_v1_v4.0'
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
 
-opt.nFolders = 2
+opt.nFolders = 60
 opt.patch_per_im = 500
 
 #opt.nFolders = 30
@@ -107,15 +107,15 @@ mtl.train(40, optim)
 epochs = 30
 
 # NORM GRAD
-opt.weightedLosses=False
-optimizer_weights = None
+#opt.weightedLosses=False
+#optimizer_weights = None
 
-#opt.weightedLosses=True
-#optimizer_weights = optimizer_gen
+opt.weightedLosses=True
+optimizer_weights = optimizer_gen
 
 # WEIGHTED LOSS TRAINING
-opt.multiTaskLoss = True
-#opt.multiTaskLoss = False
+#opt.multiTaskLoss = True
+opt.multiTaskLoss = False
 
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_weights,
                                 trainloader, validLoader, testloader) 

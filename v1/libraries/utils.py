@@ -41,7 +41,7 @@ class Checkpoint():
 #                 scores, gt_labels, epoch, filename, save, opt):   
     def __init__(self, model):   
         
-        self.model = model
+#        self.model = model
 #        self.trainloss = trainloss
 #        self.validloss = validloss
 #        self.optimizer_gen = optimizer_gen
