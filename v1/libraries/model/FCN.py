@@ -11,12 +11,14 @@ import torch
 import torch.nn as nn
 import numpy as np
 from matplotlib import pyplot as plt
+import pickle
 
 import libraries.model.dataset as dataset
 from libraries.model.options import Options
-#from libraries.model.network import network
+from libraries.utils import Paths, ensure_folder
 from libraries.torchsummary import summary
 
+paths = Paths()
 
 #%%
 class CNN(nn.Module):
@@ -78,7 +80,7 @@ class FCN(nn.Module):
         
         # LAYER 1
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size)
-        self.relu1 = nn.LeakyReLU()
+        self.relu1 = nn.ReLU()
         self.pool1 = nn.MaxPool2d(2,2)
         
         in_channels = out_channels
@@ -86,14 +88,15 @@ class FCN(nn.Module):
         
         # LAYER 2
         self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size)
-        self.relu2 = nn.LeakyReLU()
+        self.relu2 = nn.ReLU()
         self.pool2 = nn.MaxPool2d(2,2)
         
         in_channels = out_channels
         
         # FULLY CONVOLUTION
-        self.conv_fin = nn.Conv2d(in_channels, 1024, kernel_size=30)
-        self.fully_conv = nn.Conv2d(1024, 2, kernel_size=1)
+        self.conv_fin = nn.Conv2d(in_channels, 256, kernel_size=6)
+        self.fully_conv = nn.Conv2d(256, 1, kernel_size=1)
+        self.softmax = nn.Softmax()
         
     def forward(self, x):
         
@@ -107,8 +110,9 @@ class FCN(nn.Module):
         
         h = self.conv_fin(h)
         h = self.fully_conv(h)
+        out = self.softmax(h)
         
-        return h
+        return out
     
 class CNNmodel():
     
@@ -156,7 +160,7 @@ class CNNmodel():
 #            print(loss.item() * x.size(0))
             
         loss_value = np.mean(losses)
-        accuracy_value = 100*(correct/total)
+        accuracy_value = correct/total
         
         return loss_value, accuracy_value
     
@@ -224,6 +228,14 @@ opt.nFolders = 60
 
 train_set, valid_set, test_set = dataset._setupDataset(opt, train='mixed', valid='mixed', test='mixed')
 dataloader = dataset.generateDataloaderFromDatasets(opt, train_set, valid_set, test_set)
+
+#%%
+ensure_folder(paths.dataloaders + '/FCN')
+
+filename = 'FCN_60-500-30k.pickle'
+
+with open(paths.dataloaders + '/FCN' + filename, 'wb') as f:
+    pickle.dump(dataloader, f)
 #%%
 model = CNNmodel(dataloader)   
 model.train_model(30)        
@@ -234,6 +246,30 @@ summary(net.cuda(), (3,32,32))
 #%%
 cnn = CNN()
 summary(cnn.cuda(), (3,32,32))
+#%%
+
+fcn = FCN().cuda()
+
+cnn = model.model
+fcn.conv1.weight = cnn.conv1.weight
+fcn.conv1.bias = cnn.conv1.bias
+fcn.conv2.weight = cnn.conv2.weight
+fcn.conv2.bias = cnn.conv2.bias
+fcn.conv_fin.weight = cnn.fc2.weight.reshape((16, 256, 6,6))
+fcn.fully_conv.weight = torch.reshape(cnn.fc3.weight, (1, 256, 1,1))
+
+
+
+
+
+
+
+
+
+
+
+
+
 #%%
 opt = Options()
 opt.patch_per_im = 500
