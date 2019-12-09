@@ -501,7 +501,10 @@ class SteelDataset(Dataset):
     
     def __init__(self, opt, dataset=None, train=False, valid=False, test=False):
         
-#        in_channels = opt.in_channels
+        self.train = train
+        self.valid = valid
+        self.test = test
+        
         if(dataset is None):
             if(train and not valid and not test):
                 self.data = opt.training_set['DATA']
@@ -528,56 +531,58 @@ class SteelDataset(Dataset):
                 self.data = dataset['DATA']
                 self.targets = dataset['LABELS']
                 
-                
-#        if(in_channels == 1):
-#            self.data = np.vstack(self.data).reshape(-1, 32, 32)
-#        else:
-#            self.data = np.vstack(self.data).reshape(-1, 32, 32, in_channels)
-            
         self.data = np.vstack(self.data).reshape(-1, 32, 32, 3)
         print(self.data.shape)
 
         self.transforms = self._initTransforms(opt)
 
     def _initTransforms(self, opt):
-        if(opt.transforms is None and opt.augmentation==False):
-            
-            transforms = Transforms.Compose(
-                                [
-#                                    transforms.Resize(32, interpolation=Image.BILINEAR),
-                                    Transforms.Grayscale(num_output_channels = opt.in_channels),
-                                    Transforms.ToTensor(),
-                                    Transforms.Normalize((0.5,),
-                                                         (0.5,)),
-#                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
-#                                    transforms.ToPILImage()
-                                ]
-                            )
+        if(self.train):
+            if(opt.augmentation==False):
+                
+                transforms = Transforms.Compose(
+                                    [
+    #                                    transforms.Resize(32, interpolation=Image.BILINEAR),
+                                        Transforms.Grayscale(num_output_channels = opt.in_channels),
+                                        Transforms.ToTensor(),
+                                        Transforms.Normalize((0.5,),
+                                                             (0.5,)),
+    #                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
+    #                                    transforms.ToPILImage()
+                                    ]
+                                )
                                 
-        elif(opt.augmentation):
-            transforms = Transforms.Compose(
-                                [
-                                    # AUGMENTATION
-                                    Transforms.ColorJitter(brightness=0.2,
-                                                            contrast=0.2, 
-                                                            saturation=0.3, 
-                                                            hue=0.2),
-                                    
-#                                    Transforms.RandomRotation(10),
-                                    Transforms.RandomAffine(degrees=10,
-                                                            scale=(0.5,2),
-                                                            shear=0.2),
-                                    
-                                    Transforms.Grayscale(num_output_channels = opt.in_channels),
-                                    Transforms.ToTensor(),
-                                    Transforms.Normalize((0.5,),
-                                                         (0.5,))   
+            else:
+                transforms = Transforms.Compose(
+                                    [
+                                        # AUGMENTATION
+                                        Transforms.ColorJitter(brightness=0.2,
+                                                                contrast=0.2, 
+                                                                saturation=0.3, 
+                                                                hue=0.2),
                                         
-                                ]
-                            )                                
+    #                                    Transforms.RandomRotation(10),
+                                        Transforms.RandomAffine(degrees=10,
+                                                                scale=(0.5,2),
+                                                                shear=0.2),
+                                        
+                                        Transforms.Grayscale(num_output_channels = opt.in_channels),
+                                        Transforms.ToTensor(),
+                                        Transforms.Normalize((0.5,),
+                                                             (0.5,))   
+                                            
+                                    ]
+                                )                                
                                 
-        elif(opt.transforms is not None):
-            transforms = opt.transforms
+        elif(self.valid or self.test):
+            transforms = Transforms.Compose(
+                                    [
+                                        Transforms.Grayscale(num_output_channels = opt.in_channels),
+                                        Transforms.ToTensor(),
+                                        Transforms.Normalize((0.5,),
+                                                             (0.5,))  
+                                    ]
+                                )
         
         return transforms
     
