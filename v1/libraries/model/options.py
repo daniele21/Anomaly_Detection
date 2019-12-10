@@ -122,7 +122,32 @@ class Options():
         
         self.loadedData = True
         
+#%%
+class FullImagesOptions():
+    
+    def __init__(self,
+                 # DATASET
+                 augmentation   = True,
+                 batch_size     = 64,
+                 split          = 0.7,
+                 n_workers      = 8,
+                 start = 0,
+                 end = 100,
+                 
+                 name           = 'My_Ganomaly',
+                 in_channels = 3,
+                 ):
         
+        self.augmentation = augmentation
+        self.batch_size = batch_size
+        self.split = split
+        self.n_workers = n_workers
+        self.start = start
+        self.end = end
+        
+        self.name = name
+        self.in_channels = in_channels
+
         
         
         

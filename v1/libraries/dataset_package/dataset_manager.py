@@ -13,6 +13,7 @@ import cv2
 from matplotlib import pyplot as plt
 from copy import deepcopy
 from time import time
+import pandas as pd
 
 from libraries.model.options import Options
 from libraries.utils import Paths, ensure_folder
@@ -927,7 +928,8 @@ def extractImages(train, start, end):
         cv2.imwrite(saving_path, img.masked_image)
         
         count += 1
-        
+      
+
 def checkAnomaly(patch, mask):
     '''
     DESCRIPTION:
@@ -983,15 +985,11 @@ def computeMask(enc_pixel, img):
     
     mask= np.zeros( width*height ).astype(np.uint8)
     if(enc_pixel == 0):
-#        print('Zeroooooo')
         return np.zeros((width, height))
     
     array = np.asarray([int(x) for x in enc_pixel.split()])
-    #print(array)
     starts = array[0::2]
-#    print(starts)
     lengths = array[1::2]
-#    print(lengths)
     
     current_position = 0
     for index, start in enumerate(starts):
@@ -999,7 +997,6 @@ def computeMask(enc_pixel, img):
         current_position += lengths[index]
         
     mask = np.flipud(np.rot90( mask.reshape(height,width), k=1))
-#    print(final)
     
     return mask
         

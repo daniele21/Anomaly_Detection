@@ -474,8 +474,8 @@ class AnomalyDetectionModel():
 #            self.visualizer.print_current_performance(result, best_auc)
                             
             print('\n')
-            print('>- Training Loss:   {:.2f} in {:.2f} sec'.format(self.train_loss[GENERATOR][-1], train_time) )
-            print('>- Validation Loss: {:.2f} in {:.2f} sec'.format(self.val_loss[GENERATOR][-1], val_time))
+            print('>- Training Loss:   {} in {:.2f} sec'.format(self.train_loss[GENERATOR][-1], train_time) )
+            print('>- Validation Loss: {} in {:.2f} sec'.format(self.val_loss[GENERATOR][-1], val_time))
             
             valid_loss = self.val_loss['GENERATOR'][-1]
             

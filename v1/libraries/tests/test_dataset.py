@@ -8,15 +8,16 @@ Created on Thu Oct 17 18:20:04 2019
 #%% IMPORTS
 
 from libraries.model.dataset import generateDataloader, loadDataset, SteelDataset, _setupDataset, generateDataloaderFromDatasets
-from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
+from libraries.model.dataset import collectAnomalySamples, collectNormalSamples, dataloaderFullImages
 from libraries.model import dataset
-from libraries.model.options import Options
+from libraries.model.options import Options, FullImagesOptions
 from libraries.utils import Paths
 paths = Paths()
 from matplotlib import pyplot as plt
 import torch
 import numpy as np
 import unittest
+from matplotlib import pyplot as plt
 #%%
 
 class test_dataset(unittest.TestCase):
@@ -91,6 +92,28 @@ class test_loaddata(unittest.TestCase):
         
     
 unittest.main()
+#%%
+class testFullDataloader(unittest.TestCase):
+    
+    def testDataloader(self):
+        opt = FullImagesOptions()
+        dataloader = dataloaderFullImages(opt)
+        
+        for i in range(5):
+            im = dataloader['test'].dataset.data[i]
+            mask = dataloader['test'].dataset.targets[i]
+            
+            plt.imshow(im)
+            plt.show()
+            plt.imshow(mask)
+            plt.show()
+        
+        
+unittest.main()
+#%%
+opt = FullImagesOptions()
+dataloader = dataloaderFullImages(opt)
+
 #%%
 opt = Options()
 opt.nFolders=5
