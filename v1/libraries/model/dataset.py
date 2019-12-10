@@ -55,7 +55,7 @@ def computeMask(enc_pixel, img):
     width = img.shape[0]
     height= img.shape[1]
     
-    mask= np.zeros( width*height ).fill(NORMAL_LABEL)
+    mask= np.zeros( width*height ).astype(np.float64)
     if(enc_pixel == 0):
         return np.zeros((width, height))
     
@@ -65,10 +65,11 @@ def computeMask(enc_pixel, img):
     
     current_position = 0
     for index, start in enumerate(starts):
-        mask[int(start):int(start+lengths[index])] = ANOMALY_LABEL
+        mask[int(start):int(start+lengths[index])] = 1
         current_position += lengths[index]
         
     mask = np.flipud(np.rot90(mask.reshape(height,width), k=1))
+    mask = mask.astype(np.float64)
     
     return mask
 
@@ -781,6 +782,8 @@ class FullSteelDataset(Dataset):
         image = Image.fromarray(image)
            
         image = self.transforms(image)
+        
+#        print(type(target[0][0]))
         
         return image, target
     

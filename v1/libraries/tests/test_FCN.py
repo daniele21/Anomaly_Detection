@@ -74,22 +74,29 @@ model.train_model(10)
 #%% TESTING FCN
 
 net = FCN()
-summary(net.cuda(), (3,32,32))
+summary(net.cuda(), (3,256,1024))
 
 opt = FullImagesOptions()
 opt.start = 0
 opt.end = 256
-
+opt.batch_size = 1
 dataloader = dataset.dataloaderFullImages(opt)
-
+    
 fcn = FCN()
 optimizer = torch.optim.Adam(fcn.parameters(), lr=1e-03)
 
 fcn_model = FCNmodel(fcn, optimizer, dataloader)
 
+fcn_model.train_model(10)
 
 
+#%%
+#labels = dataloader['test'].dataset.targets
 
-
-
-
+torch.Tensor(labels.float())
+#%%
+for images, labels in dataloader['train']:
+    break
+#%%
+    
+labels.float()

@@ -135,6 +135,7 @@ class FC_CNN(nn.Module):
         return h
 
 class FCN(nn.Module):
+    # FCN 
     
     def __init__(self):
         
@@ -151,22 +152,25 @@ class FCN(nn.Module):
         #        out_channels *= 2
         
         # LAYER 2
-        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=1, padding=0)
+        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=0)
         self.relu2 = nn.LeakyReLU()
+        self.pool2 = nn.MaxPool2d(2)
         
         in_channels = out_channels
-        #        out_channels *= 2
+        out_channels *= 2
         
         # LAYER 3
-        self.conv3 = nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=1, padding=0)
+        self.conv3 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=0)
         self.relu3 = nn.LeakyReLU()
+        self.pool3 = nn.MaxPool2d(2)
         
         in_channels = out_channels
         out_channels *= 2
         
         # LAYER 4
-        self.conv4 = nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=1, padding=0)
+        self.conv4 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=0)
         self.relu4 = nn.LeakyReLU()
+        self.pool4 = nn.MaxPool2d(2)
         
         in_channels = out_channels
         out_channels *= 2
@@ -190,19 +194,19 @@ class FCN(nn.Module):
     def forward(self, x):
         
         h = self.relu1(self.conv1(x))
-        h = self.relu2(self.conv2(h))
-        h = self.relu3(self.conv3(h))
-        h = self.relu4(self.conv4(h))
+        h = self.pool2(self.relu2(self.conv2(h)))
+        h = self.pool3(self.relu3(self.conv3(h)))
+        h = self.pool4(self.relu4(self.conv4(h)))
         
-        h = self.reluFC1(self.fc1(h))
-        h = self.reluFC2(self.fc2(h))
+#        h = self.reluFC1(self.fc1(h))
+#        h = self.reluFC2(self.fc2(h))
+#        
+#        h = self.score(h)
         
-        h = self.score(h)
-        
-        h = self.upsample(h)
+#        h = self.upsample(h)
 #        print(h.shape)
 #        print(x.size())
-        h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
+#        h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
 #        print(h.shape)
         return h
 #%%

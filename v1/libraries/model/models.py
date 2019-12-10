@@ -12,6 +12,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from torchvision import models as pre_models
 
+device = torch.device('cuda:0') 
 #%% 
 
 class BinClassifierModel():
@@ -167,12 +168,17 @@ class FCNmodel():
         losses = []
         correct = 0
         total = 0
-        
+        i=0
         for images, labels in self.trainloader:
-            
-            x = torch.Tensor(images).cuda()
-            labels = torch.Tensor(labels).cuda()
-            
+            print(i)
+            x = torch.Tensor(images).to(device)
+#            print(type(labels[0]))
+#            print(type(labels[0][0][0]))
+#            print(labels[0][0][0])
+#            print(labels[0][0][0].item())
+#            print(labels.shape)
+            labels = torch.Tensor(labels.float()).cuda()
+#            print(labels)
             output = self.model(x)
             print(output.shape)
             print(labels.shape)
@@ -192,7 +198,7 @@ class FCNmodel():
             
             correct += (predictions == targets).sum().item()
             total += labels.size(0)
-            
+            i +=1
         loss_value = np.mean(losses)
         accuracy_value = correct/total
         

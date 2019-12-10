@@ -128,7 +128,7 @@ class FullImagesOptions():
     def __init__(self,
                  # DATASET
                  augmentation   = True,
-                 batch_size     = 64,
+                 batch_size     = 16,
                  split          = 0.7,
                  n_workers      = 8,
                  start = 0,
