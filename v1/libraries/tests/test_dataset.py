@@ -95,11 +95,14 @@ unittest.main()
 #%%
 class testFullDataloader(unittest.TestCase):
     
-    def testDataloader(self):
+    def test_splitPatches(self):
         opt = FullImagesOptions()
+        opt.start = 0
+        opt.end = 20
+        
         dataloader = dataloaderFullImages(opt)
         
-        for i in range(5):
+        for i in range(1):
             im = dataloader['test'].dataset.data[i]
             mask = dataloader['test'].dataset.targets[i]
             
@@ -107,8 +110,47 @@ class testFullDataloader(unittest.TestCase):
             plt.show()
             plt.imshow(mask)
             plt.show()
+            
+            patches, patch_masks = dataset._splitPatches(im, mask)
         
+            for j in range(20):
+                plt.imshow(patches[j])
+                plt.show()
+                plt.imshow(patch_masks[j])
+                plt.show()
+#%%
+class test_dataloader_patchmask(unittest.TestCase):    
+    
+    def test_dataloader_patchmasks(self):
+        opt = FullImagesOptions()
+        opt.start = 0
+        opt.end = 2
         
+        dataloader = dataset.dataloaderPatchMasks(opt)
+        
+        for i in range(5):
+            patch = dataloader['train'].dataset.data[i]
+            mask = dataloader['train'].dataset.targets[i]
+            
+            plt.imshow(patch)
+            plt.show()
+            plt.imshow(mask)
+            plt.show()
+            
+    def test_masks(self):
+        opt = FullImagesOptions()
+        opt.start = 0
+        opt.end = 10
+        
+        dataloader = dataset.dataloaderPatchMasks(opt)
+
+        for _, labels in dataloader['train']:
+            max_value = torch.max(labels)
+            min_value = torch.min(labels)
+            
+            self.assertLessEqual(max_value, 1)
+            self.assertGreaterEqual(min_value, 0)
+
 unittest.main()
 #%%
 opt = FullImagesOptions()

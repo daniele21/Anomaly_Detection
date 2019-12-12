@@ -170,21 +170,24 @@ class FCNmodel():
         total = 0
         i=0
         for images, labels in self.trainloader:
-            print(i)
-            x = torch.Tensor(images).to(device)
-#            print(type(labels[0]))
-#            print(type(labels[0][0][0]))
-#            print(labels[0][0][0])
-#            print(labels[0][0][0].item())
-#            print(labels.shape)
+#            print(i)
+            x = torch.Tensor(images).cuda()
+            # Flattening the mask target
+            labels = labels.reshape(-1)
             labels = torch.Tensor(labels.float()).cuda()
-#            print(labels)
+
             output = self.model(x)
-            print(output.shape)
-            print(labels.shape)
-#            output = output.reshape(-1)
+            
+            # flattening output
+            output = output.reshape(-1)
+            output = torch.sigmoid(output)
+#            print('max out: {}'.format(torch.max(output)))
+#            print('max lab: {}'.format(torch.max(labels)))
+#            print('min out: {}'.format(torch.min(output)))
+#            print('min lab: {}'.format(torch.min(labels)))
             
             loss = self.loss_function(output, labels)
+#            print(loss.item())
             
             self.optimizer.zero_grad()
             loss.backward()
@@ -196,12 +199,19 @@ class FCNmodel():
             predictions = np.round(output.detach().cpu())
             targets = np.round(labels.detach().cpu())
             
+#            print('> output')
+#            print(predictions)
+#            print('> labels')
+#            print(targets)
+            
             correct += (predictions == targets).sum().item()
             total += labels.size(0)
+#            print('> Accuracy')
+#            print(correct/total)
             i +=1
         loss_value = np.mean(losses)
         accuracy_value = correct/total
-        
+#        exit()
         return {'LOSS':loss_value, 'ACC':accuracy_value}
     
     def _validation(self):
@@ -215,10 +225,13 @@ class FCNmodel():
             for images, labels in self.validloader:
                 
                 x = torch.Tensor(images).cuda()
-                labels = torch.Tensor(labels).cuda()
+                labels = labels.reshape(-1)
+                labels = torch.Tensor(labels.float()).cuda()
                 
                 output = self.model(x)
                 output = output.reshape(-1)
+                output = torch.sigmoid(output)
+                
                 loss = self.loss_function(output, labels)
                 
                 predictions = np.round(output.cpu())
@@ -226,6 +239,8 @@ class FCNmodel():
                 
                 correct += (predictions == targets).sum().item()
                 total += labels.size(0)
+#                print('> Accuracy')
+#                print(correct/total)
             
                 losses.append(loss.item() * x.size(0))
                 
@@ -273,19 +288,51 @@ class FCNmodel():
         
         with torch.no_grad():
             output = self.model(x)
-            print(output.shape)
-            print(output[:,:,:,0][0])
             
-        pred = np.round(output.cpu().item())
+            output = torch.sigmoid(output)
+#            print(output.shape)
+#            print(output[:,:,:,0][0])
+            
+        pred = np.round(output.cpu())
+        print('MAX: {}'.format(torch.max(pred))) 
+        print(pred[0][0])
         
-        plt.title('Target: {}\nPred.:   {}'.format(labelTensor.item(), pred))
+#        plt.title('Target: {}\nPred.:   {}'.format(labelTensor.item(), pred))
         plt.imshow(image)
-       
+        plt.show()
+        plt.imshow(pred[0][0])
+        plt.show()
 #        plt.imshow(output[:,:,:,0][0])
 #        output
         
-        return output
+        return image, output
+           
+    def testInference(self, dataloader):
+        
+        count_ones = 0
+        
+        for i in range(len(dataloader.dataset.data)):
+#            print(i)
+            imageTensor, labelTensor = dataloader.dataset.__getitem__(i)
             
+            x = imageTensor.unsqueeze(0).cuda()
+            
+            with torch.no_grad():
+                output = self.model(x)
+                
+                output = torch.sigmoid(output)
+    #            print(output.shape)
+    #            print(output[:,:,:,0][0])
+                
+            pred = np.round(output.cpu())
+            max_value = torch.max(pred)
+    #        print('MAX: {}'.format(torch.max(pred)))
+            if(max_value != 0):
+                print('{} ONE'.format(i))
+                count_ones += 1
+                
+        return count_ones
+    
     def plotMetrics(self):
         fig, [ax1, ax2] = plt.subplots(2,1, figsize=(6,10))
         _subplot(ax1, self.train['LOSS'], self.valid['LOSS'], 'Loss')

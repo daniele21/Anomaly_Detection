@@ -17,6 +17,8 @@ import libraries.model.dataset as dataset
 from libraries.model.options import Options, FullImagesOptions
 from libraries.utils import Paths, ensure_folder
 
+from matplotlib import pyplot as plt
+
 paths = Paths()
 #%%
 opt = Options()
@@ -72,31 +74,82 @@ model.train_model(10)
       
 
 #%% TESTING FCN
+from libraries.model.models import FCNmodel
+from libraries.model.FCN import FCN
+import libraries.model.dataset as dataset
+from libraries.model.options import Options, FullImagesOptions
+import torch
 
-net = FCN()
-summary(net.cuda(), (3,256,1024))
-
-opt = FullImagesOptions()
-opt.start = 0
-opt.end = 256
-opt.batch_size = 1
-dataloader = dataset.dataloaderFullImages(opt)
+class test_FCN():
     
+    def __init__(self, dataloader):
+        
+        fcn = FCN()
+        optimizer = torch.optim.Adam(fcn.parameters(), lr=1e-03)
+        
+        
+        self.fcn_model = FCNmodel(fcn, optimizer, dataloader)
+        
+    def test_output(self, dataloader):
+        for images, labels in dataloader['train']:
+            x = torch.Tensor(images).cuda()
+            out = self.fcn_model.model(x)
+            
+            return images, x, out
+        
+    def train(self, epochs):
+        self.fcn_model.train_model(epochs)
+        
+#%%
+opt = FullImagesOptions()
+opt.batch_size = 64
+opt.start = 0
+opt.end = 100
+dataloader = dataset.dataloaderPatchMasks(opt)
+
+test = test_FCN(dataloader)
+#ims, x, out = test.test_output(dataloader)
+
+test.train(10)
+#%%
+net = FCN()
+summary(net.cuda(), (3,32,32))
+
+#%% SAVE DATALOADER
+
+ensure_folder(paths.dataloaders + '/FCN/')
+
+filename = 'FCN_60-500-30k.pickle'
+
+with open(paths.dataloaders + '/FCN/' + filename, 'wb') as f:
+    pickle.dump(dataloader, f)
+    
+#%% LOAD DATALOADER
+filename = 'FCN_60-500-30k.pickle'
+
+with open(paths.dataloaders + '/FCN/' + filename, 'rb') as f:
+    dataloader = pickle.load(f)
+
+#%%
 fcn = FCN()
 optimizer = torch.optim.Adam(fcn.parameters(), lr=1e-03)
+
+opt = FullImagesOptions(start=0, end=50, batch_size=32)
+dataloader = dataset.dataloaderPatchMasks(opt)
 
 fcn_model = FCNmodel(fcn, optimizer, dataloader)
 
 fcn_model.train_model(10)
 
-
+fcn_model.inference(dataloader['test'], 10)
 #%%
-#labels = dataloader['test'].dataset.targets
 
-torch.Tensor(labels.float())
 #%%
 for images, labels in dataloader['train']:
     break
 #%%
     
-labels.float()
+im = dataloader['train'].dataset.data[3]
+plt.imshow(im)
+
+plt.imshow(im[0:32, 32:64])

@@ -51,6 +51,53 @@ def getImages(start, end):
     
     return images, masks
 
+def getPatchesFromImages(start, end, shape):
+    train = pd.read_csv(paths.csv_directory + 'train_unique.csv')
+    
+    patches_list = []
+    patch_masks_list = []
+    
+    count = start
+#    print(len(train.index[start : end]))
+    for row in train.index[start : end]:
+        print('Image n. {}'.format(count))
+        filename    = train.iloc[row].Image_Id
+        enc_pixels  = train.iloc[row].Encoded_Pixels
+        
+        img = cv2.imread(paths.images_path + filename)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        mask = computeMask(enc_pixels, img)    
+        
+        patches, patch_masks = _splitPatches(img, mask, shape)
+        
+        patches_list.extend(patches)
+        patch_masks_list.extend(patch_masks)
+        
+        count += 1
+    
+    return patches_list, patch_masks_list
+    
+def _splitPatches(image, mask, shape):
+    
+    x = image.shape[1]
+    y = image.shape[0]
+    
+    patches = []
+    patch_masks = []
+    
+    # 400 patches per image
+    for j in range(0, y, shape):
+        for i in range(0, x, shape):
+            patch = image[j:j+shape, i:i+shape]
+#            print('{}x{}'.format(j,i))
+            patches.append(patch)
+            
+            patch_mask = mask[j:j+shape, i:i+shape]
+            patch_masks.append(patch_mask)
+            
+    return patches, patch_masks
+    
+    
 def computeMask(enc_pixel, img):
     width = img.shape[0]
     height= img.shape[1]
@@ -88,9 +135,9 @@ def _setupDataset(opt, train='normal', valid='normal', test='mixed'):
     n_validation_imgs = math.ceil(n_patches * (1-opt.split))
     n_test_imgs = math.ceil(n_patches * (1-opt.split))
     
-    print(n_training_imgs)
-    print(n_validation_imgs)
-    print(n_test_imgs)
+#    print(n_training_imgs)
+#    print(n_validation_imgs)
+#    print(n_test_imgs)
     
     training_set    = {'DATA':[], 'LABELS':[]}
     validation_set  = {'DATA':[], 'LABELS':[]}
@@ -393,6 +440,57 @@ def generateDataloaderTest(patches, opt):
     
     return dataloader
 
+def dataloaderPatchMasks(opt):
+    
+    dataset = {}
+    dataset['DATA'], dataset['LABELS'] = getPatchesFromImages(opt.start, opt.end, opt.shape)
+    
+    training_set = {}
+    validation_set = {}
+    test_set = {}
+    
+    train_index = int(len(dataset['DATA']) * opt.split)
+    valid_index = int(len(dataset['DATA']) * (0.9-opt.split))
+    test_index = int(len(dataset['DATA']) * 0.1)
+    
+#    print(train_index)
+#    print(valid_index)
+#    print(test_index)
+    
+    start = 0
+    end = train_index
+    training_set['DATA'] = dataset['DATA'][start:end]
+    training_set['LABELS'] = dataset['LABELS'][start:end]
+    
+    start = train_index
+    end = train_index + valid_index
+    validation_set['DATA'] = dataset['DATA'][start:end]
+    validation_set['LABELS'] = dataset['LABELS'][start:end]
+    
+    start = train_index + valid_index 
+    end = train_index + valid_index + test_index
+    test_set['DATA'] = dataset['DATA'][start : end]
+    test_set['LABELS'] = dataset['LABELS'][start : end]
+    
+    dataset = {}
+    dataset['train']       = SteelDataset(opt, training_set, train=True)
+    dataset['validation']  = SteelDataset(opt, validation_set, valid=True)
+    dataset['test']        = SteelDataset(opt, test_set, test=True)
+    
+    shuffle = {'train':True, 'validation':True, 'test':True}
+    
+    dataloader = {x: DataLoader(dataset    = dataset[x],
+                                batch_size = opt.batch_size,
+                                drop_last  = True,
+                                shuffle = shuffle[x],
+                                num_workers= opt.n_workers
+                                )
+                  
+                  for x in ['train', 'validation', 'test']}
+    
+    return dataloader
+
+
 def dataloaderFullImages(opt):
     
     dataset = {}
@@ -622,7 +720,8 @@ class SteelDataset(Dataset):
                 self.data = dataset['DATA']
                 self.targets = dataset['LABELS']
                 
-        self.data = np.vstack(self.data).reshape(-1, 32, 32, 3)
+        self.data = np.vstack(self.data).reshape(-1, opt.shape, opt.shape, 3)
+        print(len(dataset['DATA']))
         print(self.data.shape)
 
         self.transforms = self._initTransforms(opt)

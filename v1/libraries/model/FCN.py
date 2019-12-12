@@ -145,15 +145,16 @@ class FCN(nn.Module):
         kernel_size = 3
         
         # LAYER 1        
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=5, stride=2, padding=1)
-        self.relu1 = nn.LeakyReLU()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=0)
+        self.relu1 = nn.ReLU()
+#        self.pool1 = nn.MaxPool2d(2)
         
         in_channels = out_channels
-        #        out_channels *= 2
+#        out_channels *= 2
         
         # LAYER 2
         self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=0)
-        self.relu2 = nn.LeakyReLU()
+        self.relu2 = nn.ReLU()
         self.pool2 = nn.MaxPool2d(2)
         
         in_channels = out_channels
@@ -161,52 +162,37 @@ class FCN(nn.Module):
         
         # LAYER 3
         self.conv3 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=0)
-        self.relu3 = nn.LeakyReLU()
-        self.pool3 = nn.MaxPool2d(2)
+        self.relu3 = nn.ReLU()
+#        self.pool3 = nn.MaxPool2d(2)
         
         in_channels = out_channels
-        out_channels *= 2
+        out_channels = 256
         
-        # LAYER 4
-        self.conv4 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=0)
-        self.relu4 = nn.LeakyReLU()
-        self.pool4 = nn.MaxPool2d(2)
-        
-        in_channels = out_channels
-        out_channels *= 2
-        
-        # FC1
-        self.fc1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=0)
-        self.reluFC1 = nn.ReLU()
+        # LAYER FC
+        self.fc = nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=1, padding=0)
         
         in_channels = out_channels
         
-        # FC2
-        self.fc2 = nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
-        self.reluFC2 = nn.ReLU()
-        
-        # SCORE
+        # LAYER SCORE
         self.score = nn.Conv2d(in_channels, 1, kernel_size=1, stride=1, padding=0)
-        
+         
         # UPSAMPLE 
         self.upsample = nn.ConvTranspose2d(1, 1, kernel_size=64, stride=32)
         
     def forward(self, x):
         
+#        h = self.pool1(self.relu1(self.conv1(x)))
         h = self.relu1(self.conv1(x))
         h = self.pool2(self.relu2(self.conv2(h)))
-        h = self.pool3(self.relu3(self.conv3(h)))
-        h = self.pool4(self.relu4(self.conv4(h)))
+        h = self.relu3(self.conv3(h))
         
-#        h = self.reluFC1(self.fc1(h))
-#        h = self.reluFC2(self.fc2(h))
-#        
-#        h = self.score(h)
+        h = self.fc(h)
+        h = self.score(h)
         
-#        h = self.upsample(h)
+        h = self.upsample(h)
 #        print(h.shape)
 #        print(x.size())
-#        h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
+        h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
 #        print(h.shape)
         return h
 #%%

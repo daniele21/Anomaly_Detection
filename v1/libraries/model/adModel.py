@@ -104,8 +104,7 @@ class AnomalyDetectionModel():
         enc_loss = []        
         
         n_iter = len(self.trainloader)
-#        printing_freq = n_iter // self.opt.loss_per_epoch
-#        print(n_iter)
+        
         start = time.time()
         
 #        for images, labels in tqdm(self.trainloader, leave=True, total=n_iter, desc='Training', file = sys.stdout):

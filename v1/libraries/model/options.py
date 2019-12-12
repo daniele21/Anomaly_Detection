@@ -16,6 +16,7 @@ class Options():
                  split       = 0.8,
                  n_workers   = 8,
                  augmentation= True,
+                 shape = 32,
                  
                  # NETWORK
                  img_size       = 32,
@@ -67,6 +68,7 @@ class Options():
         self.split          = split
         self.n_workers      = n_workers
         self.augmentation   = augmentation
+        self.shape = shape
         
         self.train_data = []
         self.train_targets = []
@@ -133,6 +135,7 @@ class FullImagesOptions():
                  n_workers      = 8,
                  start = 0,
                  end = 100,
+                 shape = 64,
                  
                  name           = 'My_Ganomaly',
                  in_channels = 3,
@@ -144,6 +147,7 @@ class FullImagesOptions():
         self.n_workers = n_workers
         self.start = start
         self.end = end
+        self.shape = shape
         
         self.name = name
         self.in_channels = in_channels
