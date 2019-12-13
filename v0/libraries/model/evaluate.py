@@ -13,9 +13,9 @@ import numpy as np
 from inspect import signature
 from sklearn.metrics import confusion_matrix
 
-def evaluate(labels, scores, metric='roc', plot=False, folder_save=None):
+def evaluate(labels, scores, metric='roc', plot=False, folder_save=None, info=''):
     if metric == 'roc':
-        return roc(labels, scores, plot, folder_save)
+        return roc(labels, scores, plot=plot, folder_save=folder_save, info=info)
     elif metric == 'avg_prec':
         return average_precision_score(labels, scores)
     elif metric == 'recall':
@@ -47,6 +47,17 @@ def recall(y_true, y_pred):
     TN, FP, FN, TP = confuseMatrix(y_true, y_pred).ravel()
     return TP/ (TP+FN)
 
+def IoU(pred_mask, true_mask):
+
+    SMOOTH = 1e-06
+    
+    intersection = pred_mask & true_mask
+    union = pred_mask | true_mask
+    
+    iou = (intersection.sum() + SMOOTH) / (union.sum() + SMOOTH)
+    
+    return iou
+    
 def confuseMatrix(y_true, y_pred):
     return confusion_matrix(y_true, y_pred)
 
@@ -65,7 +76,7 @@ def _getOptimalThreshold(fpr, tpr, threshold):
 
 #%%
 
-def roc(labels, scores, plot=False, folder_save=None):
+def roc(labels, scores, info='', plot=False, folder_save=None):
     """Compute ROC curve and ROC area for each class"""
     fpr = dict()
     tpr = dict()
@@ -104,14 +115,14 @@ def roc(labels, scores, plot=False, folder_save=None):
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic')
+        plt.title('Receiver operating characteristic _{}_'.format(info))
         plt.legend(loc="lower right")
 #        plt.show()
 
         print(folder_save)
         if(folder_save is not None):
             print('.. saving at {}'.format(folder_save))
-            plt.savefig(folder_save + '/roc curve')
+            plt.savefig(folder_save + '/roc curve_' + str(info))
             
         plt.show()
 

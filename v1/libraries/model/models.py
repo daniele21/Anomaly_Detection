@@ -12,6 +12,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from torchvision import models as pre_models
 
+from libraries.model.evaluate import evaluate
+
 device = torch.device('cuda:0') 
 #%% 
 
@@ -237,6 +239,7 @@ class FCNmodel():
                 predictions = np.round(output.cpu())
                 targets = np.round(labels.cpu())
                 
+                # ACCURACY
                 correct += (predictions == targets).sum().item()
                 total += labels.size(0)
 #                print('> Accuracy')
@@ -247,6 +250,50 @@ class FCNmodel():
             loss_value = np.mean(losses)
             accuracy_value = correct/total
         
+        return {'LOSS':loss_value, 'ACC':accuracy_value}
+    
+    def _test(self):
+        
+        losses = []
+        correct = 0
+        total = 0
+        i = 0
+        
+        with torch.no_grad():
+               
+            predictions = torch.zeros(size=(len(self.testloader.dataset),), dtype=torch.float32, device=device)
+            targets = torch.zeros(size=(len(self.testloader.dataset),), dtype=torch.long,    device=device)
+            
+            for images, labels in self.testloader:
+                
+                x = torch.Tensor(images).cuda()
+#                labels = labels.reshape(-1)
+                labels = torch.Tensor(labels.float()).cuda()
+                
+                output = self.model(x)
+#                output = output.reshape(-1)
+                output = torch.sigmoid(output)
+                
+                prediction = np.round(output.cpu())
+                target = np.round(labels.cpu())
+                
+                # ACCURACY
+                correct += (prediction == target).sum().item()
+                total += labels.size(0)
+                
+                batch_size = images.shape[0]
+                print(prediction.shape)
+#                print(prediction.reshape(prediction.size(2), prediction.size(3)))
+                predictions.expand(prediction)
+                targets[i*batch_size : i*batch_size + target.size(0)] = target.reshape(target.size(0))
+                
+                i += 1
+                
+            accuracy_value = correct/total
+            
+            # NORMALIZING - scaling values between 0 and 1 -- [0, 1]
+            auc, thr_norm = evaluate(labels, predictions, plot=True)
+            
         return {'LOSS':loss_value, 'ACC':accuracy_value}
         
     def train_model(self, epochs):
@@ -271,6 +318,8 @@ class FCNmodel():
             self.valid['ACC'].append(metrics['ACC'])
             print('|>- Validation:\tLoss: {:.3f} \t Accuracy: {:.3f}'.format(metrics['LOSS'],
                                                                          metrics['ACC']))
+            
+            metrics = self._test()
             print('|')
             
             # PLOTTING METRICS

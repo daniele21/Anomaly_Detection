@@ -20,6 +20,9 @@ from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR
 from libraries.utils import Paths, ensure_folder, getNmeans
 from libraries.dataset_package.dataset_manager import generatePatches
 
+from scipy.ndimage import convolve
+from scipy.signal import medfilt
+
 paths = Paths()
 
 #%% CONSTANTS
@@ -346,37 +349,49 @@ class AnomalyDetectionModel():
                 times.append(time_out - time_in)
 
                 i += 1
-                
-#                # Save test images.
-#                if self.opt.save_test_images:
-#                    dst = os.path.join(self.opt.output_dir, self.opt.name, 'test', 'images')
-#                    if not os.path.isdir(dst):
-#                        os.makedirs(dst)
-#                    real, fake, _ = self.get_images()
-#                    vutils.save_image(real, '%s/real_%03d.eps' % (dst, i+1), normalize=True)
-#                    vutils.save_image(fake, '%s/fake_%03d.eps' % (dst, i+1), normalize=True)
-#            
-#            # Measure inference time.
-#            times = np.array(times)
-#            times = np.mean(times[:100] * 1000)
-            
+
             # NORMALIZATION - Scale error vector between [0, 1]
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
             # auc, eer = roc(self.gt_labels, self.anomaly_scores)
-            auc, threshold_norm = evaluate(gt_labels, anomaly_scores_norm)
+            auc_norm, threshold_norm = evaluate(gt_labels, anomaly_scores_norm, info='norm',
+                                                folder_save=self.folder_save, plot=True)
             
-            _, threshold = evaluate(gt_labels, anomaly_scores)
+            # WITHOUT NORMALIZATION
+            auc, threshold = evaluate(gt_labels, anomaly_scores,
+                                      folder_save=self.folder_save, plot=True, info='standard')
 
-            performance = dict({'AUC':auc,
+            # CONV ANOMALY SCORE
+            kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
+            kernel = kernel/len(self.validationloader)
+            conv_anom_scores = convolve(anomaly_scores.cpu(), kernel.cpu())
+            auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
+                                                folder_save=self.folder_save, info='conv')
+
+            # MEDIAN ANOMALY SCORE
+            median_anom_scores = medfilt(anomaly_scores.cpu())
+            auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='median',
+                                                    plot=True, folder_save=self.folder_save)
+
+            performance_norm = dict({'AUC':auc_norm,
+                                'Threshold':threshold_norm})
+    
+            performance_stand = dict({'AUC':auc,
                                 'Threshold':threshold})
+    
+            performance_conv = dict({'AUC':auc_conv,
+                                'Threshold':conv_threshold})
+    
+            performance_median = dict({'AUC':auc_median,
+                                'Threshold':median_threshold})
             
             eval_data = dict({'gt_labels':gt_labels,
                               'scores':anomaly_scores})
 
-#            if self.opt.phase == 'test':
-#                counter_ratio = float(curr_epoch) / len(self.dataloader['test'].dataset)
-#                self.visualizer.plot_performance(self.epoch, counter_ratio, performance)
-                
+            
+            performance = {'standard':performance_stand,
+                           'norm': performance_norm,
+                           'conv': performance_conv,
+                           'median': performance_median}
             
             spent_time = time.time() - start
                 
@@ -456,17 +471,16 @@ class AnomalyDetectionModel():
             # TEST
 #            return self._test()
             
-            performance, eval_data, spent_time = self._test()
+            self.performance, eval_data, spent_time = self._test()
             
-            self.auc, self.threshold = performance['AUC'], performance['Threshold']
-            self.thresholds.append(self.threshold)
+            self.auc, self.threshold = self.performance['standard']['AUC'], self.performance['standard']['Threshold']
+#            self.thresholds.append(self.threshold)
             
-            self.gt_labels, self.anomaly_scores = eval_data['gt_labels'], eval_data['scores']
-#            test_time = adjustTime(spent_time)
+#            self.gt_labels, self.anomaly_scores = eval_data['gt_labels'], eval_data['scores']
             
             if(self.epoch % self.opt.printing_freq == 0):
                 self.plotting()
-                self.evaluateRoc()
+#                self.evaluateRoc()
             
 #            if(result['AUC'] > best_auc):
 #                best_auc = result['AUC']
@@ -496,7 +510,7 @@ class AnomalyDetectionModel():
         self.saveCheckPoint(valid_loss)
         self.plotting()
         self.saveInfo()
-        self.evaluateRoc(folder_save=self.folder_save)
+#        self.evaluateRoc(folder_save=self.folder_save)
         
         return valid_loss
     

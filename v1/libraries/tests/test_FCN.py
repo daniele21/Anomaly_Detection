@@ -134,16 +134,16 @@ with open(paths.dataloaders + '/FCN/' + filename, 'rb') as f:
 fcn = FCN()
 optimizer = torch.optim.Adam(fcn.parameters(), lr=1e-03)
 
-opt = FullImagesOptions(start=0, end=50, batch_size=32)
+opt = FullImagesOptions(start=0, end=100, batch_size=16, shape=128)
 dataloader = dataset.dataloaderPatchMasks(opt)
 
 fcn_model = FCNmodel(fcn, optimizer, dataloader)
 
-fcn_model.train_model(10)
+fcn_model.train_model(30)
 
-fcn_model.inference(dataloader['test'], 10)
+im, out = fcn_model.inference(dataloader['test'], 102)
 #%%
-
+fcn_model.testInference(dataloader['test'])
 #%%
 for images, labels in dataloader['train']:
     break

@@ -88,12 +88,13 @@ def _splitPatches(image, mask, shape):
     # 400 patches per image
     for j in range(0, y, shape):
         for i in range(0, x, shape):
-            patch = image[j:j+shape, i:i+shape]
-#            print('{}x{}'.format(j,i))
-            patches.append(patch)
-            
-            patch_mask = mask[j:j+shape, i:i+shape]
-            patch_masks.append(patch_mask)
+            if(j+shape < y and i+shape < x):
+                patch = image[j:j+shape, i:i+shape]
+    #            print('{}x{}'.format(j,i))
+                patches.append(patch)
+                
+                patch_mask = mask[j:j+shape, i:i+shape]
+                patch_masks.append(patch_mask)
             
     return patches, patch_masks
     

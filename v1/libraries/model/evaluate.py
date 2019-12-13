@@ -50,6 +50,16 @@ def recall(y_true, y_pred):
 def confuseMatrix(y_true, y_pred):
     return confusion_matrix(y_true, y_pred)
 
+def IoU(pred_mask, true_mask):
+    SMOOTH = 1e-06
+    
+    intersection = pred_mask & true_mask
+    union = pred_mask | true_mask
+    
+    iou = (intersection.sum() + SMOOTH) / (union.sum() + SMOOTH)
+
+    return intersection, union, iou
+
 def _getOptimalThreshold(fpr, tpr, threshold):
     #
     # tpr - (1-fpr) should be 0 or near to 0
