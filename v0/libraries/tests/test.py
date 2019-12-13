@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from libraries.model.ganomaly import loadModel, outputSample
 from libraries.utils import Paths, writeDataResults
-from libraries.model.evaluate import evaluate, accuracy, precision, recall
+from libraries.model.evaluate import evaluate, accuracy, precision, recall, IoU
 from libraries.dataset_package import dataset_manager as dm
 from libraries.dataset_package.dataset_manager import Shape
 from libraries.model.dataset import generateDataloaderTest
@@ -26,10 +26,12 @@ def computeEvaluation(mask_true, mask_pred, info, folder_save):
     prec = precision(mask_true.ravel(), mask_pred.ravel())
     acc = accuracy(mask_true.ravel(), mask_pred.ravel())
     rec = recall(mask_true.ravel(), mask_pred.ravel())
+    iou = IoU(mask_pred, mask_true)
     
     results = {'acc':acc,
                'prec':prec,
                'rec':rec,
+               'iou':iou,
                'info': info}
     
     writeDataResults(results, folder_save)
@@ -37,8 +39,8 @@ def computeEvaluation(mask_true, mask_pred, info, folder_save):
 def evaluateResult(model, img, mask):
   
     # 2.PREDICTION ANOMALY THRESHOLDING OVER EACH BATCH
-    dataTest = generateDataloaderTest(img.patches, model.opt)
-    pred_patches, _ , performance = model.predictImage(dataTest, img.folder_save)
+#    dataTest = generateDataloaderTest(img.patches, model.opt)
+#    pred_patches, _ , performance = model.predictImage(dataTest, img.folder_save)
 
 
     # 1.PREDICTION ANOMALY USING THE FINAL THRESHOLD OF MODEL 
@@ -63,51 +65,12 @@ def evaluateResult(model, img, mask):
     maj_mask_1 = img.drawAnomaliesMajVoting()
     
     
-    # DRAWING ANOMALIES --> METHOD 2
-    
-    # SIMPLE METHOD
-#    simple_mask_2, n_anom_1 = img.drawAnomaliesSimple(pred_patches, info='TH-PER-BATCH')
-    # MAJORITY VOTING
-#    maj_mask_2 = img.drawAnomaliesMajVoting(pred_patches, info='TH-PER-BATCH')
-
-
     # EVALUATION
     info = 'Thr over data - SIMPLE'
     computeEvaluation(mask, simple_mask_1, info, img.folder_save)
     info = 'Thr over data - MAJORITY VOTING'
     computeEvaluation(mask, maj_mask_1, info, img.folder_save)
-    
-#    info = 'Thr over batch - SIMPLE'
-#    computeEvaluation(mask, simple_mask_2, info, img.folder_save)
-#    info = 'Thr over batch - MAJORITY VOTING'
-#    computeEvaluation(mask, maj_mask_2, info, img.folder_save)
-    
-#    # SIMPLE 1
-#    prec = precision(mask.ravel(), simple_mask_1.ravel())
-#    acc = accuracy(mask.ravel(), simple_mask_1.ravel())
-#    rec = recall(mask.ravel(), simple_mask_1.ravel())
-#    
-#    simple_results = {'acc':acc,
-#                      'prec':prec,
-#                      'rec':rec,
-#                      'info': 'Thr per data'}
-#    
-#    # MAJ_VOTING 1
-#    prec = precision(mask.ravel(), maj_mask_1.ravel())
-#    acc = accuracy(mask.ravel(), maj_mask_1.ravel())
-#    rec = recall(mask.ravel(), maj_mask_1.ravel())
-#    
-#    
-#    
-#    # SIMPLE 2
-#    prec = precision(mask.ravel(), simple_mask_2.ravel())
-#    acc = accuracy(mask.ravel(), simple_mask_2.ravel())
-#    rec = recall(mask.ravel(), simple_mask_2.ravel())
-#   
-#    # MAJ_VOTING 2
-#    prec = precision(mask.ravel(), maj_mask_2.ravel())
-#    acc = accuracy(mask.ravel(), maj_mask_2.ravel())
-#    rec = recall(mask.ravel(), maj_mask_2.ravel())
+
     
 def automaticEvaluation(model, start, end, stride):
     

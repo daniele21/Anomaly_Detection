@@ -561,15 +561,15 @@ class AnomalyDetectionModel():
             
             # TEST
 #            return self._test()
-            performance, eval_data, spent_time = self._test()
+            self.performance, eval_data, spent_time = self._test()
             
-            self.auc, self.threshold = performance['AUC'], performance['Threshold']
+            self.auc, self.threshold = self.performance['standard']['AUC'], self.performance['standard']['Threshold']
             self.gt_labels, self.anomaly_scores = eval_data['gt_labels'], eval_data['scores']
 #            test_time = adjustTime(spent_time)
             
             if(self.epoch % self.opt.printing_freq == 0):
                 self.plotting(save=False)
-                self.evaluateRoc()
+#                self.evaluateRoc()
             
 #            if(result['AUC'] > best_auc):
 #                best_auc = result['AUC']
@@ -593,7 +593,7 @@ class AnomalyDetectionModel():
         self.saveCheckPoint(valid_loss)
         self.plotting()
         self.saveInfo()
-        self.evaluateRoc(folder_save=self.folder_save)
+#        self.evaluateRoc(folder_save=self.folder_save)
         
         return valid_loss
     
