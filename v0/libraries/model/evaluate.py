@@ -36,6 +36,7 @@ def evaluate(labels, scores, metric='roc', plot=False, folder_save=None, info=''
         raise NotImplementedError("Check the evaluation metric.")
 
 def precision(y_true, y_pred):
+    print(confuseMatrix(y_true, y_pred).ravel())
     TN, FP, FN, TP = confuseMatrix(y_true, y_pred).ravel()
     return TP / (TP+FP)
 
