@@ -694,7 +694,7 @@ class AnomalyDetectionModel():
             thr = self.threshold
         
         prediction = ['Anomalous Image', 1] if score >= thr else ['Normal Image', 0]
-        print('*****')
+        print('*****predict')
         print(thr)
         
         if(target is not None):
