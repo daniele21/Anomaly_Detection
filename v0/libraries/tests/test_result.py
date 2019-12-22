@@ -55,7 +55,8 @@ def evaluateResult(model, img, mask):
     
     for x in thr_dict:
         thr = thr_dict[x]
-        
+        print('*****tes_result')
+        print(thr)
         # ANOMALY PREDICTION FOR EACH SINGLE PATCH
         for patch in tqdm(img.patches, total=len(img.patches)):
         

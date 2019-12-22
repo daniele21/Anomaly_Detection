@@ -688,10 +688,14 @@ class AnomalyDetectionModel():
         final_output = np.flip(final_output, 1)
         final_output = np.rot90(final_output, 1)        
         
-        threshold = self.threshold if threshold is None else threshold
+        if(threshold is not None):
+            thr = threshold
+        else:
+            thr = self.threshold
         
-        prediction = ['Anomalous Image', 1] if score >= self.threshold else ['Normal Image', 0]
-        
+        prediction = ['Anomalous Image', 1] if score >= thr else ['Normal Image', 0]
+        print('*****')
+        print(thr)
         
         if(target is not None):
             real_outcome = 'Anomalous Image' if target == 1 else 'Normal Image'
@@ -701,7 +705,7 @@ class AnomalyDetectionModel():
             
             fig, [ax1, ax2] = plt.subplots(2,1, figsize=(10,13))
             results = '\n------------ RESULTS -------------\n' + \
-                       'Threshold: {:.3f}\n'.format(self.threshold) + \
+                       'Threshold: {:.3f}\n'.format(thr) + \
                        'Score: {:.3f}\n'.format(anomaly_score.item()) + \
                        'Real Outcome: {}\n'.format(real_outcome) + \
                        '---------------------------------\n\n' + \
@@ -714,7 +718,7 @@ class AnomalyDetectionModel():
             
             print('')
             print('\n------------ RESULTS -------------')
-            print('Threshold: \t{:.3f}'.format(self.threshold))
+            print('Threshold: \t{:.3f}'.format(thr))
             print('Score: \t\t{:.3f}'.format(anomaly_score.item()))
             print('From \t\t{}'.format(real_outcome))
             print('')
