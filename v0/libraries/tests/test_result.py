@@ -67,7 +67,7 @@ def evaluateResult(model, img, mask):
             patch.setScore(score, threshold)
             
         # DRAWING ANOMALIES --> METHOD 1
-        
+        print('threshold: {}'.format(threshold))
         # SIMPLE METHOD
         simple_mask_1, n_anom_1 = img.drawAnomaliesSimple(info = x)
         

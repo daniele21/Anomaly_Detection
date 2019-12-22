@@ -734,7 +734,7 @@ class AnomalyDetectionModel():
                 else:
                     raise Exception('Wrong Predicion')
             
-        return prediction, anomaly_score.item(), self.threshold
+        return prediction, anomaly_score.item(), thr
         
     
     def predictImage(self, dataTest, folder_save=None, N=10):
