@@ -22,11 +22,8 @@ csv_directory = paths.csv_directory
 #%%
 def computeEvaluation(mask_true, mask_pred, info, folder_save):
     
-    return mask_true, mask_pred
-    
-    mask_true.dtype=int
+#    mask_true.dtype=int
     mask_pred.dtype=int
-    
     
     
     prec = precision(mask_true.ravel(), mask_pred.ravel())
@@ -77,7 +74,7 @@ def evaluateResult(model, img, mask):
 #        return simple_mask_1, mask
         
         info = 'Thr over data - ' + x
-        return computeEvaluation(mask, simple_mask_1, info, img.folder_save)
+        computeEvaluation(mask, simple_mask_1, info, img.folder_save)
         
         if(x == 'standard'):
             # MAJORITY VOTING
@@ -97,6 +94,6 @@ def automaticEvaluation(model, start, end, stride):
     
     for index in range(start, end):        
         img, _, mask = dm.extractPatchesForTest(train, index, shape, stride, model_name)
-        return evaluateResult(model, img, mask)
+        evaluateResult(model, img, mask)
         
 
