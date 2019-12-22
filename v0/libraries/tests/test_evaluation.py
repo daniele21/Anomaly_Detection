@@ -15,4 +15,6 @@ true_mask = np.array([[0,1,1],
 
 ev.IoU(mask, true_mask)
 
-
+#%%
+result = classification_report(mask, true_mask, output_dict=True)
+result

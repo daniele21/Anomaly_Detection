@@ -122,7 +122,7 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
         print(folder_save)
         if(folder_save is not None):
             print('.. saving at {}'.format(folder_save))
-            plt.savefig(folder_save + '/roc curve_' + str(info))
+            plt.savefig(folder_save + 'roc curve_' + str(info))
             
         plt.show()
 

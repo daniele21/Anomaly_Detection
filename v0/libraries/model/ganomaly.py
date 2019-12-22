@@ -471,6 +471,15 @@ class AnomalyDetectionModel():
             # TEST
 #            return self._test()
             
+            # PERFOMANCE DICT
+#            performance_x = {'AUC'      :----,
+#                             'Threshold':----}
+            
+#            performance = {'standard': performance_stand,
+#                           'norm'    : performance_norm,
+#                           'conv'    : performance_conv,
+#                           'median'  : performance_median}
+            
             self.performance, eval_data, spent_time = self._test()
             
             self.auc, self.threshold = self.performance['standard']['AUC'], self.performance['standard']['Threshold']
@@ -647,7 +656,8 @@ class AnomalyDetectionModel():
         
         addInfoGanomaly(self.opt, folder_save, info)
     
-    def predict(self, image, target=None, info=None, verbose=0):
+    def predict(self, image, threshold=None,
+                target=None, info=None, verbose=0):
 #        image_tensor = torch.FloatTensor(image)
         image_transf = Transforms.ToTensor()(image)
         image_unsqueeze = image_transf.unsqueeze_(0)
@@ -677,6 +687,8 @@ class AnomalyDetectionModel():
 #        final_output = (output * 0.5) + 0.5
         final_output = np.flip(final_output, 1)
         final_output = np.rot90(final_output, 1)        
+        
+        threshold = self.threshold if threshold is None else threshold
         
         prediction = ['Anomalous Image', 1] if score >= self.threshold else ['Normal Image', 0]
         

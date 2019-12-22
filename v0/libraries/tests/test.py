@@ -46,30 +46,38 @@ def evaluateResult(model, img, mask):
     # 1.PREDICTION ANOMALY USING THE FINAL THRESHOLD OF MODEL 
     # OVER ALL DATA TRAINED
     outcomes = []
+    thr_dict = {}
     
-    # ANOMALY PREDICTION FOR EACH SINGLE PATCH
-    for patch in tqdm(img.patches, total=len(img.patches)):
+    for x in ['standard','conv','median']:
+        thr_dict.update({x : model.performance[x]['Threshold']})
     
-        patch_image = patch.patch_image
-        outcome, score, threshold = model.predict(patch_image)
-        outcomes.append(outcome)
-        patch.anomaly = outcome[1]
-        patch.setScore(score, threshold)
-
+    for x in thr_dict:
+        thr = thr_dict[x]
         
-    # DRAWING ANOMALIES --> METHOD 1
-    
-    # SIMPLE METHOD
-    simple_mask_1, n_anom_1 = img.drawAnomaliesSimple()
-    # MAJORITY VOTING
-    maj_mask_1 = img.drawAnomaliesMajVoting()
-    
-    
-    # EVALUATION
-    info = 'Thr over data - SIMPLE'
-    computeEvaluation(mask, simple_mask_1, info, img.folder_save)
-    info = 'Thr over data - MAJORITY VOTING'
-    computeEvaluation(mask, maj_mask_1, info, img.folder_save)
+        # ANOMALY PREDICTION FOR EACH SINGLE PATCH
+        for patch in tqdm(img.patches, total=len(img.patches)):
+        
+            patch_image = patch.patch_image
+            outcome, score, threshold = model.predict(patch_image, threshold=thr)
+            outcomes.append(outcome)
+            patch.anomaly = outcome[1]
+            patch.setScore(score, threshold)
+            
+        # DRAWING ANOMALIES --> METHOD 1
+        
+        # SIMPLE METHOD
+        simple_mask_1, n_anom_1 = img.drawAnomaliesSimple()
+        
+        info = 'Thr over data - ' + x
+        computeEvaluation(mask, simple_mask_1, info, img.folder_save)
+        
+        if(x == 'standard'):
+            # MAJORITY VOTING
+            maj_mask_1 = img.drawAnomaliesMajVoting()
+            
+            # EVALUATION
+            info = 'Thr over data - MAJORITY VOTING'
+            computeEvaluation(mask, maj_mask_1, info, img.folder_save)
 
     
 def automaticEvaluation(model, start, end, stride):

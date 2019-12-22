@@ -17,7 +17,7 @@ from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNorm
 
 paths = Paths()
 #%% LOAD OPTIONS
-opt = Options()
+opt = Options(endFolder=100)
 opt.name = 'Ganom_v0.0'
 opt.anom_perc = 0.4
 #opt.in_channels = 1 # GRAYSCALE
@@ -37,6 +37,9 @@ opt.descr = 'xavier init'
 
 #cifar_dataloader = getCifar10(opt)
 my_dataloader = generateDataloader(opt)
+
+#%% LOAD DATALOADER
+
 
 #%%
 
@@ -82,7 +85,7 @@ adModel = torch.load(path_file)
 #opt.lr_gen = 1e-05
 #opt.lr_discr = 1e-05
 
-opt.epochs = 100
+opt.epochs = 10
 opt.patience = 3
 
 opt.w_adv = 1
@@ -117,7 +120,7 @@ adModel.model.init_optim(optimizer_gen, optimizer_discr)
 #opt.epochs=20
 #adModel.train_model()
 
-adModel.resumeTraining(300)
+adModel.resumeTraining(400)
 #%% RESULTS
 adModel.plotting()
 adModel.evaluateRoc()
