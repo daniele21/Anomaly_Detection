@@ -75,13 +75,13 @@ def evaluateResult(model, img, mask):
         info = 'Thr over data - ' + x
         computeEvaluation(mask, simple_mask_1, info, img.folder_save)
         
-        if(x == 'standard'):
-            # MAJORITY VOTING
-            maj_mask_1 = img.drawAnomaliesMajVoting()
-            
-            # EVALUATION
-            info = 'Thr over data - MAJORITY VOTING'
-            computeEvaluation(mask, maj_mask_1, info, img.folder_save)
+#        if(x == 'standard'):
+#            # MAJORITY VOTING
+#            maj_mask_1 = img.drawAnomaliesMajVoting()
+#            
+#            # EVALUATION
+#            info = 'Thr over data - MAJORITY VOTING'
+#            computeEvaluation(mask, maj_mask_1, info, img.folder_save)
 
     
 def automaticEvaluation(model, start, end, stride):
