@@ -67,6 +67,8 @@ def evaluateResult(model, img, mask):
         # SIMPLE METHOD
         simple_mask_1, n_anom_1 = img.drawAnomaliesSimple()
         
+        return simple_mask_1, mask
+        
         info = 'Thr over data - ' + x
         computeEvaluation(mask, simple_mask_1, info, img.folder_save)
         
@@ -88,6 +90,6 @@ def automaticEvaluation(model, start, end, stride):
     
     for index in range(start, end):        
         img, _, mask = dm.extractPatchesForTest(train, index, shape, stride, model_name)
-        evaluateResult(model, img, mask)
+        return evaluateResult(model, img, mask)
         
 
