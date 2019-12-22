@@ -22,8 +22,8 @@ csv_directory = paths.csv_directory
 #%%
 def computeEvaluation(mask_true, mask_pred, info, folder_save):
     
-    mask_true.astype(int)
-    mask_pred.astype(int)
+    mask_true = mask_true.astype(int)
+    mask_pred = mask_pred.astype(int)
     
     prec = precision(mask_true.ravel(), mask_pred.ravel())
     acc = accuracy(mask_true.ravel(), mask_pred.ravel())
