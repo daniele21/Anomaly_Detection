@@ -48,7 +48,8 @@ def recall(y_true, y_pred):
     return TP/ (TP+FN)
 
 def IoU(pred_mask, true_mask):
-
+    print(pred_mask)
+    print(true_mask)
     SMOOTH = 1e-06
     
     intersection = pred_mask & true_mask
