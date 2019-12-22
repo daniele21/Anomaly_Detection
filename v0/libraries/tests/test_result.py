@@ -68,7 +68,7 @@ def evaluateResult(model, img, mask):
         # DRAWING ANOMALIES --> METHOD 1
         
         # SIMPLE METHOD
-        simple_mask_1, n_anom_1 = img.drawAnomaliesSimple()
+        simple_mask_1, n_anom_1 = img.drawAnomaliesSimple(info = x)
         
 #        return simple_mask_1, mask
         
