@@ -25,6 +25,8 @@ def computeEvaluation(mask_true, mask_pred, info, folder_save):
     mask_true.dtype=int
     mask_pred.dtype=int
     
+    return mask_true, mask_pred
+    
     prec = precision(mask_true.ravel(), mask_pred.ravel())
     acc = accuracy(mask_true.ravel(), mask_pred.ravel())
     rec = recall(mask_true.ravel(), mask_pred.ravel())
@@ -73,7 +75,7 @@ def evaluateResult(model, img, mask):
 #        return simple_mask_1, mask
         
         info = 'Thr over data - ' + x
-        computeEvaluation(mask, simple_mask_1, info, img.folder_save)
+        return computeEvaluation(mask, simple_mask_1, info, img.folder_save)
         
         if(x == 'standard'):
             # MAJORITY VOTING
@@ -93,6 +95,6 @@ def automaticEvaluation(model, start, end, stride):
     
     for index in range(start, end):        
         img, _, mask = dm.extractPatchesForTest(train, index, shape, stride, model_name)
-        evaluateResult(model, img, mask)
+        return evaluateResult(model, img, mask)
         
 
