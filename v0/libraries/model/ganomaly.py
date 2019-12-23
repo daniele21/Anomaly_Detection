@@ -658,6 +658,7 @@ class AnomalyDetectionModel():
     
     def predict(self, image, threshold=None,
                 target=None, info=None, verbose=0):
+        
 #        image_tensor = torch.FloatTensor(image)
         image_transf = Transforms.ToTensor()(image)
         image_unsqueeze = image_transf.unsqueeze_(0)
@@ -694,8 +695,8 @@ class AnomalyDetectionModel():
             thr = self.threshold
         
         prediction = ['Anomalous Image', 1] if score >= thr else ['Normal Image', 0]
-        print('*****predict')
-        print(thr)
+#        print('*****predict')
+#        print(thr)
         
         if(target is not None):
             real_outcome = 'Anomalous Image' if target == 1 else 'Normal Image'

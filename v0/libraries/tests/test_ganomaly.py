@@ -2,6 +2,7 @@
 #%%
 from matplotlib import pyplot as plt
 import numpy as np
+import pickle
 
 from torch.optim import Adam
 import torch
@@ -40,7 +41,10 @@ my_dataloader = generateDataloader(opt)
 
 #%% LOAD DATALOADER
 
-
+filename = '../../variables/v0/v0_60-500-30k.pickle'
+with open(filename, 'rb') as f:
+    my_dataloader = pickle.load(f)
+    
 #%%
 
 dataloader = my_dataloader
@@ -60,8 +64,8 @@ except:
 optimizer_gen = Adam
 optimizer_discr = Adam
 
-opt.lr_gen = 1*1e-06
-opt.lr_discr = 1*1e-06
+opt.lr_gen = 1*1e-04
+opt.lr_discr = 1*1e-04
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, trainloader, validLoader) 
 
 #%% TUNING MODEL
@@ -107,20 +111,12 @@ adModel.train_model()
 ##adModel.loadCheckPoint(path_file)
 #adModel = torch.load(path_file)
 #%%
-opt.lr_gen = 5*1e-04
-#opt.lr_discr = 5*1e-05
+opt.lr_gen = 1*1e-05
+new_lr = opt.lr_gen
+adModel.model.optimizer_gen.param_groups[0]['lr'] = new_lr
+adModel.model.optimizer_discr.param_groups[0]['lr'] = new_lr
+adModel.resumeTraining(100)
 
-adModel.opt.patience = 5
-optimizer_gen = Adam(adModel.model.generator.parameters(), lr=opt.lr_gen)
-optimizer_discr = Adam(adModel.model.discriminator.parameters(), lr=opt.lr_discr)
-#optimizer_discr = Adam(adModel.model.discriminator.parameters)
-
-adModel.model.init_optim(optimizer_gen, optimizer_discr)
-
-#opt.epochs=20
-#adModel.train_model()
-
-adModel.resumeTraining(400)
 #%% RESULTS
 adModel.plotting()
 adModel.evaluateRoc()

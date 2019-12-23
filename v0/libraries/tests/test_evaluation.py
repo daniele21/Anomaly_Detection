@@ -18,3 +18,24 @@ ev.IoU(mask, true_mask)
 #%%
 result = classification_report(mask, true_mask, output_dict=True)
 result
+
+#%%
+
+a = np.zeros((3,3))
+a[0][2] = 1
+print(a)
+
+b = np.ones((3,3))
+print(b)
+
+np.bitwise_and(a,b)
+#a & b
+
+#%%
+c = np.zeros((3,3))
+c[2,2] = 1
+print(c.shape)
+c = c.astype(int)
+c
+
+c&c
