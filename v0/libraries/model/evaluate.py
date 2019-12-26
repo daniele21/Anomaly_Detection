@@ -36,7 +36,7 @@ def evaluate(labels, scores, metric='roc', plot=False, folder_save=None, info=''
         raise NotImplementedError("Check the evaluation metric.")
 
 def precision(y_true, y_pred):
-    print(confuseMatrix(y_true, y_pred))
+#    print(confuseMatrix(y_true, y_pred))
     TN, FP, FN, TP = confuseMatrix(y_true, y_pred).ravel()
     return TP / (TP+FP)
 
@@ -49,8 +49,8 @@ def recall(y_true, y_pred):
     return TP/ (TP+FN)
 
 def IoU(pred_mask, true_mask):
-    print(pred_mask)
-    print(true_mask)
+#    print(pred_mask)
+#    print(true_mask)
     SMOOTH = 1e-06
     
     intersection = pred_mask & true_mask

@@ -278,6 +278,7 @@ def writeDataResults(results, folder_save):
     content = content + '- Accuracy: \t{:.2f}\n'.format(results['acc'])
     content = content + '- Precision:\t{:.2f}\n'.format(results['prec'])
     content = content + '- Recall:   \t{:.2f}\n\n'.format(results['rec'])
+    content = content + '- Iou   :   \t{:.2f}\n\n'.format(results['iou'])
 #    
 #    content = content + '- \tMajority Voting:\n'
 #    content = content + '- Accuracy: \t{}\n'.format(maj_results['acc'])
