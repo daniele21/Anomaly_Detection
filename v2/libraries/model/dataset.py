@@ -444,7 +444,7 @@ def generateDataloaderTest(patches, opt):
 def dataloaderPatchMasks(opt):
     
     dataset = {}
-    dataset['DATA'], dataset['LABELS'] = getPatchesFromImages(opt.start, opt.end, opt.shape)
+    dataset['DATA'], dataset['LABELS'] = getImages(opt.start, opt.end)
     
     training_set = {}
     validation_set = {}
@@ -474,9 +474,9 @@ def dataloaderPatchMasks(opt):
     test_set['LABELS'] = dataset['LABELS'][start : end]
     
     dataset = {}
-    dataset['train']       = SteelDataset(opt, training_set, train=True)
-    dataset['validation']  = SteelDataset(opt, validation_set, valid=True)
-    dataset['test']        = SteelDataset(opt, test_set, test=True)
+    dataset['train']       = FullSteelDataset(opt, training_set, train=True)
+    dataset['validation']  = FullSteelDataset(opt, validation_set, valid=True)
+    dataset['test']        = FullSteelDataset(opt, test_set, test=True)
     
     shuffle = {'train':True, 'validation':True, 'test':True}
     
@@ -817,6 +817,8 @@ class FullSteelDataset(Dataset):
             self.data = dataset['DATA']
             self.targets = dataset['LABELS']
                 
+        print(len(self.data))
+        print(self.data[0].shape)
         self.data = np.vstack(self.data).reshape(-1, 256, 1600, 3)
         print(self.data.shape)
 

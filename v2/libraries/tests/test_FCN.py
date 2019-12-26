@@ -10,8 +10,9 @@ Created on Sat Dec  7 18:14:00 2019
 import torch
 import pickle
 
-from libraries.model.models import BinClassifierModel, FCNmodel
+from libraries.model.models import BinClassifierModel, FCNmodel, FCN_FullImage
 from libraries.model.FCN import CNN, FC_CNN, FCN
+from libraries.model.network import FCN_Generator
 from libraries.torchsummary import summary
 import libraries.model.dataset as dataset
 from libraries.model.options import Options, FullImagesOptions
@@ -153,3 +154,13 @@ im = dataloader['train'].dataset.data[3]
 plt.imshow(im)
 
 plt.imshow(im[0:32, 32:64])
+
+#%%
+fullOpt = FullImagesOptions(start=0, end=100, batch_size=16)
+dataloader = dataset.dataloaderPatchMasks(fullOpt)
+
+model = FCN_Generator().cuda()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+
+model_training = FCN_FullImage(model, optimizer, dataloader)
+model_training.train_model(10)

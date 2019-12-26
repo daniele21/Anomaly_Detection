@@ -13,6 +13,7 @@ import torch.nn as nn
 from torch.nn.init import xavier_uniform_, xavier_normal_
 from torch.nn.init import kaiming_uniform, kaiming_normal_
 from libraries.torchsummary import summary
+from torchvision import models
 #%% CONSTANTS
 
 KERNEL_SIZE = 4
@@ -43,8 +44,8 @@ def weights_init(mod):
     # HE NORMAL INITIALIZATION --> better with relu / leaky_relu activations
     if isinstance(mod, nn.Conv2d):
         kaiming_normal_(mod.weight.data)
-        if(mod.bias):
-            kaiming_normal_(mod.bias.data)
+#        if(mod.bias):
+#            kaiming_normal_(mod.bias.data)
 
 #model.apply(weights_init)
         
@@ -290,10 +291,131 @@ class Discriminator(nn.Module):
 
         return classifier, features
         
+def featureExtraction():
+
+    vgg = models.vgg16_bn(pretrained=True)
+    
+    for param in vgg.parameters():
+        param.requires_grad = False
+
+    modules = list(vgg.children())[:-1]
+    modules.append(nn.Sequential(nn.Conv2d(512, 100, 7)))
+
+    features = nn.Sequential(*modules)
+
+    return features   
+
+def encoderFullyConv():
+    encoder = nn.Sequential(
+            nn.Conv2d(3, 32, 4, stride=2),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(32, 64, 4, stride=2),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(64, 128, 4, stride=2),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(128, 256, 4, stride=2),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(256, 512, 4, stride=2),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(512, 100, (6,48)),
+            
+            )
+    
+    return encoder
+
+
+def decoderFullyConv():
+    
+    decoder = nn.Sequential(
+            nn.ConvTranspose2d(100, 1024, (4,25)),
+            nn.BatchNorm2d(1024),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(1024, 512, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(512, 256, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(256, 128, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(128, 64, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(64, 32, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(32, 3, (2,2), stride=2),
+#
+#            nn.Conv2d(3, 1, (256,1600)),
+#            nn.Tanh()
+            
+            )
+    
+    return decoder
+
+def fully_conv_layer_decoder():
+    
+    layer = nn.Sequential(
+                nn.Conv2d(3, 1, (256,1600)),
+                nn.Tanh())
+    
+    return layer
+
+def final_layer_decoder():
+    
+    layer = nn.Sequential(
+                nn.Tanh())
+    
+    return layer
+
+class FCN_Generator(nn.Module):
+
+    def __init__(self, xavier_init=True):
+
+        super().__init__()
         
-    
-    
-    
+        self.encoder1 = featureExtraction()
+        self.decoder = decoderFullyConv()               
+        
+        self.fullyConvLayer = fully_conv_layer_decoder()
+        self.finalLayer = final_layer_decoder()
+        
+        self.encoder2 = encoderFullyConv()
+        
+        # INITIALIZATION
+        if(xavier_init):
+            self.encoder1.apply(weights_init)
+            self.decoder.apply(weights_init)
+            self.encoder2.apply(weights_init)
+        
+    def forward(self, x):
+        
+        z = self.encoder1(x)
+        temp = self.decoder(z)
+        
+        x_conv = self.fullyConvLayer(temp)
+        x_prime = self.finalLayer(temp)
+        
+        z_prime = self.encoder2(x_prime)
+        
+        return x_prime, z, z_prime, x_conv
+        
     
     
     
