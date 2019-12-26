@@ -689,9 +689,9 @@ class AnomalyDetectionModel():
         final_output = np.flip(final_output, 1)
         final_output = np.rot90(final_output, 1)        
         
-        print('---------------------------------------')
-        print('-----------CHECK-----------')
-        print(threshold)
+#        print('---------------------------------------')
+#        print('-----------CHECK-----------')
+#        print(threshold)
         
         if(threshold is not None):
             thr = threshold

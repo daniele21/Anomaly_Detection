@@ -183,7 +183,7 @@ def computeAnomError(model, anom_set):
     anomalies = 0
     
     for image in anom_set:
-        pred, _, _ = model.predict(image, 1, verbose=0)
+        pred, _, _ = model.predict(image, target=1, verbose=0)
 #        print(label)
         anomalies += pred[1]
         
@@ -199,7 +199,7 @@ def computeNormError(model, normal_set):
     anomalies = 0
     
     for image in normal_set:
-        pred, _, _ = model.predict(image, 0, verbose=0)
+        pred, _, _ = model.predict(image, target=0, verbose=0)
 #        print(label)
         anomalies += pred[1]
     
