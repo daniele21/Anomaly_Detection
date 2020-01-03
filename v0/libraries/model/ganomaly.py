@@ -20,7 +20,7 @@ from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR
 from libraries.utils import Paths, ensure_folder, getNmeans
 from libraries.dataset_package.dataset_manager import generatePatches
 
-from scipy.ndimage import convolve, median_filter,
+from scipy.ndimage import convolve, median_filter
 from scipy.ndimage.filters import convolve1d
 from scipy.signal import medfilt
 
