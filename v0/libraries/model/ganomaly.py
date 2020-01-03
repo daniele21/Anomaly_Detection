@@ -368,7 +368,7 @@ class AnomalyDetectionModel():
                                                 folder_save=self.folder_save, info='conv')
 
             # MEDIAN ANOMALY SCORE
-            median_anom_scores = median_filter(anomaly_scores.cpu())
+            median_anom_scores = median_filter(anomaly_scores.cpu(), size=(32,32))
             auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='median',
                                                     plot=True, folder_save=self.folder_save)
 
