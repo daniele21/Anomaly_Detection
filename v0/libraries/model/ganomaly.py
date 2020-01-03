@@ -20,8 +20,8 @@ from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR
 from libraries.utils import Paths, ensure_folder, getNmeans
 from libraries.dataset_package.dataset_manager import generatePatches
 
-from scipy.ndimage import convolve
-from scipy.signal import medfilt
+from scipy.ndimage import convolve, median_filter
+#from scipy.signal import medfilt
 
 paths = Paths()
 
@@ -362,13 +362,13 @@ class AnomalyDetectionModel():
 
             # CONV ANOMALY SCORE
             kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
-            kernel = kernel/len(self.validationloader)
+            #kernel = kernel/len(self.validationloader)
             conv_anom_scores = convolve(anomaly_scores.cpu(), kernel.cpu())
             auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
                                                 folder_save=self.folder_save, info='conv')
 
             # MEDIAN ANOMALY SCORE
-            median_anom_scores = medfilt(anomaly_scores.cpu())
+            median_anom_scores = median_filter(anomaly_scores.cpu())
             auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='median',
                                                     plot=True, folder_save=self.folder_save)
 
