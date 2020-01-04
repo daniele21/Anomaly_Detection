@@ -159,8 +159,7 @@ def collectNormalSamples(nImages, normal_per_img=None):
     sequence = [i for i in range(len(listNormImages))]    
     folder_indexes = random.sample(sequence, len(sequence))
     
-    for index in tqdm(folder_indexes[0 : nImages], total=nImages, file=sys.stdout,
-                      descr='Norm. Images\t:', leave=True):
+    for index in folder_indexes[0 : nImages]:
         counterImage += 1
         path_anom = NORMAL_PATH + str(index) + '/'
         normImages = os.listdir(path_anom)
@@ -203,8 +202,7 @@ def collectAnomalySamples(nImages, anom_per_img=None):
     sequence = [i for i in range(len(listAnomImages))]    
     folder_indexes = random.sample(sequence, len(sequence))
     
-    for index in tqdm(folder_indexes[0 : nImages], leave=True, file=sys.stdout,
-                      total=nImages, descr='Anom. Images:\t'):
+    for index in folder_indexes[0 : nImages]:
         counterImage += 1
         path_anom = ANOM_PATH + str(index) + '/'
         anomImages = os.listdir(path_anom)
