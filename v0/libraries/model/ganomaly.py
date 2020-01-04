@@ -635,11 +635,23 @@ class AnomalyDetectionModel():
        
         plt.show()
     
-    def evaluateRoc(self, folder_save=None):
+    def evaluateRoc(self, mode='standard', kernel_size=None, folder_save=None):
+        
         if(folder_save is not None):
             folder_save = folder_save
         
-        auc, _ = evaluate(self.gt_labels, self.anomaly_scores, plot=True, folder_save=folder_save)
+        if(mode == 'conv'):
+            assert kernel_size is not None, 'kernel size NONE'
+            scores = convFilterScores(self.anomaly_scores, kernel_size)
+        
+        elif(mode == 'median'):
+            assert kernel_size is not None, 'kernel size NONE'
+            scores = medFilterScores(self.anomaly_scores, kernel_size)
+        
+        elif(mode == 'standard'):
+            scores = self.anomaly_scores
+        
+        auc, thr = evaluate(self.gt_labels, scores, plot=True, folder_save=folder_save)
         
         print('\n')
         print('AUC: {:.3f} \t Thres. : {:.3f} '.format(auc, self.threshold))

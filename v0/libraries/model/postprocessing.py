@@ -7,7 +7,7 @@ from scipy.signal import medfilt
 
 #%% FUNCTIONS
 
-def convFilterScores(scores, kernel_size, plot=False, folder_save=None):
+def convFilterScores(scores, kernel_size):
     
     try:
         scores = scores.cpu()
@@ -21,7 +21,7 @@ def convFilterScores(scores, kernel_size, plot=False, folder_save=None):
     return conv_scores
 
 
-def medFilterScores(scores, kernel_size, plot=False, folder_save=None):
+def medFilterScores(scores, kernel_size):
     
     try:
         scores = scores.cpu()
