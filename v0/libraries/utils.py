@@ -179,11 +179,11 @@ class LR_decay():
 #saveInfo(opt)
 #%% FUNCTIONS
 
-def computeAnomError(model, anom_set):
+def computeAnomError(model, thr=None, anom_set):
     anomalies = 0
     
     for image in anom_set:
-        pred, _, _ = model.predict(image, target=1, verbose=0)
+        pred, _, _ = model.predict(image, threshold=thr, target=1, verbose=0)
 #        print(label)
         anomalies += pred[1]
         
@@ -194,12 +194,12 @@ def computeAnomError(model, anom_set):
     
     return error
 
-def computeNormError(model, normal_set):
+def computeNormError(model, thr=None, normal_set):
     normal = 0
     anomalies = 0
     
     for image in normal_set:
-        pred, _, _ = model.predict(image, target=0, verbose=0)
+        pred, _, _ = model.predict(image, threshold=thr, target=0, verbose=0)
 #        print(label)
         anomalies += pred[1]
     
