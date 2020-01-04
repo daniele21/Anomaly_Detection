@@ -94,6 +94,11 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
 #    print(scores)
 
     # True/False Positive Rates.
+    
+#    print('> Evaluation CHECK:')
+#    print(labels.shape)
+#    print(scores.shape)
+    
     fpr, tpr, threshold = roc_curve(labels, scores)
     
     opt_threshold = _getOptimalThreshold(fpr, tpr, threshold)
@@ -104,29 +109,67 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
     eer = brentq(lambda x: 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
 #    print(eer)
     
+#    if(plot):
+#        plt.figure()
+#        lw = 2
+#    #    plt.plot(0,0)
+#        plt.plot(fpr, tpr, color='darkorange', lw=lw, label='(AUC = %0.2f, EER = %0.2f)' % (roc_auc, eer))
+#        plt.plot([eer], [1-eer], marker='o', markersize=5, color="navy")
+#        plt.fill_between(fpr, tpr, alpha=0.3, color='orange')
+#        plt.plot([0, 1], [1, 0], color='navy', lw=1, linestyle=':')
+#        plt.plot(fpr, threshold, markeredgecolor='r',linestyle='dashed', color='r', label='Threshold = {:.3f}'.format(opt_threshold))
+#        plt.xlim([0.0, 1.0])
+#        plt.ylim([0.0, 1.05])
+#        plt.xlabel('False Positive Rate')
+#        plt.ylabel('True Positive Rate')
+#        plt.title('Receiver operating characteristic _{}_'.format(info))
+#        plt.legend(loc="lower right")
+##        plt.show()
+#
+#        print(folder_save)
+#        if(folder_save is not None):
+#            # SAVING ROC CURVE PLOT
+#            print('.. saving at {}'.format(folder_save))
+#            plt.savefig(folder_save + 'roc curve_' + str(info))
+#            plt.show()
+#            
+#            # SAVING SCORES PLOT
+#            plt.title('Anomaly Scores Trend _{}_'.format(info))
+#            plt.plot(scores)
+#            print('..{} saving at {}'.format(info, folder_save))
+#            plt.savefig(folder_save + 'anomaly_scores_' + info + '_')
+#            plt.show()
+#        
+#        
+    
     if(plot):
-        plt.figure()
+        fig, [ax1, ax2] = plt.subplots(2,1, figsize=(8,12))
+        
         lw = 2
-    #    plt.plot(0,0)
-        plt.plot(fpr, tpr, color='darkorange', lw=lw, label='(AUC = %0.2f, EER = %0.2f)' % (roc_auc, eer))
-        plt.plot([eer], [1-eer], marker='o', markersize=5, color="navy")
-        plt.fill_between(fpr, tpr, alpha=0.3, color='orange')
-        plt.plot([0, 1], [1, 0], color='navy', lw=1, linestyle=':')
-        plt.plot(fpr, threshold, markeredgecolor='r',linestyle='dashed', color='r', label='Threshold')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic _{}_'.format(info))
-        plt.legend(loc="lower right")
-#        plt.show()
-
-        print(folder_save)
+        
+        # PLOTTING AUC
+        ax1.plot(fpr, tpr, color='darkorange', lw=lw, label='(AUC = %0.2f, EER = %0.2f)' % (roc_auc, eer))
+        ax1.plot([eer], [1-eer], marker='o', markersize=5, color="navy")
+        ax1.fill_between(fpr, tpr, alpha=0.3, color='orange')
+        ax1.plot([0, 1], [1, 0], color='navy', lw=1, linestyle=':')
+        ax1.plot(fpr, threshold, markeredgecolor='r',linestyle='dashed', color='r', label='Threshold = {:.3f}'.format(opt_threshold))
+        ax1.set_xlim([0.0, 1.0])
+        ax1.set_ylim([0.0, 1.05])
+        ax1.set_xlabel('False Positive Rate')
+        ax1.set_ylabel('True Positive Rate')
+        ax1.set_title('Receiver operating characteristic _{}_'.format(info))
+        ax1.legend(loc="lower right")
+        
+        # PLOTTING TREND SCORES
+        ax2.set_title('Anomaly Scores Trend _{}_'.format(info))
+        ax2.plot(scores)
+        
+        # SAVING PLOTS
         if(folder_save is not None):
+            # SAVING ROC CURVE PLOT
             print('.. saving at {}'.format(folder_save))
-            plt.savefig(folder_save + 'roc curve_' + str(info))
-            
-        plt.show()
+            plt.savefig(folder_save + 'evaluation_' + str(info))
+            plt.show()        
 
     return roc_auc, opt_threshold
 

@@ -23,8 +23,8 @@ opt.name = 'Ganom_v0.0'
 opt.anom_perc = 0.4
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
-opt.nFolders = 10
-opt.patch_per_im = 500
+opt.nFolders = 30
+opt.patch_per_im = 100
 
 #opt.n_extra_layers=2
 
@@ -85,6 +85,7 @@ print(path_file)
 adModel = torch.load(path_file)
 
 #%% TRAINING MODEL
+
 #opt.lr = 0.0001
 #opt.lr_gen = 1e-05
 #opt.lr_discr = 1e-05

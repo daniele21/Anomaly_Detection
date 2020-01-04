@@ -19,6 +19,7 @@ from libraries.model.evaluate import evaluate
 from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR_decay
 from libraries.utils import Paths, ensure_folder, getNmeans
 from libraries.dataset_package.dataset_manager import generatePatches
+from libraries.model.postprocessing import convFilterScores, medFilterScores
 
 from scipy.ndimage import convolve, median_filter
 from scipy.ndimage.filters import convolve1d
@@ -351,32 +352,36 @@ class AnomalyDetectionModel():
 
                 i += 1
 
+            # ANOMALY SCORE DESCRIPTION
+#            print('> Anomaly score:')
+#            print(anomaly_scores.cpu())
+#            plt.plot(anomaly_scores.cpu())
+
             # NORMALIZATION - Scale error vector between [0, 1]
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
             # auc, eer = roc(self.gt_labels, self.anomaly_scores)
-            auc_norm, threshold_norm = evaluate(gt_labels, anomaly_scores_norm, info='norm',
+            auc_norm, threshold_norm = evaluate(gt_labels, anomaly_scores_norm, info='2.norm',
                                                 folder_save=self.folder_save, plot=True)
             
             # WITHOUT NORMALIZATION
             auc, threshold = evaluate(gt_labels, anomaly_scores,
-                                      folder_save=self.folder_save, plot=True, info='standard')
+                                      folder_save=self.folder_save, plot=True, info='1.standard')
 
             # CONV ANOMALY SCORE
-            kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
-            #kernel = kernel/len(self.validationloader)
-#            print('\n\n\Kernel:\n')
-#            print(kernel.shape)
-#            print(kernel.shape)
-#            conv_anom_scores = convolve(anomaly_scores.cpu(), kernel.cpu())
-            conv_anom_scores = convolve1d(anomaly_scores.cpu(), kernel.cpu())
+#            kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
+            kernel_size = 3
+            conv_anom_scores = convFilterScores(anomaly_scores, kernel_size,
+                                                plot=True, folder_save=self.folder_save)            
             auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
-                                                folder_save=self.folder_save, info='conv')
+                                                folder_save=self.folder_save, info='4.conv')
 
             # MEDIAN ANOMALY SCORE
-#            median_anom_scores = median_filter(anomaly_scores.cpu(), size=kernel.size)
-            median_anom_scores = medfilt(anomaly_scores.cpu(), kernel_size=10)
-            auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='median',
+            kernel_size = 3
+            median_anom_scores = medFilterScores(anomaly_scores, kernel_size,
+                                                 plot=True, folder_save=self.folder_save)
+            auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='3.median',
                                                     plot=True, folder_save=self.folder_save)
+
 
             performance_norm = dict({'AUC':auc_norm,
                                 'Threshold':threshold_norm})
@@ -748,62 +753,62 @@ class AnomalyDetectionModel():
         return prediction, anomaly_score.item(), thr
         
     
-    def predictImage(self, dataTest, folder_save=None, N=10):
-        
-        i = 0
-        
-        with torch.no_grad():
-            anomaly_scores = torch.zeros(size=(len(dataTest.dataset),), dtype=torch.float32, device=device)
-            gt_labels = torch.zeros(size=(len(dataTest.dataset),), dtype=torch.long, device=device)
-            
-    #        print('> anom shape')
-    #        print(anomaly_scores.shape)
-                
-            start = time.time()
-            for patches, labels in tqdm(dataTest, total=len(dataTest)):
-                
-                x = torch.Tensor(patches).cuda()
-                tensor_label = torch.Tensor(labels).cuda()
-                
-    #            print('> x shape')
-    #            print(x.shape)
-                
-                x_prime, z, z_prime = self.model.forward_gen(x)
-                
-                # ANOMALY SCORE
-                score = torch.mean(torch.pow((z-z_prime), 2), dim=1)
-                    
-                anomaly_scores[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = score.reshape(score.size(0))
-                gt_labels[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = tensor_label.reshape(score.size(0))
-        
-                i += 1
-    
-            anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
-            auc, threshold_auc = evaluate(gt_labels, anomaly_scores_norm, plot=True, folder_save=folder_save)
-            
-            avg_prec = evaluate(gt_labels, anomaly_scores_norm, metric='prec_rec_curve', plot=True, folder_save=folder_save)
-#            return evaluate(gt_labels, anomaly_scores_norm, metric='prec_rec_curve', plot=True)
-            end = time.time()
-            
-            performance = {'AUC': auc,
-                           'Thr': threshold_auc,
-                           'Avg_prec': avg_prec}
-            
-            print('Prediction time: {}'.format(adjustTime(end-start)))
-            
-            gt_labels = dataTest.dataset.targets
-            pred_labels = computeAnomalyDetection(anomaly_scores_norm, threshold_auc)
-            # PRECISION
-            precision = evaluate(gt_labels, pred_labels, metric='precision')
-            
-            
-            pred_patches = generatePatches(dataTest.dataset.data, pred_labels)
-            
-            
-            print('Precision: {}'.format(precision))
-            samples = getSamples(patches, x_prime, labels, anomaly_scores_norm, N=10)
-            
-        return pred_patches, samples, performance
+#    def predictImage(self, dataTest, folder_save=None, N=10):
+#        
+#        i = 0
+#        
+#        with torch.no_grad():
+#            anomaly_scores = torch.zeros(size=(len(dataTest.dataset),), dtype=torch.float32, device=device)
+#            gt_labels = torch.zeros(size=(len(dataTest.dataset),), dtype=torch.long, device=device)
+#            
+#    #        print('> anom shape')
+#    #        print(anomaly_scores.shape)
+#                
+#            start = time.time()
+#            for patches, labels in tqdm(dataTest, total=len(dataTest)):
+#                
+#                x = torch.Tensor(patches).cuda()
+#                tensor_label = torch.Tensor(labels).cuda()
+#                
+#    #            print('> x shape')
+#    #            print(x.shape)
+#                
+#                x_prime, z, z_prime = self.model.forward_gen(x)
+#                
+#                # ANOMALY SCORE
+#                score = torch.mean(torch.pow((z-z_prime), 2), dim=1)
+#                    
+#                anomaly_scores[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = score.reshape(score.size(0))
+#                gt_labels[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = tensor_label.reshape(score.size(0))
+#        
+#                i += 1
+#    
+#            anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
+#            auc, threshold_auc = evaluate(gt_labels, anomaly_scores_norm, plot=True, folder_save=folder_save)
+#            
+#            avg_prec = evaluate(gt_labels, anomaly_scores_norm, metric='prec_rec_curve', plot=True, folder_save=folder_save)
+##            return evaluate(gt_labels, anomaly_scores_norm, metric='prec_rec_curve', plot=True)
+#            end = time.time()
+#            
+#            performance = {'AUC': auc,
+#                           'Thr': threshold_auc,
+#                           'Avg_prec': avg_prec}
+#            
+#            print('Prediction time: {}'.format(adjustTime(end-start)))
+#            
+#            gt_labels = dataTest.dataset.targets
+#            pred_labels = computeAnomalyDetection(anomaly_scores_norm, threshold_auc)
+#            # PRECISION
+#            precision = evaluate(gt_labels, pred_labels, metric='precision')
+#            
+#            
+#            pred_patches = generatePatches(dataTest.dataset.data, pred_labels)
+#            
+#            
+#            print('Precision: {}'.format(precision))
+#            samples = getSamples(patches, x_prime, labels, anomaly_scores_norm, N=10)
+#            
+#        return pred_patches, samples, performance
             
     def saveImages(self, dataloader):
         

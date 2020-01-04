@@ -14,7 +14,7 @@ class Paths():
         self.code_path = './'
 #        self.dataset_path = '../../Dataset/my_dataset/'
 #        self.dataset_path = './data/'
-        self.dataset_path = '../'
+        self.dataset_path = '../../'
         
         self.test_images = self.dataset_path + 'test_images/'
         self.test_labeled = self.test_images + 'labeled_images/'
