@@ -71,10 +71,7 @@ def evaluateResult(model, img, mask):
         
         info = 'Thr over data - ' + x
         computeEvaluation(mask, simple_mask_1, info, img.folder_save)
-        
-        print('****************')
-        print(x)
-        print('****************')
+
         if(x == 'standard'):
             # MAJORITY VOTING
             maj_mask_1 = img.drawAnomaliesMajVoting()
