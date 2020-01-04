@@ -57,7 +57,7 @@ def evaluateResult(model, img, mask):
         thr = thr_dict[x]
 
         # ANOMALY PREDICTION FOR EACH SINGLE PATCH
-        for patch in tqdm(img.patches, total=len(img.patches)):
+        for patch in img.patches:
         
             patch_image = patch.patch_image
             outcome, score, threshold = model.predict(patch_image, threshold=thr)
