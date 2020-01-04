@@ -360,12 +360,12 @@ class AnomalyDetectionModel():
             # NORMALIZATION - Scale error vector between [0, 1]
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
             # auc, eer = roc(self.gt_labels, self.anomaly_scores)
-            auc_norm, threshold_norm = evaluate(gt_labels, anomaly_scores_norm, info='2.norm',
+            auc_norm, threshold_norm = evaluate(gt_labels, anomaly_scores_norm, info='2_norm',
                                                 folder_save=self.folder_save, plot=True)
             
             # WITHOUT NORMALIZATION
             auc, threshold = evaluate(gt_labels, anomaly_scores,
-                                      folder_save=self.folder_save, plot=True, info='1.standard')
+                                      folder_save=self.folder_save, plot=True, info='1_standard')
 
             # CONV ANOMALY SCORE
 #            kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
@@ -373,13 +373,13 @@ class AnomalyDetectionModel():
             conv_anom_scores = convFilterScores(anomaly_scores, kernel_size,
                                                 plot=True, folder_save=self.folder_save)            
             auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
-                                                folder_save=self.folder_save, info='4.conv')
+                                                folder_save=self.folder_save, info='4_conv')
 
             # MEDIAN ANOMALY SCORE
             kernel_size = 3
             median_anom_scores = medFilterScores(anomaly_scores, kernel_size,
                                                  plot=True, folder_save=self.folder_save)
-            auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='3.median',
+            auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='3_median',
                                                     plot=True, folder_save=self.folder_save)
 
 
