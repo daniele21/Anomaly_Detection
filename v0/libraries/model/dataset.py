@@ -164,7 +164,7 @@ def collectNormalSamples(nImages, normal_per_img=None):
         path_anom = NORMAL_PATH + str(index) + '/'
         normImages = os.listdir(path_anom)
         
-        print('\nImage n.', counterImage)
+#        print('\nImage n.', counterImage)
         
         if(normal_per_img is None):
             normal_per_img = len(normImages)
@@ -207,7 +207,7 @@ def collectAnomalySamples(nImages, anom_per_img=None):
         path_anom = ANOM_PATH + str(index) + '/'
         anomImages = os.listdir(path_anom)
         
-        print('\nImage n.', counterImage)
+#        print('\nImage n.', counterImage)
         
         if(anom_per_img is None):
             anom_per_img = len(anomImages)
