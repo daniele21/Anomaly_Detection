@@ -652,7 +652,9 @@ class AnomalyDetectionModel():
         auc, thr = evaluate(self.gt_labels, scores, plot=True, folder_save=folder_save)
         
         print('\n')
-        print('AUC: {:.3f} \t Thres. : {:.3f} '.format(auc, self.threshold))
+        print('AUC: {:.3f} \t Thres. : {:.6f} '.format(auc, thr))
+        
+        return auc, thr
     
     def plotLosses(self):
         fig, [ax1, ax2, ax3, ax4, ax5] = plt.subplots(5,1, figsize=(8,16))
