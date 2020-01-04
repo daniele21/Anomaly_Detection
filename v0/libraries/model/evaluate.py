@@ -13,6 +13,8 @@ import numpy as np
 from inspect import signature
 from sklearn.metrics import confusion_matrix
 
+EXTENSION = '.png'
+
 def evaluate(labels, scores, metric='roc', plot=False, folder_save=None, info=''):
     if metric == 'roc':
         return roc(labels, scores, plot=plot, folder_save=folder_save, info=info)
@@ -168,7 +170,7 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
         if(folder_save is not None):
             # SAVING ROC CURVE PLOT
             print('.. saving at {}'.format(folder_save))
-            plt.savefig(folder_save + 'evaluation_' + str(info))
+            plt.savefig(folder_save + 'evaluation_' + str(info) + EXTENSION)
             plt.show()        
 
     return roc_auc, opt_threshold
@@ -200,7 +202,7 @@ def precision_recall(labels, scores, plot, folder_save):
         
         if(folder_save is not None):
             print('.. saving at {}'.format(folder_save))
-            plt.savefig(folder_save + '/prec-recall curve')
+            plt.savefig(folder_save + '/prec-recall curve' + EXTENSION)
             
         plt.show()
         
