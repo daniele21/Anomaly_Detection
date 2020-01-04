@@ -369,16 +369,14 @@ class AnomalyDetectionModel():
 
             # CONV ANOMALY SCORE
 #            kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
-            kernel_size = 3
-            conv_anom_scores = convFilterScores(anomaly_scores, kernel_size,
-                                                plot=True, folder_save=self.folder_save)            
+            kernel_size = self.opt.kernel_size
+            conv_anom_scores = convFilterScores(anomaly_scores, kernel_size)            
             auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
                                                 folder_save=self.folder_save, info='4_conv')
 
             # MEDIAN ANOMALY SCORE
-            kernel_size = 3
-            median_anom_scores = medFilterScores(anomaly_scores, kernel_size,
-                                                 plot=True, folder_save=self.folder_save)
+            kernel_size = self.opt.kernel_size
+            median_anom_scores = medFilterScores(anomaly_scores, kernel_size)
             auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='3_median',
                                                     plot=True, folder_save=self.folder_save)
 
