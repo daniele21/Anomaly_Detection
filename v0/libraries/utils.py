@@ -179,7 +179,7 @@ class LR_decay():
 #saveInfo(opt)
 #%% FUNCTIONS
 
-def computeAnomError(model, thr=None, anom_set):
+def computeAnomError(model, anom_set, thr=None):
     anomalies = 0
     
     for image in anom_set:
@@ -194,7 +194,7 @@ def computeAnomError(model, thr=None, anom_set):
     
     return error
 
-def computeNormError(model, thr=None, normal_set):
+def computeNormError(model, normal_set, thr=None):
     normal = 0
     anomalies = 0
     
