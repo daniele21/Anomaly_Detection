@@ -55,13 +55,13 @@ def evaluateResult(model, img, mask):
         thr = thr_dict[x]
         
         # ANOMALY PREDICTION FOR EACH SINGLE PATCH
-        for patch in tqdm(img.patches, total=len(img.patches)):
+        for patch in img.patches:
         
             patch_image = patch.patch_image
             outcome, score, threshold = model.predict(patch_image, threshold=thr)
             outcomes.append(outcome)
             patch.anomaly = outcome[1]
-            patch.setScore(score, threshold)
+            patch.setScore(score, thr)
             
         # DRAWING ANOMALIES --> METHOD 1
         
@@ -72,6 +72,9 @@ def evaluateResult(model, img, mask):
         info = 'Thr over data - ' + x
         computeEvaluation(mask, simple_mask_1, info, img.folder_save)
         
+        print('****************')
+        print(x)
+        print('****************')
         if(x == 'standard'):
             # MAJORITY VOTING
             maj_mask_1 = img.drawAnomaliesMajVoting()
