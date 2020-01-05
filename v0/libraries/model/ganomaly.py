@@ -361,24 +361,24 @@ class AnomalyDetectionModel():
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
             # auc, eer = roc(self.gt_labels, self.anomaly_scores)
             auc_norm, threshold_norm = evaluate(gt_labels, anomaly_scores_norm, info='2_norm',
-                                                folder_save=self.folder_save, plot=True)
+                                                folder_save=self.results_folder, plot=True)
             
             # WITHOUT NORMALIZATION
             auc, threshold = evaluate(gt_labels, anomaly_scores,
-                                      folder_save=self.folder_save, plot=True, info='1_standard')
+                                      folder_save=self.results_folder, plot=True, info='1_standard')
 
             # CONV ANOMALY SCORE
 #            kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
             kernel_size = self.opt.kernel_size
             conv_anom_scores = convFilterScores(anomaly_scores, kernel_size)            
             auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
-                                                folder_save=self.folder_save, info='4_conv')
+                                                folder_save=self.results_folder, info='4_conv')
 
             # MEDIAN ANOMALY SCORE
             kernel_size = self.opt.kernel_size
             median_anom_scores = medFilterScores(anomaly_scores, kernel_size)
             auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='3_median',
-                                                    plot=True, folder_save=self.folder_save)
+                                                    plot=True, folder_save=self.results_folder)
 
 
             performance_norm = dict({'AUC':auc_norm,
@@ -434,7 +434,8 @@ class AnomalyDetectionModel():
         self.folder_save = paths.checkpoint_folder + self.opt.name + '/'
         ensure_folder(self.folder_save)
         
-        best_auc = 0
+        self.results_folder = paths.checkpoint_folder + self.opt.name + '/training_result/'
+        ensure_folder(self.results_folder)
         
         es = EarlyStopping(self.opt)
         lrDecay = LR_decay(self.opt.lr_gen)
@@ -469,18 +470,11 @@ class AnomalyDetectionModel():
 #            val_loss[GENERATOR] = np.concatenate((val_loss[GENERATOR], loss[GENERATOR]))
 #            print(len(val_loss[GENERATOR]))
             val_time = adjustTime(val_time)
-            
-#            self.visualizer.plot(val_loss[GENERATOR], 'validation', 'Generator', 'append')
-            
-            # VISUALIZATION
-            
-#            self.visualizer.plot_loss(train_loss['INDEX'], train_loss['GENERATOR'], val_loss['GENERATOR'], 'GENERATOR')
-#            self.visualizer.plot_loss(train_loss['INDEX'], train_loss['DISCRIMINATOR'], val_loss['DISCRIMINATOR'], 'DISCRIMINATOR')
-            
+                      
             # TEST
-#            return self._test()
             
             # PERFOMANCE DICT
+            
 #            performance_x = {'AUC'      :----,
 #                             'Threshold':----}
             
@@ -629,7 +623,7 @@ class AnomalyDetectionModel():
         
         if(save):
 #            plt.savefig(self.folder_save + self.opt.name + '/'+ 'plot')
-            plt.savefig(self.folder_save + 'plot')
+            plt.savefig(self.results_folder + 'plot')
        
         plt.show()
     

@@ -14,6 +14,7 @@ from tqdm import tqdm
 from libraries.model.ganomaly import loadModel, outputSample
 from libraries.utils import Paths, writeDataResults
 from libraries.model.evaluate import evaluate, accuracy, precision, recall, IoU
+from libraries.model.evaluate import precision_recall
 from libraries.dataset_package import dataset_manager as dm
 from libraries.dataset_package.dataset_manager import Shape
 from libraries.model.dataset import generateDataloaderTest
@@ -22,6 +23,8 @@ paths = Paths()
 csv_directory = paths.csv_directory
 #%%
 def computeEvaluation(mask_true, mask_pred, info, folder_save):
+    
+    precision_recall(mask_true, mask_pred, plot=True, folder_save=folder_save)
     
     prec = precision(mask_true.ravel(), mask_pred.ravel())
     acc = accuracy(mask_true.ravel(), mask_pred.ravel())

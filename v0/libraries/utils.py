@@ -16,9 +16,12 @@ class Paths():
 #        self.dataset_path = './data/'
         self.dataset_path = '../../'
         
-        self.test_images = self.dataset_path + 'test_images/'
-        self.test_labeled = self.test_images + 'labeled_images/'
-        self.test_patched = self.test_images + 'patched_images/'
+#        self.test_images = self.dataset_path + 'test_images/'
+        self.test_images = 'test_results/'
+        
+#        self.test_labeled = self.test_images + 'labeled_images/'
+#        self.test_patched = self.test_images + 'patched_images/'
+        self.test_patched = self.test_images
         
         self.library_folder = self.code_path + 'libraries/'
         self.csv_directory = '../data/'
@@ -281,6 +284,8 @@ def writeDataResults(results, folder_save):
     content = content + '- Precision:\t{:.2f}\n'.format(results['prec'])
     content = content + '- Recall:   \t{:.2f}\n'.format(results['rec'])
     content = content + '- Iou   :   \t{:.2f}\n\n'.format(results['iou'])
+    content = content + '- Avg Prec: \t{:.2f}\n\n'.format(results['avg_prec'])
+    content = content + '______________________________________\n\n' 
 #    
 #    content = content + '- \tMajority Voting:\n'
 #    content = content + '- Accuracy: \t{}\n'.format(maj_results['acc'])

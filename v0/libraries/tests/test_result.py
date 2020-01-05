@@ -13,6 +13,7 @@ from tqdm import tqdm
 from libraries.model.ganomaly import loadModel, outputSample
 from libraries.utils import Paths, writeDataResults
 from libraries.model.evaluate import evaluate, accuracy, precision, recall, IoU
+from libraries.model.evaluate import precision_recall
 from libraries.dataset_package import dataset_manager as dm
 from libraries.dataset_package.dataset_manager import Shape
 from libraries.model.dataset import generateDataloaderTest
@@ -25,6 +26,9 @@ def computeEvaluation(mask_true, mask_pred, info, folder_save):
     mask_true = mask_true.astype(int)
     mask_pred = mask_pred.astype(int)
     
+    avg_prec = precision_recall(mask_true.ravel(), mask_pred.ravel(),
+                                plot=True, folder_save=folder_save)
+    
     prec = precision(mask_true.ravel(), mask_pred.ravel())
     acc = accuracy(mask_true.ravel(), mask_pred.ravel())
     rec = recall(mask_true.ravel(), mask_pred.ravel())
@@ -34,6 +38,7 @@ def computeEvaluation(mask_true, mask_pred, info, folder_save):
                'prec':prec,
                'rec':rec,
                'iou':iou,
+               'avg_prec':avg_prec,
                'info': info}
     
     writeDataResults(results, folder_save)
@@ -67,6 +72,8 @@ def evaluateResult(model, img, mask):
             
         # DRAWING ANOMALIES --> METHOD 1
         print('threshold: {}'.format(threshold))
+        if(x == 'conv' or x == 'median'):
+            x = str(x) + '_' + str(model.opt.kernel_size)
         # SIMPLE METHOD
         simple_mask_1, n_anom_1 = img.drawAnomaliesSimple(info = x)
         
@@ -75,13 +82,13 @@ def evaluateResult(model, img, mask):
         info = 'Thr over data - ' + x
         computeEvaluation(mask, simple_mask_1, info, img.folder_save)
         
-        if(x == 'standard'):
-            # MAJORITY VOTING
-            maj_mask_1 = img.drawAnomaliesMajVoting()
-            
-            # EVALUATION
-            info = 'Thr over data - MAJORITY VOTING'
-            computeEvaluation(mask, maj_mask_1, info, img.folder_save)
+#        if(x == 'standard'):
+#            # MAJORITY VOTING
+#            maj_mask_1 = img.drawAnomaliesMajVoting()
+#            
+#            # EVALUATION
+#            info = 'Thr over data - MAJORITY VOTING'
+#            computeEvaluation(mask, maj_mask_1, info, img.folder_save)
 
     
 def automaticEvaluation(model, start, end, stride):
