@@ -74,6 +74,7 @@ def evaluateResult(model, img, mask):
         print('threshold: {}'.format(threshold))
         if(x == 'conv' or x == 'median'):
             x = str(x) + '_k=' + str(model.performance[x]['k'])
+            
         # SIMPLE METHOD
         simple_mask_1, n_anom_1 = img.drawAnomaliesSimple(info = x)
         

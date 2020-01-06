@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 from inspect import signature
 from sklearn.metrics import confusion_matrix
+from libraries.utils import ensure_folder
 
 EXTENSION = '.png'
 
@@ -130,6 +131,7 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
         if(folder_save is not None):
             # SAVING ROC CURVE PLOT
             print('.. saving at {}'.format(folder_save))
+            ensure_folder(folder_save)
             plt.savefig(folder_save + 'evaluation_' + str(info) + EXTENSION)
             plt.show()    
             
