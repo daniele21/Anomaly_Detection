@@ -390,11 +390,13 @@ class AnomalyDetectionModel():
             performance_stand = dict({'AUC':auc,
                                 'Threshold':threshold})
     
-            performance_conv = dict({'AUC':auc_conv,
-                                'Threshold':conv_threshold})
+            performance_conv = dict({'k':kernel_size,
+                                    'AUC':auc_conv,
+                                    'Threshold':conv_threshold})
     
-            performance_median = dict({'AUC':auc_median,
-                                'Threshold':median_threshold})
+            performance_median = dict({'k':kernel_size,
+                                    'AUC':auc_median,
+                                    'Threshold':median_threshold})
             
             eval_data = dict({'gt_labels':gt_labels,
                               'scores':anomaly_scores})

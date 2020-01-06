@@ -45,7 +45,7 @@ def tune_KernelSize(model, mode='conv'):
     scores = model.anomaly_scores
     kernel_sizes  = np.arange(3,23,2)
         
-    best = {'auc':0, 'k':0}
+    best = {'auc':0, 'k':0, 'thr':0}
     
     if(mode == 'median'):
 
@@ -57,6 +57,7 @@ def tune_KernelSize(model, mode='conv'):
             if(auc > best['auc']):
                 best['auc'] = auc
                 best['k'] = k
+                best['thr'] = thr
                 
             results['k'].append(k)
             results['AUC'].append(auc)
@@ -72,17 +73,19 @@ def tune_KernelSize(model, mode='conv'):
             if(auc > best['auc']):
                 best['auc'] = auc
                 best['k'] = k
+                best['thr'] = thr
             
             results['k'].append(k)
             results['AUC'].append(auc)
             results['Thr'].append(thr)
     
     __print_tuningResults(results, mode)
-    print('\n\n> Best Option: ')
+    print('\n\n>____Best Option____\n')
     print('> kernel_size: \t{}'.format(best['k']))
     print('> auc        : \t{}'.format(best['auc']))
+    print('> threshold  : \t{}'.format(best['thr']))
     
-    return results
+    return best['k'], best['thr']
     
 def __print_tuningResults(results, mode):
     
