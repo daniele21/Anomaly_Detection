@@ -286,8 +286,6 @@ class AnomalyDetectionModel():
             
             _, threshold = evaluate(gt_labels, anomaly_scores)
             
-#            print(np.where(gt_labels.cpu() == 1.0))
-#            len(np.where(gt_labels.cpu() == 1.0))
             
             performance = dict({'AUC':auc,
                                 'Threshold':threshold})

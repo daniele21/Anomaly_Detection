@@ -66,7 +66,7 @@ optimizer_gen = Adam
 optimizer_discr = Adam
 
 opt.lr_gen = 1*1e-04
-opt.lr_discr = 1*1e-04
+opt.lr_discr = 1*1e-06
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, trainloader, validLoader) 
 
 #%% TUNING MODEL
@@ -147,6 +147,7 @@ adModel.addInfo(content)
 #%% INFERENCE
 
 automaticEvaluation(adModel, 1070, 1080, 12)
+
 
 
 

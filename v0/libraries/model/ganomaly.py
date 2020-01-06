@@ -493,11 +493,6 @@ class AnomalyDetectionModel():
             if(self.epoch % self.opt.printing_freq == 0):
                 self.plotting()
 #                self.evaluateRoc()
-            
-#            if(result['AUC'] > best_auc):
-#                best_auc = result['AUC']
-#                
-#            self.visualizer.print_current_performance(result, best_auc)
                             
             print('\n')
             print('>- Training Loss:   {:.2f} in {} sec'.format(self.train_loss[GENERATOR][-1], train_time) )
@@ -836,7 +831,9 @@ class AnomalyDetectionModel():
                                                                              valid_loss)
         
         torch.save(self, path_file)
-#        print('3.Model: ', self.model)
+        
+        path_best_ckp = '{0}/{1}_best_ckp.pth.tar'.format(self.folder_save, self.opt.name)
+        torch.save(self, path_best_ckp)
         
     def tuneLearningRate(self, inf_bound_gen, sup_bound_gen, inf_bound_discr, sup_bound_discr):
         
