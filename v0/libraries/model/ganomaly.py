@@ -19,7 +19,7 @@ from libraries.model.evaluate import evaluate
 from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR_decay
 from libraries.utils import Paths, ensure_folder, getNmeans
 from libraries.dataset_package.dataset_manager import generatePatches
-from libraries.model.postprocessing import convFilterScores, medFilterScores
+from libraries.model.postprocessing import convFilterScores, medFilterScores, gaussFilterScores
 
 from scipy.ndimage import convolve, median_filter
 from scipy.ndimage.filters import convolve1d
@@ -382,6 +382,12 @@ class AnomalyDetectionModel():
             median_anom_scores = medFilterScores(anomaly_scores, kernel_size)
             auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='3_median',
                                                     plot=True, folder_save=self.results_folder)
+            
+            # GAUSSIAN ANOMALY SCORE
+            sigma = self.opt.sigma
+            gauss_anom_scores = gaussFilterScores(anomaly_scores, sigma)
+            auc_gauss, gauss_threshold = evaluate(gt_labels, gauss_anom_scores, info='5_gauss',
+                                                  plot=True, folder_save=self.results_folder)
 
 
             performance_norm = dict({'AUC':auc_norm,
@@ -628,18 +634,23 @@ class AnomalyDetectionModel():
        
         plt.show()
     
-    def evaluateRoc(self, mode='standard', kernel_size=None, folder_save=None, plot=True):
+    def evaluateRoc(self, mode='standard', param=None,
+                    folder_save=None, plot=True):
         
         if(folder_save is not None):
             folder_save = folder_save
         
         if(mode == 'conv'):
-            assert kernel_size is not None, 'kernel size NONE'
-            scores = convFilterScores(self.anomaly_scores, kernel_size)
+            assert param is not None, 'kernel size NONE'
+            scores = convFilterScores(self.anomaly_scores, param)
         
         elif(mode == 'median'):
-            assert kernel_size is not None, 'kernel size NONE'
-            scores = medFilterScores(self.anomaly_scores, kernel_size)
+            assert param is not None, 'kernel size NONE'
+            scores = medFilterScores(self.anomaly_scores, param)
+        
+        elif(mode == 'gauss'):
+            assert param is not None, 'Wrong gauss params EVALUATE ROC'
+            scores = gaussian_filter1d(self.anomaly_scores, param)
         
         elif(mode == 'standard'):
             scores = self.anomaly_scores

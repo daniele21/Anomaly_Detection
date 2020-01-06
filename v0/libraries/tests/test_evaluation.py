@@ -39,3 +39,5 @@ c = c.astype(int)
 c
 
 c&c
+
+#%%

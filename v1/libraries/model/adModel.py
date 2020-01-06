@@ -284,7 +284,7 @@ class AnomalyDetectionModel():
             
             auc, threshold_norm = evaluate(gt_labels, anomaly_scores_norm)
             
-            _, threshold = evaluate(gt_labels, anomaly_scores)
+            auc, threshold = evaluate(gt_labels, anomaly_scores)
             
             
             performance = dict({'AUC':auc,
@@ -517,7 +517,7 @@ class AnomalyDetectionModel():
         if(folder_save is not None):
             folder_save = folder_save
         
-        auc, _ = evaluate(self.gt_labels, self.anomaly_scores, plot=True, folder_save=folder_save)
+        auc, thr = evaluate(self.gt_labels, self.anomaly_scores, plot=True, folder_save=folder_save)
         
         print('\n')
         print('AUC: {:.3f} \t Thres. : {:.3f} '.format(auc, self.threshold))

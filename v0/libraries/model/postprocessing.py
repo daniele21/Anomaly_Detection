@@ -3,6 +3,7 @@
 #%%
 import numpy as np
 from scipy.signal import medfilt
+from scipy.ndimage.filters import gaussian_filter1d
 
 from libraries.model.evaluate import evaluate
 #%% FUNCTIONS
@@ -31,6 +32,17 @@ def medFilterScores(scores, kernel_size):
     med_scores = medfilt(scores, kernel_size=kernel_size)
 
     return med_scores
+
+def gaussFilterScores(scores, sigma):
+    
+    try:
+        scores = scores.cpu()
+    except:
+        scores = scores
+    
+    gauss_scores = gaussian_filter1d(scores, sigma=sigma)
+
+    return gauss_scores
 
 #def tune_KernelSize(model, mode='conv'):
 #    '''
@@ -87,15 +99,15 @@ def medFilterScores(scores, kernel_size):
 #    
 #    return best['k'], best['thr']
     
-def tune_KernelSize(model, mode='conv'):
+def tune_filters(model, mode='conv'):
     '''
-        mode :  'conv' or 'median'
+        mode :  'conv' or 'median' or 'gauss'
 
     '''
     
-    assert mode in ['conv', 'median'], 'Wrong mode input'
+    assert mode in ['conv', 'median', 'gauss'], 'Wrong mode input'
 
-    results = {'k':[], 'AUC':[], 'Thr':[]}
+    results = {'param':[], 'AUC':[], 'Thr':[]}
     
     kernel_sizes  = np.arange(3,33,2)
         
@@ -107,20 +119,20 @@ def tune_KernelSize(model, mode='conv'):
         
         if(auc > best['auc']):
             best['auc'] = auc
-            best['k'] = k
+            best['param'] = k
             best['thr'] = thr
             
-        results['k'].append(k)
+        results['param'].append(k)
         results['AUC'].append(auc)
         results['Thr'].append(thr)
 
     __print_tuningResults(results, mode)
-    print('\n\n>____Best Option____\n')
-    print('> kernel_size: \t{}'.format(best['k']))
+    print('\n\n_____Best Option____\n')
+    print('> kernel_size: \t{}'.format(best['param']))
     print('> auc        : \t{}'.format(best['auc']))
     print('> threshold  : \t{}'.format(best['thr']))
     
-    return best['k'], best['thr']
+    return best['param'], best['thr']
     
 def __print_tuningResults(results, mode):
     
