@@ -56,10 +56,20 @@ def evaluateResult(model, img, mask):
     thr_dict = {}
     
     for x in ['standard','conv','median','gauss']:
-        thr_dict.update({x : model.performance[x]['Threshold']})
+        
+        try:
+            thr_dict.update({x : model.performance[x]['Threshold']})
+            
+        except:
+            break
     
     for x in thr_dict:
-        thr = thr_dict[x]
+        
+        try:
+            thr = thr_dict[x]
+            
+        except:
+            break
 
         # ANOMALY PREDICTION FOR EACH SINGLE PATCH
         for patch in img.patches:
