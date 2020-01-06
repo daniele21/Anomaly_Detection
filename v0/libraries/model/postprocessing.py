@@ -67,7 +67,7 @@ def tune_KernelSize(model, mode='conv'):
             results['AUC'].append(auc)
             results['Thr'].append(thr)
     
-    __print_tuningResults(results)
+    __print_tuningResults(results, mode)
     
     return results
     
