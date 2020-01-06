@@ -55,6 +55,17 @@ def tune_KernelSize(model, mode='conv'):
             results['k'].append(k)
             results['AUC'].append(auc)
             results['Thr'].append(thr)
+            
+    if(mode == 'conv'):
+
+        for k in kernel_sizes:
+            
+            scores = convFilterScores(scores, k)
+            auc, thr = evaluate(model.gt_labels, scores)
+            
+            results['k'].append(k)
+            results['AUC'].append(auc)
+            results['Thr'].append(thr)
     
     return results
     
