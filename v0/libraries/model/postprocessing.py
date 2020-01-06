@@ -2,9 +2,9 @@
 
 #%%
 import numpy as np
-
 from scipy.signal import medfilt
 
+from libraries.model.evaluate import evaluate
 #%% FUNCTIONS
 
 def convFilterScores(scores, kernel_size):
@@ -32,9 +32,29 @@ def medFilterScores(scores, kernel_size):
 
     return med_scores
 
-def postProcessing(kernel_size, mode='conv'):
+def tune_KernelSize(model, mode='conv'):
     '''
-        mode: 'conv' or 'median'
+        mode :  'conv' or 'median'
+
     '''
     
+    assert mode in ['conv', 'median'], 'Wrong mode input'
+
+    results = {'k':[], 'AUC':[], 'Thr':{}}
+    
+    scores = model.anomaly_scores
+    kernel_sizes  = np.arange(3,23,2)
+        
+    if(mode == 'median'):
+
+        for k in kernel_sizes:
+            
+            scores = medFilterScores(scores, k)
+            auc, thr = evaluate(model.gt_labels, scores)
+            
+            results['k'].append(k)
+            results['AUC'].append(auc)
+            results['Thr'].append(thr)
+    
+    return results
     

@@ -437,7 +437,7 @@ class AnomalyDetectionModel():
         self.folder_save = paths.checkpoint_folder + self.opt.name + '/'
         ensure_folder(self.folder_save)
         
-        self.results_folder = paths.checkpoint_folder + self.opt.name + '/training_result/'
+        self.results_folder = paths.checkpoint_folder + self.opt.name + '/' + self.opt.name + '_training_result/'
         ensure_folder(self.results_folder)
         
         es = EarlyStopping(self.opt)
