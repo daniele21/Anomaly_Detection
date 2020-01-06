@@ -364,24 +364,24 @@ class AnomalyDetectionModel():
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
             # auc, eer = roc(self.gt_labels, self.anomaly_scores)
             auc_norm, threshold_norm = evaluate(gt_labels, anomaly_scores_norm, info='2_norm',
-                                                folder_save=self.results_folder, plot=False)
+                                                folder_save=self.results_folder, plot=True)
             
             # WITHOUT NORMALIZATION
             auc, threshold = evaluate(gt_labels, anomaly_scores,
-                                      folder_save=self.results_folder, plot=False, info='1_standard')
+                                      folder_save=self.results_folder, plot=True, info='1_standard')
 
             # CONV ANOMALY SCORE
 #            kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
             kernel_size = self.opt.kernel_size
             conv_anom_scores = convFilterScores(anomaly_scores, kernel_size)            
-            auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=False,
+            auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
                                                 folder_save=self.results_folder, info='4_conv')
 
             # MEDIAN ANOMALY SCORE
             kernel_size = self.opt.kernel_size
             median_anom_scores = medFilterScores(anomaly_scores, kernel_size)
             auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='3_median',
-                                                    plot=False, folder_save=self.results_folder)
+                                                    plot=True, folder_save=self.results_folder)
 
 
             performance_norm = dict({'AUC':auc_norm,
@@ -500,8 +500,8 @@ class AnomalyDetectionModel():
 #                self.evaluateRoc()
                             
             print('\n')
-            print('>- Training Loss:   {:.2f} in {} sec'.format(self.train_loss[GENERATOR][-1], train_time) )
-            print('>- Validation Loss: {:.2f} in {} sec'.format(self.val_loss[GENERATOR][-1], val_time))
+            print('>- Training Loss:   {:.2f} in {}'.format(self.train_loss[GENERATOR][-1], train_time) )
+            print('>- Validation Loss: {:.2f} in {}'.format(self.val_loss[GENERATOR][-1], val_time))
             
             valid_loss = self.val_loss['GENERATOR'][-1]
             

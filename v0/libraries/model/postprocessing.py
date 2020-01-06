@@ -43,7 +43,7 @@ def tune_KernelSize(model, mode='conv'):
     results = {'k':[], 'AUC':[], 'Thr':[]}
     
     scores = model.anomaly_scores
-    kernel_sizes  = np.arange(3,23,2)
+    kernel_sizes  = np.arange(3,33,2)
         
     best = {'auc':0, 'k':0, 'thr':0}
     

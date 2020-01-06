@@ -134,8 +134,8 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
             plt.show()    
             
 
-    print('> AUC {}:\t\t{:.3f}'.format(str(info), roc_auc))
-    print('> EER {}:\t\t{:.3f}'.format(str(info), eer))
+    print('> AUC {}      :\t{:.3f}'.format(str(info), roc_auc))
+    print('> EER {}      :\t{:.3f}'.format(str(info), eer))
     print('> Threshold {}:\t{:.5f}\n'.format(str(info), opt_threshold))
 
     return roc_auc, opt_threshold
