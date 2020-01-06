@@ -657,7 +657,7 @@ class AnomalyDetectionModel():
         
         elif(mode == 'gauss'):
             assert param is not None, 'Wrong gauss params EVALUATE ROC'
-            scores = gaussian_filter1d(self.anomaly_scores, param)
+            scores = gaussFilterScores(self.anomaly_scores, param)
         
         elif(mode == 'standard'):
             scores = self.anomaly_scores

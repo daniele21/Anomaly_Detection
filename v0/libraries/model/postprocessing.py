@@ -99,7 +99,7 @@ def gaussFilterScores(scores, sigma):
 #    
 #    return best['k'], best['thr']
     
-def tune_filters(model, mode='conv'):
+def tune_kernelSize(model, mode='conv'):
     '''
         mode :  'conv' or 'median' or 'gauss'
 
@@ -115,7 +115,7 @@ def tune_filters(model, mode='conv'):
 
     for k in kernel_sizes:
         
-        auc, thr = model.evaluateRoc(mode=mode, kernel_size=k)
+        auc, thr = model.evaluateRoc(mode=mode, param=k)
         
         if(auc > best['auc']):
             best['auc'] = auc
@@ -133,6 +133,41 @@ def tune_filters(model, mode='conv'):
     print('> threshold  : \t{}'.format(best['thr']))
     
     return best['param'], best['thr']
+
+def tune_sigma(model, mode='gauss'):
+    '''
+        mode :  'conv' or 'median' or 'gauss'
+
+    '''
+    
+    assert mode is not 'gauss', 'Wrong mode input'
+
+    results = {'param':[], 'AUC':[], 'Thr':[]}
+    
+    sigmas  = np.arange(1,20,0.1)
+        
+    best = {'auc':0, 'param':0, 'thr':0}
+
+    for s in sigmas:
+        
+        auc, thr = model.evaluateRoc(mode=mode, param=s)
+        
+        if(auc > best['auc']):
+            best['auc'] = auc
+            best['param'] = s
+            best['thr'] = thr
+            
+        results['param'].append(s)
+        results['AUC'].append(auc)
+        results['Thr'].append(thr)
+
+    __print_tuningResults(results, mode)
+    print('\n\n_____Best Option____\n')
+    print('> kernel_size: \t{}'.format(best['param']))
+    print('> auc        : \t{}'.format(best['auc']))
+    print('> threshold  : \t{}'.format(best['thr']))
+    
+    return best['param'], best['thr'] 
     
 def __print_tuningResults(results, mode):
     
