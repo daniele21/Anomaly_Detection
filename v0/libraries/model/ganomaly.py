@@ -592,6 +592,7 @@ class AnomalyDetectionModel():
             print('>- Training Loss:   {} in {} sec'.format(self.train_loss[GENERATOR][-1], train_time) )
             print('>- Validation Loss: {} in {} sec'.format(self.val_loss[GENERATOR][-1], val_time))
             
+            
             valid_loss = self.val_loss['GENERATOR'][-1]
             
             saveCkp = es(valid_loss)
@@ -627,7 +628,7 @@ class AnomalyDetectionModel():
        
         plt.show()
     
-    def evaluateRoc(self, mode='standard', kernel_size=None, folder_save=None):
+    def evaluateRoc(self, mode='standard', kernel_size=None, folder_save=None, plot=True):
         
         if(folder_save is not None):
             folder_save = folder_save
@@ -643,7 +644,7 @@ class AnomalyDetectionModel():
         elif(mode == 'standard'):
             scores = self.anomaly_scores
         
-        auc, thr = evaluate(self.gt_labels, scores, plot=True, folder_save=folder_save)
+        auc, thr = evaluate(self.gt_labels, scores, plot=plot, folder_save=folder_save)
         
         print('\n')
         print('AUC: {:.3f} \t Thres. : {:.6f} '.format(auc, thr))
