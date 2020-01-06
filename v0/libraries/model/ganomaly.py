@@ -396,14 +396,20 @@ class AnomalyDetectionModel():
             performance_stand = dict({'AUC':auc,
                                 'Threshold':threshold})
     
-            performance_conv = dict({'k':kernel_size,
+            performance_conv = dict({'param':kernel_size,
                                     'AUC':auc_conv,
                                     'Threshold':conv_threshold})
     
-            performance_median = dict({'k':kernel_size,
+            performance_median = dict({'param':kernel_size,
                                     'AUC':auc_median,
                                     'Threshold':median_threshold})
             
+            performance_gauss = dict({'param':sigma,
+                                    'AUC':auc_gauss,
+                                    'Threshold':gauss_threshold})
+            
+            
+    
             eval_data = dict({'gt_labels':gt_labels,
                               'scores':anomaly_scores})
 
@@ -411,7 +417,8 @@ class AnomalyDetectionModel():
             performance = {'standard':performance_stand,
                            'norm': performance_norm,
                            'conv': performance_conv,
-                           'median': performance_median}
+                           'median': performance_median,
+                           'gauss': performance_gauss}
             
             spent_time = time.time() - start
                 

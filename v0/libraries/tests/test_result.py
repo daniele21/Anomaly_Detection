@@ -55,7 +55,7 @@ def evaluateResult(model, img, mask):
     outcomes = []
     thr_dict = {}
     
-    for x in ['standard','conv','median']:
+    for x in ['standard','conv','median','gauss']:
         thr_dict.update({x : model.performance[x]['Threshold']})
     
     for x in thr_dict:
@@ -72,8 +72,8 @@ def evaluateResult(model, img, mask):
             
         # DRAWING ANOMALIES --> METHOD 1
         print('threshold: {}'.format(threshold))
-        if(x == 'conv' or x == 'median'):
-            x = str(x) + '_k=' + str(model.performance[x]['k'])
+        if(x == 'conv' or x == 'median' or x == 'gauss'):
+            x = str(x) + '_param=' + str(model.performance[x]['param'])
             
         # SIMPLE METHOD
         simple_mask_1, n_anom_1 = img.drawAnomaliesSimple(info = x)
