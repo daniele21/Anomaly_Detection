@@ -174,7 +174,7 @@ def __print_tuningResults(results, mode):
     print('\nResults Tuning {}'.format(mode))
     
     
-    for i in range(len(results['k'])):
+    for i in range(len(results['param'])):
         print('\n')
         
         for x in ['k', 'AUC', 'Thr']:
