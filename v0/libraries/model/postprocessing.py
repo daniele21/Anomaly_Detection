@@ -69,3 +69,38 @@ def tune_KernelSize(model, mode='conv'):
     
     return results
     
+def __print_tuningResults(results, mode):
+    
+    print('\nResults Tuning {}'.format(mode))
+    
+    
+    for i in range(len(results['k'])):
+        print('\n')
+        
+        for x in ['k', 'AUC', 'Thr']:
+            print(str(x) + ':\t\t{}'.format(results[x][i]))
+            
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
