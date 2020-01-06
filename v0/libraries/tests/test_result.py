@@ -83,7 +83,10 @@ def evaluateResult(model, img, mask):
         # DRAWING ANOMALIES --> METHOD 1
         print('threshold: {}'.format(threshold))
         if(x == 'conv' or x == 'median' or x == 'gauss'):
-            x = str(x) + '_param=' + str(model.performance[x]['param'])
+            try:
+                x = str(x) + '_param=' + str(model.performance[x]['param'])
+            except:
+                x = str(x) + '_param=' + str(model.performance[x]['k'])
             
         # SIMPLE METHOD
         simple_mask_1, n_anom_1 = img.drawAnomaliesSimple(info = x)
