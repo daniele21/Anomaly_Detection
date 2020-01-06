@@ -92,14 +92,14 @@ def evaluateResult(model, img, mask):
 #            computeEvaluation(mask, maj_mask_1, info, img.folder_save)
 
     
-def automaticEvaluation(model, start, end, stride):
+def automaticEvaluation(model, samples, stride):
     
     shape = Shape(32,32)
     model_name = model.opt.name
     
     train = pd.read_csv(csv_directory + 'train_unique.csv', index_col=0)
     
-    for index in range(start, end):        
+    for index in samples:        
         img, _, mask = dm.extractPatchesForTest(train, index, shape, stride, model_name)
         evaluateResult(model, img, mask)
         
