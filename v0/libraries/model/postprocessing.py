@@ -40,7 +40,7 @@ def tune_KernelSize(model, mode='conv'):
     
     assert mode in ['conv', 'median'], 'Wrong mode input'
 
-    results = {'k':[], 'AUC':[], 'Thr':{}}
+    results = {'k':[], 'AUC':[], 'Thr':[]}
     
     scores = model.anomaly_scores
     kernel_sizes  = np.arange(3,23,2)
