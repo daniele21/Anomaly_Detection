@@ -177,7 +177,7 @@ def __print_tuningResults(results, mode):
     for i in range(len(results['param'])):
         print('\n')
         
-        for x in ['k', 'AUC', 'Thr']:
+        for x in ['param', 'AUC', 'Thr']:
             print(str(x) + ':\t\t{:.4f}'.format(results[x][i]))
             
     
