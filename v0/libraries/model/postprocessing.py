@@ -103,7 +103,7 @@ def tune_KernelSize(model, mode='conv'):
 
     for k in kernel_sizes:
         
-        auc, thr = model.evaluateRoc(mode=mode, kernel_size=k, plot=False)
+        auc, thr = model.evaluateRoc(mode=mode, kernel_size=k)
         
         if(auc > best['auc']):
             best['auc'] = auc
