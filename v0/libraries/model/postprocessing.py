@@ -45,6 +45,8 @@ def tune_KernelSize(model, mode='conv'):
     scores = model.anomaly_scores
     kernel_sizes  = np.arange(3,23,2)
         
+    best = {'auc':0, 'k':0}
+    
     if(mode == 'median'):
 
         for k in kernel_sizes:
@@ -52,6 +54,10 @@ def tune_KernelSize(model, mode='conv'):
             scores = medFilterScores(scores, k)
             auc, thr = evaluate(model.gt_labels, scores)
             
+            if(auc > best['auc']):
+                best['auc'] = auc
+                best['k'] = k
+                
             results['k'].append(k)
             results['AUC'].append(auc)
             results['Thr'].append(thr)
@@ -63,11 +69,18 @@ def tune_KernelSize(model, mode='conv'):
             scores = convFilterScores(scores, k)
             auc, thr = evaluate(model.gt_labels, scores)
             
+            if(auc > best['auc']):
+                best['auc'] = auc
+                best['k'] = k
+            
             results['k'].append(k)
             results['AUC'].append(auc)
             results['Thr'].append(thr)
     
     __print_tuningResults(results, mode)
+    print('\n\n> Best Option: ')
+    print('> kernel_size: \t{}'.format(best['k']))
+    print('> auc        : \t{}'.format(best['auc']))
     
     return results
     
@@ -80,7 +93,7 @@ def __print_tuningResults(results, mode):
         print('\n')
         
         for x in ['k', 'AUC', 'Thr']:
-            print(str(x) + ':\t\t{}'.format(results[x][i]))
+            print(str(x) + ':\t\t{:.3f}'.format(results[x][i]))
             
     
     
