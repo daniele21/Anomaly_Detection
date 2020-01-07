@@ -126,7 +126,7 @@ class EarlyStopping():
             - delta (float): Minimum change in the monitored quantity to qualify as an improvement.
                             Default: 0
         """
-        print(opt)
+        print(opt)  
         self.patience = opt.patience
         self.verbose = verbose
         self.counter = 0
@@ -222,7 +222,7 @@ def saveInfoAE(opt, path, auc):
     filename = opt.name + '_lr:{}'.format(opt.lr) + '_info'
     content = '\t\t' + opt.name + ' information\n\n'
     content = content + '- Dataset: {}\n'.format(opt.dataset)
-    content = content + '- Anomaly at: {}%\n'.format(opt.anom_perc*100)
+#    content = content + '- Anomaly at: {}%\n'.format(opt.anom_perc*100)
     content = content + '- Images: {}\n'.format(opt.nFolders)
     content = content + '- Patches per image: {}\n'.format(opt.patch_per_im)
     content = content + '- Patches: {}\n'.format(opt.nFolders*opt.patch_per_im)
