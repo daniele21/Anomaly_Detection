@@ -126,6 +126,7 @@ class EarlyStopping():
             - delta (float): Minimum change in the monitored quantity to qualify as an improvement.
                             Default: 0
         """
+        print(opt)
         self.patience = opt.patience
         self.verbose = verbose
         self.counter = 0

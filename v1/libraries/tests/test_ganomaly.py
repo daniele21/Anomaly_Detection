@@ -24,7 +24,7 @@ opt.name = 'Ganom_v1_v4.0'
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
 
-opt.nFolders = 20
+opt.nFolders = 2
 opt.patch_per_im = 500
 
 #opt.nFolders = 30

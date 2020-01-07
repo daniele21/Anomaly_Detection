@@ -404,7 +404,7 @@ class AnomalyDetectionModel():
 #                                                                      step_size=20, gamma=1)
             
         
-        self.es = EarlyStopping(self.opt.patience)
+        self.es = EarlyStopping(self.opt)
         self.lrDecay = LR_decay(self.opt.lr_gen)
         
         for self.epoch in range(self.epoch, epochs):
@@ -527,7 +527,7 @@ class AnomalyDetectionModel():
         ensure_folder(self.results_folder)
         
         self.best_auc = {'AUC':0, 'Loss':0, 'Threshold':0}
-        
+
         performance = self._training_step(epochs, save, lr_decay_value)
         
         return performance
