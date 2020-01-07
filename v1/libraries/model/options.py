@@ -44,6 +44,8 @@ class Options():
                  w_con          = 50,
                  w_enc          = 1,
                  multiTaskLoss  = False,
+                 kernel_size    = 3,
+                 sigma          = 1,
                  
                  dataset        = '',
                  descr          = '',
@@ -96,6 +98,8 @@ class Options():
         self.w_con          = w_con
         self.w_enc          = w_enc
         self.multiTaskLoss = multiTaskLoss
+        self.kernel_size    = kernel_size
+        self.sigma          = sigma
         
         self.dataset        = dataset
         self.descr          = descr

@@ -722,7 +722,7 @@ class SteelDataset(Dataset):
                 self.targets = dataset['LABELS']
                 
         self.data = np.vstack(self.data).reshape(-1, opt.shape, opt.shape, 3)
-        print(len(dataset['DATA']))
+
         print(self.data.shape)
 
         self.transforms = self._initTransforms(opt)

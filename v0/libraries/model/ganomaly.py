@@ -371,7 +371,6 @@ class AnomalyDetectionModel():
                                       folder_save=self.results_folder, plot=True, info='1_standard')
 
             # CONV ANOMALY SCORE
-#            kernel = torch.ones(size=(len(self.validationloader.dataset),), dtype=torch.float32, device=device)
             kernel_size = self.opt.kernel_size
             conv_anom_scores = convFilterScores(anomaly_scores, kernel_size)            
             auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
@@ -506,7 +505,7 @@ class AnomalyDetectionModel():
             self.auc, self.threshold = self.performance['standard']['AUC'], self.performance['standard']['Threshold']
 #            self.thresholds.append(self.threshold)
             
-#            self.gt_labels, self.anomaly_scores = eval_data['gt_labels'], eval_data['scores']
+            self.gt_labels, self.anomaly_scores = eval_data['gt_labels'], eval_data['scores']
             
             if(self.epoch % self.opt.printing_freq == 0):
                 self.plotting()

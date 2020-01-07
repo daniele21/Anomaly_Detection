@@ -17,6 +17,7 @@ from libraries.model.ganomaly_network import GanomalyModel
 from libraries.model.evaluate import evaluate
 from libraries.utils import EarlyStopping, saveInfoGanomaly, addInfoGanomaly, LR_decay
 from libraries.utils import Paths, ensure_folder, getNmeans, Checkpoint
+from libraries.model.postprocessing import convFilterScores, medFilterScores, gaussFilterScores
 paths = Paths()
 
 from libraries.dataset_package.dataset_manager import generatePatches
@@ -280,20 +281,63 @@ class AnomalyDetectionModel():
             
             # NORMALIZATION - Scale error vector between [0, 1]
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
-            # auc, eer = roc(self.gt_labels, self.anomaly_scores)
             
-            auc, threshold_norm = evaluate(gt_labels, anomaly_scores_norm)
+            auc_norm, threshold_norm = evaluate(gt_labels, anomaly_scores_norm, info='2_norm',
+                                                folder_save=self.results_folder, plot=True)
             
-            auc, threshold = evaluate(gt_labels, anomaly_scores)
+            # WITHOUT NORMALIZATION
+            auc, threshold = evaluate(gt_labels, anomaly_scores,
+                                      folder_save=self.results_folder, plot=True, info='1_standard')
+
+            # CONV ANOMALY SCORE
+            kernel_size = self.opt.kernel_size
+            conv_anom_scores = convFilterScores(anomaly_scores, kernel_size)            
+            auc_conv, conv_threshold = evaluate(gt_labels, conv_anom_scores, plot=True,
+                                                folder_save=self.results_folder, info='4_conv')
+
+            # MEDIAN ANOMALY SCORE
+            kernel_size = self.opt.kernel_size
+            median_anom_scores = medFilterScores(anomaly_scores, kernel_size)
+            auc_median, median_threshold = evaluate(gt_labels, median_anom_scores, info='3_median',
+                                                    plot=True, folder_save=self.results_folder)
             
+            # GAUSSIAN ANOMALY SCORE
+            sigma = self.opt.sigma
+            gauss_anom_scores = gaussFilterScores(anomaly_scores, sigma)
+            auc_gauss, gauss_threshold = evaluate(gt_labels, gauss_anom_scores, info='5_gauss',
+                                                  plot=True, folder_save=self.results_folder)
+
             
-            performance = dict({'AUC':auc,
+            performance_norm = dict({'AUC':auc_norm,
+                                'Threshold':threshold_norm})
+    
+            performance_stand = dict({'AUC':auc,
                                 'Threshold':threshold})
+    
+            performance_conv = dict({'param':kernel_size,
+                                    'AUC':auc_conv,
+                                    'Threshold':conv_threshold})
+    
+            performance_median = dict({'param':kernel_size,
+                                    'AUC':auc_median,
+                                    'Threshold':median_threshold})
             
+            performance_gauss = dict({'param':sigma,
+                                    'AUC':auc_gauss,
+                                    'Threshold':gauss_threshold})
+            
+            
+    
             eval_data = dict({'gt_labels':gt_labels,
                               'scores':anomaly_scores})
 
-                
+            
+            performance = {'standard':performance_stand,
+                           'norm': performance_norm,
+                           'conv': performance_conv,
+                           'median': performance_median,
+                           'gauss': performance_gauss}            
+            
             spent_time = time.time() - start
                 
             return performance, eval_data, spent_time
@@ -396,11 +440,10 @@ class AnomalyDetectionModel():
 
             valid_loss = self.val_loss['GENERATOR'][-1]
             
-            performance, eval_data, spent_time = self._test()
+            self.performance, eval_data, spent_time = self._test()
             test_time = adjustTime(spent_time)
             
-            self.auc, self.threshold = performance['AUC'], performance['Threshold']
-            
+            self.auc, self.threshold = self.performance['standard']['AUC'], self.performance['standard']['Threshold']           
             self.gt_labels, self.anomaly_scores = eval_data['gt_labels'], eval_data['scores']
             
             
@@ -408,12 +451,10 @@ class AnomalyDetectionModel():
                 self.plotting()
                 self.evaluateRoc()
             
-            if(self.auc > self.best_auc['AUC']):
-                self.best_auc['AUC'] = self.auc
-                self.best_auc['Loss'] = valid_loss
-                self.best_auc['Threshold'] = self.threshold
-                
-#            self.visualizer.print_current_performance(result, best_auc)
+#            if(self.auc > self.best_auc['AUC']):
+#                self.best_auc['AUC'] = self.auc
+#                self.best_auc['Loss'] = valid_loss
+#                self.best_auc['Threshold'] = self.threshold
                             
             print('\n')
             print('>- Training Loss:   {:.3f} in {} sec'.format(self.train_loss[GENERATOR][-1], train_time) )
@@ -482,6 +523,9 @@ class AnomalyDetectionModel():
         self.folder_save = paths.checkpoint_folder + self.opt.name + '/'
         ensure_folder(self.folder_save)
         
+        self.results_folder = paths.checkpoint_folder + self.opt.name + '/' + self.opt.name + '_training_result/'
+        ensure_folder(self.results_folder)
+        
         self.best_auc = {'AUC':0, 'Loss':0, 'Threshold':0}
         
         performance = self._training_step(epochs, save, lr_decay_value)
@@ -513,14 +557,33 @@ class AnomalyDetectionModel():
        
         plt.show()
     
-    def evaluateRoc(self, folder_save=None):
+    def evaluateRoc(self, mode='standard', param=None,
+                    folder_save=None, plot=True):
+        
         if(folder_save is not None):
             folder_save = folder_save
         
-        auc, thr = evaluate(self.gt_labels, self.anomaly_scores, plot=True, folder_save=folder_save)
+        if(mode == 'conv'):
+            assert param is not None, 'kernel size NONE'
+            scores = convFilterScores(self.anomaly_scores, param)
+        
+        elif(mode == 'median'):
+            assert param is not None, 'kernel size NONE'
+            scores = medFilterScores(self.anomaly_scores, param)
+        
+        elif(mode == 'gauss'):
+            assert param is not None, 'Wrong gauss params EVALUATE ROC'
+            scores = gaussFilterScores(self.anomaly_scores, param)
+        
+        elif(mode == 'standard'):
+            scores = self.anomaly_scores
+        
+        auc, thr = evaluate(self.gt_labels, scores, plot=plot, folder_save=folder_save)
         
         print('\n')
-        print('AUC: {:.3f} \t Thres. : {:.3f} '.format(auc, self.threshold))
+        print('AUC: {:.3f} \t Thres. : {:.6f} '.format(auc, thr))
+        
+        return auc, thr
     
     def saveInfo(self):
         folder_save = paths.checkpoint_folder + self.opt.name + '/'
@@ -535,7 +598,7 @@ class AnomalyDetectionModel():
         addInfoGanomaly(self.opt, folder_save, info)
     
     
-    def predict(self, image, target=None, info=None, verbose=0):
+    def predict(self, image, threshold=None, target=None, info=None, verbose=0):
 #        image_tensor = torch.FloatTensor(image)
         image_transf = Transforms.ToTensor()(image)
         image_unsqueeze = image_transf.unsqueeze_(0)
@@ -566,18 +629,22 @@ class AnomalyDetectionModel():
         final_output = np.flip(final_output, 1)
         final_output = np.rot90(final_output, 1)        
         
-        prediction = ['Anomalous Image', 1] if score >= self.threshold else ['Normal Image', 0]
         
+        if(threshold is not None):
+            thr = threshold
+        else:
+            thr = self.threshold
         
-        if(target is not None):
-            real_outcome = 'Anomalous Image' if target == 1 else 'Normal Image'
+        prediction = ['Anomalous Image', 1] if score >= thr else ['Normal Image', 0]
             
+        if(target is not None):
+            real_outcome = 'Anomalous Image' if target == 1 else 'Normal Image'        
 
         if(verbose):
             
             fig, [ax1, ax2] = plt.subplots(2,1, figsize=(10,13))
             results = '\n------------ RESULTS -------------\n' + \
-                       'Threshold: {:.3f}\n'.format(self.threshold) + \
+                       'Threshold: {:.3f}\n'.format(thr) + \
                        'Score: {:.3f}\n'.format(anomaly_score.item()) + \
                        'Real Outcome: {}\n'.format(real_outcome) + \
                        '---------------------------------\n\n' + \
@@ -590,7 +657,7 @@ class AnomalyDetectionModel():
             
             print('')
             print('\n------------ RESULTS -------------')
-            print('Threshold: \t{:.3f}'.format(self.threshold))
+            print('Threshold: \t{:.3f}'.format(thr))
             print('Score: \t\t{:.3f}'.format(anomaly_score.item()))
             print('From \t\t{}'.format(real_outcome))
             print('')
@@ -606,7 +673,7 @@ class AnomalyDetectionModel():
                 else:
                     raise Exception('Wrong Predicion')
             
-        return prediction, anomaly_score.item(), self.threshold
+        return prediction, anomaly_score.item(), thr
         
     
     def predictImage(self, dataTest, folder_save=None, N=10):
@@ -680,7 +747,11 @@ class AnomalyDetectionModel():
                                                                              self.auc,
                                                                              valid_loss)
         
-#        torch.save(self, path_file)
+        torch.save(self, path_file)
+        
+        path_best_ckp = '{0}/{1}_best_ckp.pth.tar'.format(self.folder_save, self.opt.name)
+        torch.save(self, path_best_ckp)
+        
         
         # SAVE JUST A CHECKPOINT
         ckp = Checkpoint(self)
