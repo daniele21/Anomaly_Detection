@@ -140,7 +140,7 @@ def tune_sigma(model, mode='gauss'):
 
     '''
     
-    assert mode is not 'gauss', 'Wrong mode input'
+    assert mode is 'gauss', 'Wrong mode input'
 
     results = {'param':[], 'AUC':[], 'Thr':[]}
     
