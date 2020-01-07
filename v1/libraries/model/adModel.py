@@ -754,8 +754,8 @@ class AnomalyDetectionModel():
         
         
         # SAVE JUST A CHECKPOINT
-        ckp = Checkpoint(self)
-        ckp.saveCheckpoint(valid_loss)
+#        ckp = Checkpoint(self)
+#        ckp.saveCheckpoint(valid_loss)
         
     def tuneLearningRate(self, inf_bound_gen, sup_bound_gen, inf_bound_discr, sup_bound_discr):
         

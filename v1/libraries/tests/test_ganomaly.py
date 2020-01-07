@@ -24,7 +24,7 @@ opt.name = 'Ganom_v1_v4.0'
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
 
-opt.nFolders = 60
+opt.nFolders = 20
 opt.patch_per_im = 500
 
 #opt.nFolders = 30
@@ -75,7 +75,7 @@ opt.lr_discr = 5*1e-05
 opt.patience = 5
 
 opt.w_adv = 1
-opt.w_con = 1
+opt.w_con = 50
 opt.w_enc = 1
 
 opt.weightedLosses = False
@@ -95,6 +95,7 @@ print(path_file)
 #adModel = torch.load(path_file)
 adModel = loadModel(path_file, trainloader, validLoader, testloader)
 #ckp = loadModel(, trainloader, validLoader, testloader)
+
 #%% MULTI TASK LOSS WEIGHTS
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
                                 trainloader, validLoader, testloader) 
@@ -110,7 +111,7 @@ epochs = 30
 #opt.weightedLosses=False
 #optimizer_weights = None
 
-opt.weightedLosses=True
+opt.weightedLosses=False
 optimizer_weights = optimizer_gen
 
 # WEIGHTED LOSS TRAINING
