@@ -140,7 +140,7 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
     
         # PLOTTING TREND SCORES
         ax3.set_title('Anomaly Scores Trend _{}_'.format(info))
-        ax3.plot(scores)
+        ax3.hist(scores, bins=100)
         
         
         # SAVING PLOTS

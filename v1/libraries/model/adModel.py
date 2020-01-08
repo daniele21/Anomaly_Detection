@@ -227,27 +227,30 @@ class AnomalyDetectionModel():
                 
         return valid_loss, [adv_loss, con_loss, enc_loss], spent_time
         
-    def _test(self):
+    def _test(self, normal_score=False):
         
         start = time.time()
         
-        if(self.testloader is None):
-            test_loader = self.validationloader
-        else:
-            test_loader = self.testloader
+        test_loader = self.testloader
+
+        valid_loader = self.validationloader
         
         with torch.no_grad():
             
-            i=0
+            
             curr_epoch = 0
             times = []
 #            n_iter = len(self.validationloader)
 
             anomaly_scores = torch.zeros(size=(len(test_loader.dataset),), dtype=torch.float32, device=device)
+            normal_scores = torch.zeros(size=(len(valid_loader.dataset),), dtype=torch.float32, device=device)
+            
             gt_labels = torch.zeros(size=(len(test_loader.dataset),), dtype=torch.long,    device=device)
+            normal_gt_labels = torch.zeros(size=(len(valid_loader.dataset),), dtype=torch.long,    device=device)
             
             
-#            for images, labels in tqdm(test_loader, leave=True, total=n_iter, desc='Test', file = sys.stdout):
+            # ANOMALY SCORE COMPUTED ON TEST SET(NORMAL + ANORMAL SAMPLES)
+            i=0
             for images, labels in test_loader:
                 
                 curr_epoch += self.opt.batch_size
@@ -277,7 +280,34 @@ class AnomalyDetectionModel():
                 times.append(time_out - time_in)
 
                 i += 1
-                
+            
+            # NORMAL SCORE COMPUTED ON VALIDATION SET(ALL NORMAL SAMPLES)
+            i=0
+            if(normal_score):
+                for images, labels in valid_loader:
+                    
+                    curr_epoch += self.opt.batch_size
+                    
+                    time_in = time.time()
+                    
+                    x = torch.Tensor(images).cuda()
+                    tensor_labels = torch.Tensor(labels).cuda()                
+                                    
+                    _, z, z_prime = self.model.forward_gen(x)
+                    
+                    # NORMAL SCORE
+                    score = torch.mean(torch.pow((z-z_prime), 2), dim=1)
+    
+                    time_out = time.time()
+                                    
+                    
+                    normal_scores[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = score.reshape(score.size(0))
+                    normal_gt_labels[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = tensor_labels.reshape(score.size(0))
+    
+                    times.append(time_out - time_in)
+    
+                    i += 1 
+            #-----------------------------------------------------------------------------------------------
             
             # NORMALIZATION - Scale error vector between [0, 1]
             anomaly_scores_norm = (anomaly_scores - torch.min(anomaly_scores)) / (torch.max(anomaly_scores) - torch.min(anomaly_scores))
@@ -329,7 +359,8 @@ class AnomalyDetectionModel():
             
     
             eval_data = dict({'gt_labels':gt_labels,
-                              'scores':anomaly_scores})
+                              'scores':anomaly_scores,
+                              'normal_scores':normal_scores})
 
             
             performance = {'standard':performance_stand,
@@ -444,8 +475,8 @@ class AnomalyDetectionModel():
             test_time = adjustTime(spent_time)
             
             self.auc, self.threshold = self.performance['standard']['AUC'], self.performance['standard']['Threshold']           
-            self.gt_labels, self.anomaly_scores = eval_data['gt_labels'], eval_data['scores']
-            
+            self.gt_labels, self.anomaly_scores= eval_data['gt_labels'], eval_data['scores']
+            self.normal_scores = eval_data['normal_scores']
             
             if(self.epoch % 5 == 0):
                 self.plotting()

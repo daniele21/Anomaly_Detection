@@ -2,6 +2,8 @@
 
 #%%
 import numpy as np
+from matplotlib import pyplot as plt
+import seaborn as sn
 from scipy.signal import medfilt
 from scipy.ndimage.filters import gaussian_filter1d
 
@@ -44,60 +46,6 @@ def gaussFilterScores(scores, sigma):
 
     return gauss_scores
 
-#def tune_KernelSize(model, mode='conv'):
-#    '''
-#        mode :  'conv' or 'median'
-#
-#    '''
-#    
-#    assert mode in ['conv', 'median'], 'Wrong mode input'
-#
-#    results = {'k':[], 'AUC':[], 'Thr':[]}
-#    
-#    scores = model.anomaly_scores
-#    kernel_sizes  = np.arange(3,33,2)
-#        
-#    best = {'auc':0, 'k':0, 'thr':0}
-#    
-#    if(mode == 'median'):
-#
-#        for k in kernel_sizes:
-#            
-#            scores = medFilterScores(scores, k)
-#            auc, thr = evaluate(model.gt_labels, scores)
-#            
-#            if(auc > best['auc']):
-#                best['auc'] = auc
-#                best['k'] = k
-#                best['thr'] = thr
-#                
-#            results['k'].append(k)
-#            results['AUC'].append(auc)
-#            results['Thr'].append(thr)
-#            
-#    if(mode == 'conv'):
-#
-#        for k in kernel_sizes:
-#            
-#            scores = convFilterScores(scores, k)
-#            auc, thr = evaluate(model.gt_labels, scores)
-#            
-#            if(auc > best['auc']):
-#                best['auc'] = auc
-#                best['k'] = k
-#                best['thr'] = thr
-#            
-#            results['k'].append(k)
-#            results['AUC'].append(auc)
-#            results['Thr'].append(thr)
-#    
-#    __print_tuningResults(results, mode)
-#    print('\n\n>____Best Option____\n')
-#    print('> kernel_size: \t{}'.format(best['k']))
-#    print('> auc        : \t{}'.format(best['auc']))
-#    print('> threshold  : \t{}'.format(best['thr']))
-#    
-#    return best['k'], best['thr']
     
 def tune_kernelSize(model, mode='conv'):
     '''
@@ -181,10 +129,43 @@ def __print_tuningResults(results, mode):
             print(str(x) + ':\t\t{:.4f}'.format(results[x][i]))
             
     
+def distScores(anomaly_scores, gt_labels):
     
+    try:
+        anomaly_scores = anomaly_scores.cpu()
+        gt_labels = gt_labels.cpu()
+    except:
+        anomaly_scores = anomaly_scores
+        gt_labels = gt_labels
     
+    anom_indexes = np.where(gt_labels==1)[0]
+    normal_indexes = np.where(gt_labels==0)[0]
     
+    # CHECK
+    for item in anom_indexes:
+        assert item not in normal_indexes, 'Anomaly in Normal set'
     
+    #
+    
+    anomalies = [anomaly_scores[i] for i in anom_indexes]
+    normals = [anomaly_scores[i] for i in normal_indexes]
+    
+#    plt.hist(anomalies, bins=100, label='anomaly scores', color='red')
+#    plt.xlim(0,1)
+#    plt.legend()
+#    plt.show()
+#    
+#    plt.hist(normals, bins=100, label='normal scores', color='green')
+#    plt.xlim(0,1)
+#    plt.legend()
+#    plt.show()
+    
+    plt.hist([anomalies, normals], bins=100, label=['Anomaly Scores', 'Normal Scores'])
+    plt.legend(loc='upper right')
+    plt.show()
+    
+    sn.distplot(anomalies, label='Anomaly Score')
+    sn.distplot(normals, label='Normal Score')
     
     
     
