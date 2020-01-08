@@ -615,7 +615,7 @@ class AnomalyDetectionModel():
                 print('-> Early stopping now')
                 break
         
-        self.saveCheckPoint(valid_loss)
+        self.saveCheckPoint(valid_loss, last=True)
         self.plotting()
         self.saveInfo()
 #        self.evaluateRoc(folder_save=self.folder_save)
@@ -842,7 +842,7 @@ class AnomalyDetectionModel():
             self.visualizer.display_current_images(reals, fakes, fixed)
     
         
-    def saveCheckPoint(self, valid_loss):
+    def saveCheckPoint(self, valid_loss, last=False):
         self.folder_save = paths.checkpoint_folder + self.opt.name + '/'
         ensure_folder(self.folder_save)
         
@@ -855,8 +855,9 @@ class AnomalyDetectionModel():
         
         torch.save(self, path_file)
         
-        path_best_ckp = '{0}/{1}_best_ckp.pth.tar'.format(self.folder_save, self.opt.name)
-        torch.save(self, path_best_ckp)
+        if(last==False):
+            path_best_ckp = '{0}/{1}_best_ckp.pth.tar'.format(self.folder_save, self.opt.name)
+            torch.save(self, path_best_ckp)
         
     def tuneLearningRate(self, inf_bound_gen, sup_bound_gen, inf_bound_discr, sup_bound_discr):
         
