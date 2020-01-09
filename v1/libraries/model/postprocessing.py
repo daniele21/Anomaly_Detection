@@ -130,7 +130,7 @@ def __print_tuningResults(results, mode):
             print(str(x) + ':\t\t{:.4f}'.format(results[x][i]))
             
     
-def distScores(anomaly_scores, gt_labels, threshold, figsize=(20,10)):
+def distScores(anomaly_scores, gt_labels, threshold, figsize=(7,5)):
     
     try:
         anomaly_scores = anomaly_scores.cpu()
@@ -144,13 +144,14 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(20,10)):
     
     # CHECK
     for item in anom_indexes:
-        assert item not in normal_indexes, 'Anomaly in Normal set'
-    
-    #
+        assert item not in normal_indexes, 'Anomaly in Normal set'   
+    # END CHECK
     
     anomalies = [anomaly_scores[i] for i in anom_indexes]
     normals = [anomaly_scores[i] for i in normal_indexes]
 
+
+    # PLOTTING
     plt.figure(figsize=figsize)
     x1, y1 = [threshold, threshold], [0,1]
     plt.plot(x1, y1, marker='o', c='r', label='Threshold')
@@ -165,14 +166,13 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(20,10)):
     x1, y1 = [threshold, threshold], [0,1]
     plt.plot(x1, y1, marker='o', c='r', label='Threshold')
     # DISTRIBUTIONS
-    ax, anom_density = sn.distplot(anomalies, bins=100, label='Anomaly Score')
-    ax, norm_density = sn.distplot(normals, bins=100, label='Normal Score')
+    sn.distplot(anomalies, bins=100, label='Anomaly Score')
+    sn.distplot(normals, bins=100, label='Normal Score')
 
     plt.xlim(0,max(normals))
     plt.legend()
     plt.show()
     
-    plt.plot(anom_density)
     
     
     
