@@ -4,11 +4,13 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sn
+
 from scipy.stats import norm, gaussian_kde
 from scipy.signal import medfilt
 from scipy.ndimage.filters import gaussian_filter1d
 
 from libraries.model.evaluate import evaluate
+from libraries.utils import ensure_folder
 #%% FUNCTIONS
 
 def convFilterScores(scores, kernel_size):
@@ -185,6 +187,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     plt.legend()
     
     if(folder_save is not None):
+        ensure_folder(folder_save)
         plt.savefig(folder_save + 'distribution.png')
     
     plt.xlabel('Score')
