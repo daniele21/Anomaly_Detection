@@ -158,7 +158,7 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(7,5)):
     values, _, _ = plt.hist([anomalies, normals], bins=1000,
              label=['Anomaly Scores', 'Normal Scores'], density=True)
 #    return values
-    x1, y1 = [threshold, threshold], [0,10]
+    x1, y1 = [threshold, threshold], [0,max(values[1])]
     plt.plot(x1, y1, marker='o', c='r', label='Threshold')
     
     plt.xlim(0, x_limit)
@@ -167,7 +167,7 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(7,5)):
     
     plt.figure(figsize=figsize)
     # THRESHOLD
-    x1, y1 = [threshold, threshold], [0,max(values[1])]
+    x1, y1 = [threshold, threshold], [0,10]
     plt.plot(x1, y1, marker='o', c='r', label='Threshold')
     
     # DISTRIBUTIONS 
