@@ -130,7 +130,7 @@ def __print_tuningResults(results, mode):
             print(str(x) + ':\t\t{:.4f}'.format(results[x][i]))
             
     
-def distScores(anomaly_scores, gt_labels, performance, figsize=(7,5)):
+def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6)):
     
     try:
         anomaly_scores = anomaly_scores.cpu()
@@ -165,6 +165,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(7,5)):
     
     plt.xlim(0, x_limit)
     plt.legend(loc='best')
+    plt.xlabel('Threshold')
     plt.show()
     
     plt.figure(figsize=figsize)
@@ -180,6 +181,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(7,5)):
     sn.distplot(normals, bins=1000, kde=False, hist=True, norm_hist=True,label='Normal Score')
 
     plt.xlim(0, x_limit)
+    plt.xlabel('Threshold')
     plt.legend()
     plt.show()
     
@@ -199,13 +201,14 @@ def __plottingThresholds(performance, h):
     colors = ['red', 'green', 'black', 'brown']
     i = 0
     
+    
     for filter_type in ['standard', 'conv', 'median', 'gauss']:
         
         thr = thresholds[filter_type]
         x, y = [thr, thr], [0, h]
         
         plt.plot(x, y, marker='o', c=colors[i],
-                 label='AUC: {:.3f} - {}_thr'.format(aucs[filter_type], filter_type))
+                 label='AUC: {:.3f} - Thr: {:.3f} - {}'.format(aucs[filter_type], thr, filter_type))
         
         i += 1
     
