@@ -130,7 +130,7 @@ def __print_tuningResults(results, mode):
             print(str(x) + ':\t\t{:.4f}'.format(results[x][i]))
             
     
-def distScores(anomaly_scores, gt_labels, threshold, figsize=(7,5)):
+def distScores(anomaly_scores, gt_labels, performance, figsize=(7,5)):
     
     try:
         anomaly_scores = anomaly_scores.cpu()
@@ -157,36 +157,57 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(7,5)):
     
     values, _, _ = plt.hist([anomalies, normals], bins=1000,
              label=['Anomaly Scores', 'Normal Scores'], density=True)
-#    return values
-    x1, y1 = [threshold, threshold], [0,max(values[1])]
-    plt.plot(x1, y1, marker='o', c='r', label='Threshold')
+
+#    x1, y1 = [threshold, threshold], [0, max(values[1])]
+#    plt.plot(x1, y1, marker='o', c='r', label='Threshold')
+    
+    __plottingThresholds(performance, max(values[1]))
     
     plt.xlim(0, x_limit)
-    plt.legend(loc='upper right')
+    plt.legend(loc='best')
     plt.show()
     
     plt.figure(figsize=figsize)
     # THRESHOLD
-    x1, y1 = [threshold, threshold], [0,10]
-    plt.plot(x1, y1, marker='o', c='r', label='Threshold')
+    __plottingThresholds(performance, max(values[1]))
     
     # DISTRIBUTIONS 
     
 #    sn.distplot(anomalies, bins=1000, norm_hist=True, label='Anomaly Score')
 #    sn.distplot(normals, bins=1000, norm_hist=True, label='Normal Score')
     
-    sn.distplot(anomalies, hist=False, label='Anomaly Score')
-    sn.distplot(normals, hist=False, label='Normal Score')
+    sn.distplot(anomalies, bins=1000, kde=False, hist=True, norm_hist=True, label='Anomaly Score')
+    sn.distplot(normals, bins=1000, kde=False, hist=True, norm_hist=True,label='Normal Score')
 
     plt.xlim(0, x_limit)
     plt.legend()
     plt.show()
     
     
+def __plottingThresholds(performance, h):
     
+    thresholds = {'standard' : performance['standard']['Threshold'],
+                  'conv' : performance['conv']['Threshold'],
+                  'median' : performance['median']['Threshold'],
+                  'gauss' : performance['gauss']['Threshold']}
     
+    aucs = {'standard' : performance['standard']['AUC'],
+              'conv' : performance['conv']['AUC'],
+              'median' : performance['median']['AUC'],
+              'gauss' : performance['gauss']['AUC']}
     
+    colors = ['red', 'green', 'black', 'brown']
+    i = 0
     
+    for filter_type in ['standard', 'conv', 'median', 'gauss']:
+        
+        thr = thresholds[filter_type]
+        x, y = [thr, thr], [0, h]
+        
+        plt.plot(x, y, marker='o', c=colors[i],
+                 label='AUC: {:.3f} - {}_thr'.format(aucs[filter_type], filter_type))
+        
+        i += 1
     
     
     

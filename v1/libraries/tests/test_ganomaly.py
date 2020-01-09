@@ -182,3 +182,16 @@ content = '\n- Norm_Error: {:.3f}'.format(normalError)
 adModel.addInfo(content)
 
 #%%
+adModel = torch.load('../../ckp_v1/Ganom_v1_v3_best_ckp.pth.tar')
+
+thresholds = {'standard' : adModel.performance['standard']['Threshold'],
+              'conv' : adModel.performance['conv']['Threshold'],
+              'median' : adModel.performance['median']['Threshold'],
+              'gauss' : adModel.performance['gauss']['Threshold']}
+
+aucs = {'standard' : adModel.performance['standard']['AUC'],
+          'conv' : adModel.performance['conv']['AUC'],
+          'median' : adModel.performance['median']['AUC'],
+          'gauss' : adModel.performance['gauss']['AUC']}
+
+
