@@ -4,6 +4,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sn
+from scipy.stats import norm, gaussian_kde
 from scipy.signal import medfilt
 from scipy.ndimage.filters import gaussian_filter1d
 
@@ -63,7 +64,7 @@ def tune_kernelSize(model, mode='conv'):
 
     for k in kernel_sizes:
         
-        auc, thr = model.evaluateRoc(mode=mode, param=k)
+        auc, thr = model.evaluateRoc(mode=mode, param=k, plot=False)
         
         if(auc > best['auc']):
             best['auc'] = auc
@@ -98,7 +99,7 @@ def tune_sigma(model, mode='gauss'):
 
     for s in sigmas:
         
-        auc, thr = model.evaluateRoc(mode=mode, param=s)
+        auc, thr = model.evaluateRoc(mode=mode, param=s, plot=False)
         
         if(auc > best['auc']):
             best['auc'] = auc
@@ -150,9 +151,8 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(20,10)):
     anomalies = [anomaly_scores[i] for i in anom_indexes]
     normals = [anomaly_scores[i] for i in normal_indexes]
 
-
     plt.figure(figsize=figsize)
-    x1, y1 = [threshold, threshold], [0,10]
+    x1, y1 = [threshold, threshold], [0,1]
     plt.plot(x1, y1, marker='o', c='r', label='Threshold')
     plt.hist([anomalies, normals], bins=100, label=['Anomaly Scores', 'Normal Scores'],
              density=True)
@@ -162,14 +162,19 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(20,10)):
     
     plt.figure(figsize=figsize)
     # THRESHOLD
-    x1, y1 = [threshold, threshold], [0,10]
+    x1, y1 = [threshold, threshold], [0,1]
     plt.plot(x1, y1, marker='o', c='r', label='Threshold')
     # DISTRIBUTIONS
-    sn.distplot(anomalies, bins=100, label='Anomaly Score')
-    sn.distplot(normals, bins=100, label='Normal Score')
+    ax, anom_density = sn.distplot(anomalies, bins=100, label='Anomaly Score')
+    ax, norm_density = sn.distplot(normals, bins=100, label='Normal Score')
 
     plt.xlim(0,max(normals))
     plt.legend()
+    plt.show()
+    
+    plt.plot(anom_density)
+    
+    
     
     
     

@@ -6,6 +6,7 @@ from libraries.model.dataset import generateDataloader, getCifar10
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE, loadModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
+from libraries.model.postprocessing import distScores
 paths = Paths()
 
 from matplotlib import pyplot as plt
