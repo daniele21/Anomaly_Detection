@@ -64,7 +64,7 @@ def evaluateResult(model, img, mask, stride):
             break
     
     for x in thr_dict:
-        
+        print('> {} Filter Evaluation'.format(x))
         try:
             thr = thr_dict[x]
             

@@ -280,7 +280,7 @@ def writeDataResults(results, folder_save):
     filename = 'data_results.txt'
 #    content = '\t\t' + model_name + ' results\n\n'
     
-    content = '- \t' + results['info'] + ':\n'
+    content = results['info'] + '\n'
     content = content + '- Accuracy: \t{:.2f}\n'.format(results['acc'])
     content = content + '- Precision:\t{:.2f}\n'.format(results['prec'])
     content = content + '- Recall:   \t{:.2f}\n'.format(results['rec'])
