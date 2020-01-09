@@ -130,7 +130,8 @@ def __print_tuningResults(results, mode):
             print(str(x) + ':\t\t{:.4f}'.format(results[x][i]))
             
     
-def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6)):
+def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
+               folder_save=None):
     
     try:
         anomaly_scores = anomaly_scores.cpu()
@@ -165,7 +166,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6)):
     
     plt.xlim(0, x_limit)
     plt.legend(loc='best')
-    plt.xlabel('Threshold')
+    plt.xlabel('Score')
     plt.show()
     
     plt.figure(figsize=figsize)
@@ -181,8 +182,12 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6)):
     sn.distplot(normals, bins=1000, kde=False, hist=True, norm_hist=True,label='Normal Score')
 
     plt.xlim(0, x_limit)
-    plt.xlabel('Threshold')
     plt.legend()
+    
+    if(folder_save is not None):
+        plt.savefig(folder_save + 'distribution.png')
+    
+    plt.xlabel('Score')
     plt.show()
     
     
