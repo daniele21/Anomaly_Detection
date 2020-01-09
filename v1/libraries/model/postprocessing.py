@@ -172,8 +172,8 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(7,5)):
     
     # DISTRIBUTIONS 
     
-    sn.distplot(anomalies, bins=100, norm_hist=True, label='Anomaly Score')
-    sn.distplot(normals, bins=100, norm_hist=True, label='Normal Score')
+    sn.distplot(anomalies, bins=1000, norm_hist=True, label='Anomaly Score')
+    sn.distplot(normals, bins=1000, norm_hist=True, label='Normal Score')
 
     plt.xlim(0, x_limit)
     plt.legend()
