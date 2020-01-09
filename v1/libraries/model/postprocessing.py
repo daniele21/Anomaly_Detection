@@ -153,23 +153,29 @@ def distScores(anomaly_scores, gt_labels, threshold, figsize=(7,5)):
 
     # PLOTTING
     plt.figure(figsize=figsize)
-    x1, y1 = [threshold, threshold], [0,1]
+    x_limit = np.mean(anomalies)
+    
+    values, _, _ = plt.hist([anomalies, normals], bins=100,
+             label=['Anomaly Scores', 'Normal Scores'], density=True)
+#    return values
+    x1, y1 = [threshold, threshold], [0,max(values[1])]
     plt.plot(x1, y1, marker='o', c='r', label='Threshold')
-    plt.hist([anomalies, normals], bins=100, label=['Anomaly Scores', 'Normal Scores'],
-             density=True)
-    plt.xlim(0,max(normals))
+    
+    plt.xlim(0, x_limit)
     plt.legend(loc='upper right')
     plt.show()
     
     plt.figure(figsize=figsize)
     # THRESHOLD
-    x1, y1 = [threshold, threshold], [0,1]
+    x1, y1 = [threshold, threshold], [0,max(values[1])]
     plt.plot(x1, y1, marker='o', c='r', label='Threshold')
-    # DISTRIBUTIONS
-    sn.distplot(anomalies, bins=100, label='Anomaly Score')
-    sn.distplot(normals, bins=100, label='Normal Score')
+    
+    # DISTRIBUTIONS 
+    
+    sn.distplot(anomalies, bins=100, norm_hist=True, label='Anomaly Score')
+    sn.distplot(normals, bins=100, norm_hist=True, label='Normal Score')
 
-    plt.xlim(0,max(normals))
+    plt.xlim(0, x_limit)
     plt.legend()
     plt.show()
     
