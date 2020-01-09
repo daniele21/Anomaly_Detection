@@ -43,7 +43,7 @@ def computeEvaluation(mask_true, mask_pred, info, folder_save):
     
     writeDataResults(results, folder_save)
 
-def evaluateResult(model, img, mask):
+def evaluateResult(model, img, mask, stride):
   
     # 2.PREDICTION ANOMALY THRESHOLDING OVER EACH BATCH
 #    dataTest = generateDataloaderTest(img.patches, model.opt)
@@ -93,7 +93,7 @@ def evaluateResult(model, img, mask):
         
 #        return simple_mask_1, mask
         
-        info = 'Thr over data - ' + x
+        info = '********************************\n\tStride:{} - {}\n'.format(stride, x)
         computeEvaluation(mask, simple_mask_1, info, img.folder_save)
         
 #        if(x == 'standard'):
@@ -114,6 +114,6 @@ def automaticEvaluation(model, samples, stride):
     
     for index in samples:        
         img, _, mask = dm.extractPatchesForTest(train, index, shape, stride, model_name)
-        evaluateResult(model, img, mask)
+        evaluateResult(model, img, mask, stride)
         
 
