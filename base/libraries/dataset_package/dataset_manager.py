@@ -786,7 +786,7 @@ def extractPatchesForTest(train, index, shape, stride, model_name, folder_save=N
     ensure_folder(father_folder)
     
     if(folder_save is not None):
-        folder_save = folder_save + str(index) + '_' + filename.split('.')[0] + '/'
+        img.folder_save = folder_save + str(index) + '_' + filename.split('.')[0] + '/'
     else:
         img.folder_save = father_folder + str(index) + '_' + filename.split('.')[0] + '/'
 #    directory = paths.test_patched + img.folder_save + '/'
