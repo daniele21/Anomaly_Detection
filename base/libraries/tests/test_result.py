@@ -120,6 +120,7 @@ def automaticEvaluation(model, samples, stride, folder_save=None):
     for index in samples:        
         img, _, mask = dm.extractPatchesForTest(train, index, shape, stride,
                                                 model_name, folder_save)
-        evaluateResult(model, img, mask, stride, folder_save)
+        
+        evaluateResult(model, img, mask, stride, img.folder_save)
         
 
