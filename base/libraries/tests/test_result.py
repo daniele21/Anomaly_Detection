@@ -21,7 +21,7 @@ from libraries.model.dataset import generateDataloaderTest
 paths = Paths()
 csv_directory = paths.csv_directory
 #%%
-def computeEvaluation(mask_true, mask_pred, info, folder_save):
+def computeEvaluation(mask_true, mask_pred, info, stride, folder_save):
     
     mask_true = mask_true.astype(int)
     mask_pred = mask_pred.astype(int)
@@ -41,7 +41,7 @@ def computeEvaluation(mask_true, mask_pred, info, folder_save):
                'avg_prec':avg_prec,
                'info': info}
     
-    writeDataResults(results, folder_save)
+    writeDataResults(results, stride, folder_save)
 
 def evaluateResult(model, img, mask, stride, folder_save):
   
@@ -94,7 +94,7 @@ def evaluateResult(model, img, mask, stride, folder_save):
 #        return simple_mask_1, mask
         
         info = '\tStride:{} - {}\n'.format(stride, x)
-        computeEvaluation(mask, simple_mask_1, info, folder_save)
+        computeEvaluation(mask, simple_mask_1, info, stride, folder_save)
         
 #        if(x == 'standard'):
 #            # MAJORITY VOTING

@@ -276,8 +276,8 @@ def addInfoGanomaly(opt, path, info):
     f.write(content)
     f.close()
     
-def writeDataResults(results, folder_save):
-    filename = 'data_results.txt'
+def writeDataResults(results, stride, folder_save):
+    filename = 'data_results_stride:{}.txt'.format(stride)
 #    content = '\t\t' + model_name + ' results\n\n'
     
     content = results['info'] + '\n'
