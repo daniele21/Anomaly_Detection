@@ -133,7 +133,7 @@ def __print_tuningResults(results, mode):
             
     
 def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
-               folder_save=None, bins=1000):
+               folder_save=None, bins=1000, h=None):
     
     try:
         anomaly_scores = anomaly_scores.cpu()
@@ -164,7 +164,12 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
 #    x1, y1 = [threshold, threshold], [0, max(values[1])]
 #    plt.plot(x1, y1, marker='o', c='r', label='Threshold')
     
-    __plottingThresholds(performance, max(values[1]))
+    if(h is None):
+        h = max(values[1])
+    else:
+        h = h
+    
+    __plottingThresholds(performance, h)
     
     plt.xlim(0, x_limit)
     plt.legend(loc='best')
@@ -173,7 +178,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     
     plt.figure(figsize=figsize)
     # THRESHOLD
-    __plottingThresholds(performance, max(values[1]))
+    __plottingThresholds(performance, h)
     
     # DISTRIBUTIONS 
     
