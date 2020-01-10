@@ -768,7 +768,7 @@ def extractPatchesOptimized(train, start, end, nPatches, shape):
 #        print(count)
             
  
-def extractPatchesForTest(train, index, shape, stride, model_name):
+def extractPatchesForTest(train, index, shape, stride, model_name, folder_save=None):
 
     filename    = train.iloc[index].Image_Id
     enc_pixels  = train.iloc[index].Encoded_Pixels
@@ -785,7 +785,10 @@ def extractPatchesForTest(train, index, shape, stride, model_name):
 #        os.mkdir(father_folder)
     ensure_folder(father_folder)
     
-    img.folder_save = father_folder + str(index) + '_' + filename.split('.')[0] + '/'
+    if(folder_save is not None):
+        folder_save = folder_save + str(index) + '_' + filename.split('.')[0] + '/'
+    else:
+        img.folder_save = father_folder + str(index) + '_' + filename.split('.')[0] + '/'
 #    directory = paths.test_patched + img.folder_save + '/'
     
 #    if(os.path.exists(img.folder_save) == False):
