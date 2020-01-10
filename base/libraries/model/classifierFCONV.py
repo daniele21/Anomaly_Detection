@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# -*- coding: utf-8 -*-
+
 #%% IMPORTS
 import time
 from collections import OrderedDict
@@ -31,20 +33,28 @@ paths = Paths()
 
 device = torch.device('cuda:0')
 
-class Autoencoder(nn.Module):
+class ClassifierFCONV(nn.Module):
     
     def __init__(self, opt):
         super().__init__()
         
-        self.encoder = Encoder(opt)
-        self.decoder = Decoder(opt)
+        enc = Encoder(opt, 1)
+        
+        layers = list(enc.net.children())
+
+        self.features = nn.Sequential(*layers[:-1])
+        self.classifier = nn.Sequential(layers[-1])
+        self.classifier.add_module('Sigmoid', nn.Sigmoid())
 
     def forward(self, x):
         
-        z = self.encoder(x)
-        x_prime = self.decoder(z)
+        features = self.features(x)
+        classifier = self.classifier(features)
         
-        return x_prime
+        #
+        classifier = classifier.view(-1,1).squeeze(1)
+        
+        return classifier
 
 def generateAutoencoder(opt, cuda=True):
     
@@ -247,12 +257,34 @@ class AutoencoderModel():
             spent_time = time.time() - start
                 
             return performance, eval_data,  spent_time
-    
-    def _trainingStep(self, epochs, save):
         
-        for self.epoch in range(epochs):
+    
+    def train_autoencoder(self, save=True):
+        
+        self.curr_steps = 0
+        self.batch_size = self.opt.batch_size
+        
+        es = EarlyStopping(self.opt)
+        
+        self.loss = {}
+        self.loss['train'] = []
+        self.loss['validation'] = []
+        
+        self.avg_loss = {}
+        self.avg_loss['train'] = []
+        self.avg_loss['validation'] = []
+        
+        self.folder_save = paths.checkpoint_folder
+        self.results_folder = paths.checkpoint_folder + self.opt.name + '/' + self.opt.name + '_training_result/'
+        ensure_folder(self.results_folder)
+        
+        assert self.trainloader is not None, 'None Trainloader'
+        assert self.validationloader is not None, 'None Validloader'
+        assert self.testloader is not None, 'None Testloader'
+        
+        for self.epoch in range(self.opt.epochs):
             print('\n')
-            print('Epoch {}/{}'.format(self.epoch+1, epochs))
+            print('Epoch {}/{}'.format(self.epoch+1, self.opt.epochs))
             
             # TRAINING
             train_losses, train_time = self._trainOneEpoch()
@@ -289,11 +321,11 @@ class AutoencoderModel():
 #                                                                                self.opt.lr,
 #                                                                                epoch, train_loss)
             
-            saveCkp = self.es(val_loss)
+            saveCkp = es(val_loss)
             if(saveCkp and save):
                 self.saveCheckPoint(val_loss)
             
-            if(self.es.early_stop):
+            if(es.early_stop):
                 print('-> Early stopping now')
 #                self.plotting()
                 break
@@ -303,36 +335,7 @@ class AutoencoderModel():
         self.evaluateRoc(folder_save=self.folder_save)
         self.saveInfo()
         
-        return {'Validation_Loss' : val_loss,
-                'AUC': self.auc,
-                'Threshold' : self.threshold}
-    
-    def train_autoencoder(self, epochs, save=True):
-        
-        self.curr_steps = 0
-        self.batch_size = self.opt.batch_size
-        
-        self.es = EarlyStopping(self.opt)
-        
-        self.loss = {}
-        self.loss['train'] = []
-        self.loss['validation'] = []
-        
-        self.avg_loss = {}
-        self.avg_loss['train'] = []
-        self.avg_loss['validation'] = []
-        
-        self.folder_save = paths.checkpoint_folder
-        self.results_folder = paths.checkpoint_folder + self.opt.name + '/' + self.opt.name + '_training_result/'
-        ensure_folder(self.results_folder)
-        
-        assert self.trainloader is not None, 'None Trainloader'
-        assert self.validationloader is not None, 'None Validloader'
-        assert self.testloader is not None, 'None Testloader'
-        
-        performance = self._trainingStep(epochs, save)
-        
-        return performance
+        return val_loss
     
     def evaluateRoc(self, mode='standard', param=None,
                     folder_save=None, plot=True):
