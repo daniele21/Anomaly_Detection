@@ -188,6 +188,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     
     if(folder_save is not None):
         ensure_folder(folder_save)
+        print('> Saving Distribution Score at .. {}'.format(folder_save))
         plt.savefig(folder_save + 'distribution.png')
     
     plt.xlabel('Score')
