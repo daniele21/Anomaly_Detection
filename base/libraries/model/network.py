@@ -43,8 +43,9 @@ def weights_init(mod):
     # HE NORMAL INITIALIZATION --> better with relu / leaky_relu activations
     if isinstance(mod, nn.Conv2d):
         kaiming_normal_(mod.weight.data)
-        if(mod.bias):
-            kaiming_normal_(mod.bias.data)
+#        print(mod.bias)
+#        if(mod.bias):
+#            kaiming_normal_(mod.bias.data)
 
 #model.apply(weights_init)
         
@@ -290,8 +291,8 @@ class Discriminator(nn.Module):
 
         return classifier, features
         
-        
     
+
     
     
     

@@ -133,7 +133,7 @@ def __print_tuningResults(results, mode):
             
     
 def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
-               folder_save=None):
+               folder_save=None, bins=1000):
     
     try:
         anomaly_scores = anomaly_scores.cpu()
@@ -180,8 +180,8 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
 #    sn.distplot(anomalies, bins=1000, norm_hist=True, label='Anomaly Score')
 #    sn.distplot(normals, bins=1000, norm_hist=True, label='Normal Score')
     
-    sn.distplot(anomalies, bins=1000, kde=False, hist=True, norm_hist=True, label='Anomaly Score')
-    sn.distplot(normals, bins=1000, kde=False, hist=True, norm_hist=True,label='Normal Score')
+    sn.distplot(anomalies, bins=bins, kde=False, hist=True, norm_hist=True, label='Anomaly Score')
+    sn.distplot(normals, bins=bins, kde=False, hist=True, norm_hist=True,label='Normal Score')
 
     plt.xlim(0, x_limit)
     plt.legend()

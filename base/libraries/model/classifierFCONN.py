@@ -9,7 +9,7 @@ import time
 from collections import OrderedDict
 
 from libraries.model.network import Encoder, Decoder, weights_init
-from libraries.model.loss import contextual_loss
+from libraries.model.loss import binaryCrossEntropy_loss
 from libraries.model.evaluate import evaluate
 from libraries.utils import Paths
 from libraries.utils import Checkpoint, saveInfoAE, addInfoAE
@@ -69,38 +69,52 @@ class ClassifierFCONN(nn.Module):
         net.add_module('4_Conv-2D', nn.Conv2d(in_channels, out_channels,
                                                      kernel_size=3, stride=1))
         
+        self.features = net
+        
+
+        fc_net = nn.Sequential()
+
         # FULLY CONNECTION LAYERS
-#        net.add_module('FC1', nn.Linear(8192, 1024))
+        self.flattenSize = 4096
         
+        fc_net.add_module('FC1', nn.Linear(self.flattenSize, 1024))
+        fc_net.add_module('FC1-ReLu', nn.ReLU())
         
-        self.classifier = net
+        fc_net.add_module('FC2', nn.Linear(1024, 256))
+        fc_net.add_module('FC2-ReLu', nn.ReLU())
+        
+        fc_net.add_module('Output-Layer', nn.Linear(256, 1))
+        fc_net.add_module('Sigmoid', nn.Sigmoid())
+        
+        self.classifier = fc_net
 
     def forward(self, x):
-        print(x.shape)
-        output = self.classifier(x)
-        print(output.unsqueeze(1).shape)
+        features = self.features(x)
+        features = features.view(-1, self.flattenSize)
+    
+        output = self.classifier(features)
         
-#        classifier = classifier.view(-1,1).squeeze(1)
+        output = output.view(-1,1).squeeze(1)
         
         return output
 
-def generateAutoencoder(opt, cuda=True):
+def generateModel(opt, cuda=True):
     
     if(cuda):
-        return Autoencoder(opt).cuda()        
+        return ClassifierFCONN(opt).cuda()        
     else:
-        return Autoencoder(opt).cpu()
+        return ClassifierFCONN(opt).cpu()
 
 def loadAEmodel(path_file):
     return torch.load(path_file)
 
-class AutoencoderModel():
+class ClassifierFCONNModel():
     
     def __init__(self, opt, optimizer, trainloader=None, validationloader=None, testloader=None):
         
-        self.model      = generateAutoencoder(opt)
+        self.model      = generateModel(opt)
         self.optimizer  = optimizer(self.model.parameters(), opt.lr)
-        self.loss_function = contextual_loss()
+        self.loss_function = binaryCrossEntropy_loss()
         self.trainloader = trainloader
         self.validationloader = validationloader
         self.testloader = testloader
@@ -121,7 +135,8 @@ class AutoencoderModel():
     def _trainOneEpoch(self):
     
         trainLoss = []
-        
+        correct = 0
+        total = 0
         self.model.train()
         
         start = time.time()
@@ -132,27 +147,39 @@ class AutoencoderModel():
                                    file = sys.stdout):
             
             x = torch.Tensor(images).cuda()
+            labels = torch.Tensor(labels).cuda()
             
             # FORWARD
             output = self.model(x)        
-            
-            loss = self.loss_function(output, x)
+            output = output.reshape(-1)
+            loss = self.loss_function(output, labels)
                     
             # BACKWARD
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
             
+            # ACCURACY            
+            predictions = np.round(output.detach().cpu())
+            targets = np.round(labels.detach().cpu())
+            
+            correct += (predictions == targets).sum().item()
+            total += labels.size(0)
+            
             # VISUALIZATION
             trainLoss.append(loss.item()*images.size(0))
+            
+        accuracy_value = correct/total
                   
         time_spent = time.time() - start
             
-        return trainLoss, time_spent
+        return trainLoss, time_spent, accuracy_value
         
     def _validation(self):
     
         validationLoss = []
+        correct = 0
+        total = 0        
     
         self.model.eval()      
         
@@ -170,18 +197,27 @@ class AutoencoderModel():
                 count += 1
                 
                 x = torch.Tensor(images).cuda()
+                labels = torch.Tensor(labels).cuda()
                 
                 # FORWARD
-                output = self.model(x)       
-                        
-                loss = self.loss_function(output, x)
+                output = self.model(x)
+                output = output.reshape(-1)
+                loss = self.loss_function(output, labels)    
+                
+                # ACCURACY
+                predictions = np.round(output.cpu())
+                targets = np.round(labels.cpu())
+                
+                correct += (predictions == targets).sum().item()
+                total += labels.size(0)
                 
                 # VISUALIZATION
                 validationLoss.append(loss.item()*images.size(0))
             
+            accuracy_value = correct/total
             time_spent = time.time() - start
             
-        return validationLoss, time_spent
+        return validationLoss, time_spent, accuracy_value
     
     def _test(self):
         
@@ -204,20 +240,20 @@ class AutoencoderModel():
                 time_in = time.time()
                 
                 x = torch.Tensor(images).cuda()
-                tensor_labels = torch.Tensor(labels).cuda()                
+                labels = torch.Tensor(labels).cuda()
                 
-                x_prime = self.model(x)
+                # FORWARD
+                output = self.model(x)
+                output = output.reshape(-1)
                 
-                # ANOMALY SCORE
-                x = x.reshape(x.size(0), x.size(1)*x.size(2)*x.size(3))
-                x_prime = x_prime.reshape(x_prime.size(0), x_prime.size(1)*x_prime.size(2)*x_prime.size(3))
-                
-                score = torch.mean(torch.pow((x-x_prime), 2), dim=1)
+                score = output
+                predictions = np.round(output.cpu())
+                targets = np.round(labels.cpu())
                 
                 time_out = time.time()
                 
                 anomaly_scores[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = score.reshape(score.size(0))
-                gt_labels[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = tensor_labels.reshape(score.size(0))
+                gt_labels[i*self.opt.batch_size : i*self.opt.batch_size + score.size(0)] = labels.reshape(score.size(0))
               
                 times.append(time_out - time_in)
 
@@ -287,7 +323,7 @@ class AutoencoderModel():
             return performance, eval_data,  spent_time
         
     
-    def train_autoencoder(self, save=True):
+    def train_model(self, save=True):
         
         self.curr_steps = 0
         self.batch_size = self.opt.batch_size
@@ -315,13 +351,13 @@ class AutoencoderModel():
             print('Epoch {}/{}'.format(self.epoch+1, self.opt.epochs))
             
             # TRAINING
-            train_losses, train_time = self._trainOneEpoch()
+            train_losses, train_time, train_acc = self._trainOneEpoch()
             train_loss = np.average(train_losses)
 #            self.loss['train'].append(train_losses) 
             self.avg_loss['train'].append(train_loss)
             
             # VALIDATION
-            val_losses, val_time     = self._validation()
+            val_losses, val_time, val_acc = self._validation()
             val_loss = np.average(val_losses)
 #            self.loss['validation'].append(val_losses)
             self.avg_loss['validation'].append(val_loss)
@@ -337,8 +373,10 @@ class AutoencoderModel():
                 self.evaluateRoc()
             
             print('\n')
-            print('>- Training Loss:   {:.4f} in {:.2f} sec'.format(train_loss, train_time) )
-            print('>- Validation Loss: {:.4f} in {:.2f} sec'.format(val_loss, val_time))
+            print('>- Training   Loss: {:.4f}, Acc: {:.3f}    in {:.2f} sec'.format(train_loss, train_acc, train_time) )
+            print('>- Validation Loss: {:.4f}, Acc: {:.3f}    in {:.2f} sec'.format(val_loss, val_acc, val_time))
+            print('\n')
+            
             
             # SAVING CHECKPOINT
             
