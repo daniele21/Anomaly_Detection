@@ -1,0 +1,8 @@
+- Autoencoder:
+
+  - Trained on Normal images
+
+
+- Classifier:
+
+  - Trained on Normal and Anomalous images 

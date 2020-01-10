@@ -93,7 +93,7 @@ def evaluateResult(model, img, mask, stride):
         
 #        return simple_mask_1, mask
         
-        info = '********************************\n\tStride:{} - {}\n'.format(stride, x)
+        info = '\tStride:{} - {}\n'.format(stride, x)
         computeEvaluation(mask, simple_mask_1, info, img.folder_save)
         
 #        if(x == 'standard'):
