@@ -323,9 +323,9 @@ class ClassifierFCONNModel():
             return performance, eval_data,  spent_time
         
     def _trainingStep(self, epochs, save):
-        for self.epoch in range(self.opt.epochs):
+        for self.epoch in range(epochs):
             print('\n')
-            print('Epoch {}/{}'.format(self.epoch+1, self.opt.epochs))
+            print('Epoch {}/{}'.format(self.epoch+1, epochs))
             
             # TRAINING
             train_losses, train_time, train_acc = self._trainOneEpoch()
