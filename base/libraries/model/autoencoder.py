@@ -307,7 +307,7 @@ class AutoencoderModel():
                 'AUC': self.auc,
                 'Threshold' : self.threshold}
     
-    def train_autoencoder(self, epochs, save=True):
+    def train_model(self, epochs, save=True):
         
         self.curr_steps = 0
         self.batch_size = self.opt.batch_size
@@ -331,6 +331,12 @@ class AutoencoderModel():
         assert self.testloader is not None, 'None Testloader'
         
         performance = self._trainingStep(epochs, save)
+        
+        return performance
+    
+    def resumeTraining(self, epochs, save=True):
+        
+        performance = self._training_step(epochs, save)
         
         return performance
     

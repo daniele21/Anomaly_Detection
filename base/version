@@ -1,8 +1,10 @@
 - Autoencoder:
 
-  - Trained on Normal images
+  	- Trained on Normal images
+  	- Anomaly based on patch center
 
 
-- Classifier:
+- Classifiers (FCONN, FCONV):
 
-  - Trained on Normal and Anomalous images 
+	- Trained on Normal and Anomalous images 
+  	- Anomaly based on patch center

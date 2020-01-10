@@ -322,30 +322,7 @@ class ClassifierFCONNModel():
                 
             return performance, eval_data,  spent_time
         
-    
-    def train_model(self, save=True):
-        
-        self.curr_steps = 0
-        self.batch_size = self.opt.batch_size
-        
-        es = EarlyStopping(self.opt)
-        
-        self.loss = {}
-        self.loss['train'] = []
-        self.loss['validation'] = []
-        
-        self.avg_loss = {}
-        self.avg_loss['train'] = []
-        self.avg_loss['validation'] = []
-        
-        self.folder_save = paths.checkpoint_folder
-        self.results_folder = paths.checkpoint_folder + self.opt.name + '/' + self.opt.name + '_training_result/'
-        ensure_folder(self.results_folder)
-        
-        assert self.trainloader is not None, 'None Trainloader'
-        assert self.validationloader is not None, 'None Validloader'
-        assert self.testloader is not None, 'None Testloader'
-        
+    def _trainingStep(self, epochs, save):
         for self.epoch in range(self.opt.epochs):
             print('\n')
             print('Epoch {}/{}'.format(self.epoch+1, self.opt.epochs))
@@ -387,11 +364,11 @@ class ClassifierFCONNModel():
 #                                                                                self.opt.lr,
 #                                                                                epoch, train_loss)
             
-            saveCkp = es(val_loss)
+            saveCkp = self.es(val_loss)
             if(saveCkp and save):
                 self.saveCheckPoint(val_loss)
             
-            if(es.early_stop):
+            if(self.es.early_stop):
                 print('-> Early stopping now')
 #                self.plotting()
                 break
@@ -401,7 +378,42 @@ class ClassifierFCONNModel():
         self.evaluateRoc(folder_save=self.folder_save)
         self.saveInfo()
         
-        return val_loss
+        return {'Validation_Loss' : val_loss,
+                'AUC': self.auc,
+                'Threshold' : self.threshold}
+    
+    def train_model(self, epochs, save=True):
+        
+        self.curr_steps = 0
+        self.batch_size = self.opt.batch_size
+        
+        self.es = EarlyStopping(self.opt)
+        
+        self.loss = {}
+        self.loss['train'] = []
+        self.loss['validation'] = []
+        
+        self.avg_loss = {}
+        self.avg_loss['train'] = []
+        self.avg_loss['validation'] = []
+        
+        self.folder_save = paths.checkpoint_folder
+        self.results_folder = paths.checkpoint_folder + self.opt.name + '/' + self.opt.name + '_training_result/'
+        ensure_folder(self.results_folder)
+        
+        assert self.trainloader is not None, 'None Trainloader'
+        assert self.validationloader is not None, 'None Validloader'
+        assert self.testloader is not None, 'None Testloader'
+        
+        performance = self._trainingStep(epochs, save)
+        
+        return performance
+    
+    def resumeTraining(self, epochs, save=True):
+        
+        performance = self._training_step(epochs, save)
+        
+        return performance
     
     def evaluateRoc(self, mode='standard', param=None,
                     folder_save=None, plot=True):

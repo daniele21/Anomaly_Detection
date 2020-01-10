@@ -29,7 +29,7 @@ summary(model.cuda(), (3,32,32))
 
 #%%
 opt = Options()
-opt.name = 'AE_v0.0'
+opt.name = 'FCONN_v0.0'
 opt.anom_perc = 0.4
 opt.in_channels = 3
 opt.nFolders = 2
