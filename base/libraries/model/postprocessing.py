@@ -172,6 +172,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     __plottingThresholds(performance, h)
     
     plt.xlim(0, x_limit)
+    plt.ylim(0, h)
     plt.legend(loc='best')
     plt.xlabel('Score')
     plt.show()
@@ -189,6 +190,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     sn.distplot(normals, bins=bins, kde=False, hist=True, norm_hist=True,label='Normal Score')
 
     plt.xlim(0, x_limit)
+    plt.ylim(0, h)
     plt.legend()
     
     if(folder_save is not None):
