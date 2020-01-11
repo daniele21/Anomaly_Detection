@@ -411,7 +411,7 @@ class ClassifierFCONNModel():
     
     def resumeTraining(self, epochs, save=True):
         
-        performance = self._training_step(epochs, save)
+        performance = self._trainingStep(epochs, save)
         
         return performance
     

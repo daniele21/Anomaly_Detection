@@ -64,7 +64,7 @@ opt.epochs = 15
 opt.patience = 5
 #opt.lr = 6.3*1e-5
 opt.lr = 1e-05
-aeModel.train_model(opt)
+model.train_model(opt)
 
 
 #%%
