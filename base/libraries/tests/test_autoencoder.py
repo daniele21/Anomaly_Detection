@@ -8,7 +8,7 @@ from libraries.model.network import weights_init
 from libraries.model.dataset import generateDataloader, getCifar10, collectAnomalySamples, collectNormalSamples
 from libraries.utils import Paths, Checkpoint, getAnomIndexes, computeAnomError, computeNormError
 from libraries.utils import saveInfoAE
-from libraries.model.postprocessing import distScores
+from libraries.model.postprocessing import distScores, getCDF
 from libraries.tests.test_result import automaticEvaluation
 paths = Paths()
 
@@ -26,7 +26,7 @@ opt = Options()
 opt.name = 'AE_v0.0'
 opt.anom_perc = 0.4
 opt.in_channels = 3
-opt.nFolders = 50
+opt.nFolders = 5
 opt.patch_per_im = 500
 
 opt.descr = '-----'
@@ -52,11 +52,15 @@ optimizer = Adam
 aeModel = AutoencoderModel(opt, optimizer, trainloader, validLoader, testloader)
 #aeModel.model.apply(weights_init)
 
-opt.epochs = 15
+epochs = 20
 opt.patience = 5
 #opt.lr = 6.3*1e-5
 opt.lr = 1e-05
-aeModel.train_autoencoder(opt)
+aeModel.train_model(epochs)
+#%%
+
+distScores(aeModel.anomaly_scores, aeModel.gt_labels, aeModel.performance)
+
 
 #%% LOAD MODEL
 opt = Options()
@@ -110,7 +114,7 @@ aeModel.addInfo(content)
 content = '- Norm_Error: {:.3f}'.format(normalError)
 aeModel.addInfo(content)
 #%% PLOTTING
-distScores(aeModel.anomaly_scores, aeModel.gt_labels, aeModel.performance)
+a = distScores(aeModel.anomaly_scores, aeModel.gt_labels, aeModel.performance)
 aeModel.plotting()
 aeModel.evaluateRoc()
 

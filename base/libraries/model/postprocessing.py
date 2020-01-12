@@ -9,6 +9,8 @@ from scipy.stats import norm, gaussian_kde
 from scipy.signal import medfilt
 from scipy.ndimage.filters import gaussian_filter1d
 
+import statsmodels.api as sm
+
 from libraries.model.evaluate import evaluate
 from libraries.utils import ensure_folder
 #%% FUNCTIONS
@@ -133,7 +135,7 @@ def __print_tuningResults(results, mode):
             
     
 def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
-               folder_save=None, bins=1000, h=None):
+               folder_save=None, bins=1000, h=None, x_limit=None):
     
     try:
         anomaly_scores = anomaly_scores.cpu()
@@ -153,21 +155,18 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     anomalies = [anomaly_scores[i] for i in anom_indexes]
     normals = [anomaly_scores[i] for i in normal_indexes]
 
-
     # PLOTTING
-    plt.figure(figsize=figsize)
-    x_limit = np.mean(anomalies)
+    plt.figure(figsize=figsize)    
     
-    values, _, _ = plt.hist([anomalies, normals], bins=1000,
+    # HISTOGRAM
+    values, _, _ = plt.hist([anomalies, normals], bins=bins,
              label=['Anomaly Scores', 'Normal Scores'], density=True)
-
-#    x1, y1 = [threshold, threshold], [0, max(values[1])]
-#    plt.plot(x1, y1, marker='o', c='r', label='Threshold')
+    
+    if(x_limit is None):
+        x_limit = np.mean(anomalies) + np.mean(anomalies)/2
     
     if(h is None):
         h = max(values[1])
-    else:
-        h = h
     
     __plottingThresholds(performance, h)
     
@@ -177,17 +176,32 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     plt.xlabel('Score')
     plt.show()
     
+    
+    # DISTRIBUTIONS     
     plt.figure(figsize=figsize)
+    
+    n_mean, n_std = norm.fit(normals)
+    a_mean, a_std = norm.fit(anomalies)
+    
+    x = np.arange(0, x_limit, x_limit/bins)
+    
+    norm_distr = norm(n_mean, n_std)
+    anom_distr = norm(a_mean, a_std)
+    
+    __plottingDistributions(x, norm_distr, anom_distr)
+   
     # THRESHOLD
-    __plottingThresholds(performance, h)
+    __plottingThresholds(performance, h=max(norm_distr.pdf(x)), distr=norm_distr)
+    plt.legend()
+    plt.show()
+
+
+    plt.figure(figsize=figsize)
     
-    # DISTRIBUTIONS 
-    
-#    sn.distplot(anomalies, bins=1000, norm_hist=True, label='Anomaly Score')
-#    sn.distplot(normals, bins=1000, norm_hist=True, label='Normal Score')
-    
-    sn.distplot(anomalies, bins=bins, kde=False, hist=True, norm_hist=True, label='Anomaly Score')
-    sn.distplot(normals, bins=bins, kde=False, hist=True, norm_hist=True,label='Normal Score')
+    sn.distplot(anomalies, bins=bins, kde=False,
+                hist=True, norm_hist=True, label='Anomaly Score')
+    sn.distplot(normals, bins=bins, kde=False,
+                hist=True, norm_hist=True,label='Normal Score')
 
     plt.xlim(0, x_limit)
     plt.ylim(0, h)
@@ -201,8 +215,21 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     plt.xlabel('Score')
     plt.show()
     
+    return normals
     
-def __plottingThresholds(performance, h):
+def __plottingDistributions(x, norm_distr, anom_distr, c_norm='#f06b6b', c_anom='#b9d6f4'):
+    
+    pdf_norm = norm_distr.pdf(x)
+    pdf_anom = anom_distr.pdf(x)
+    
+    plt.fill_between(x, pdf_anom, color=c_anom)
+    plt.plot(x, pdf_anom, c=c_anom, ls='--')
+    
+    plt.fill_between(x, pdf_norm, color=c_norm)
+    plt.plot(x, pdf_norm, c=c_norm)
+
+def __plottingThresholds(performance, h, distr=None):
+
     
     thresholds = {'standard' : performance['standard']['Threshold'],
                   'conv' : performance['conv']['Threshold'],
@@ -214,7 +241,7 @@ def __plottingThresholds(performance, h):
               'median' : performance['median']['AUC'],
               'gauss' : performance['gauss']['AUC']}
     
-    colors = ['red', 'green', 'black', 'brown']
+    colors = ['#ffce00', 'green', 'black', 'brown']
     i = 0
     
     
@@ -223,12 +250,32 @@ def __plottingThresholds(performance, h):
         thr = thresholds[filter_type]
         x, y = [thr, thr], [0, h]
         
-        plt.plot(x, y, marker='o', c=colors[i],
-                 label='AUC: {:.3f} - Thr: {:.3f} - {}'.format(aucs[filter_type], thr, filter_type))
+        if(distr is None):
+            label = 'AUC: {:.3f} - Thr: {:.3f} - {}'.format(aucs[filter_type], thr, filter_type)
+        else:
+            cdf = distr.cdf(thr)
+            label = 'CDF: {:.2f}% - AUC: {:.3f} - Thr: {:.3f} - {}'.format(cdf, aucs[filter_type], thr, filter_type)
+            
+        plt.plot(x, y, marker='o', c=colors[i], label=label)
         
         i += 1
     
+def getCDF(cdf, value):
     
+    bins = len(cdf)
+    xmin = min(cdf)
+    xmax = max(cdf)
+    x = xmax - xmin
+    
+    x_values = np.arange(xmin, xmax, x/bins)
+#    print(x_values)
+    i=0
+    for x in x_values:
+#        print(x)
+        if(x > value):
+            return cdf[i]
+        
+        i += 1
     
     
     
