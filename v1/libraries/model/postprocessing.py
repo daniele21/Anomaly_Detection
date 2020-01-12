@@ -193,6 +193,11 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     # THRESHOLD
     __plottingThresholds(performance, h=max(norm_distr.pdf(x)), distr=norm_distr)
     plt.legend()
+    
+    if(folder_save is not None):
+        ensure_folder(folder_save)
+        print('> Saving Distribution Score at .. {}'.format(folder_save))
+        plt.savefig(folder_save + 'distribution.png')
     plt.show()
 
 
@@ -210,7 +215,7 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     if(folder_save is not None):
         ensure_folder(folder_save)
         print('> Saving Distribution Score at .. {}'.format(folder_save))
-        plt.savefig(folder_save + 'distribution.png')
+        plt.savefig(folder_save + 'histogram.png')
     
     plt.xlabel('Score')
     plt.show()
