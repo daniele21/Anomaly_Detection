@@ -236,9 +236,9 @@ class GanomalyModel():
         G_avg = torch.div((G1+G2+G3), nTasks)
         
         # Calculating relative losses 
-        lhat1 = torch.div(self.w_adv_loss,l0)
-        lhat2 = torch.div(self.w_con_loss,l0)
-        lhat3 = torch.div(self.w_enc_loss,l0)
+        lhat1 = torch.div(self.w_adv_loss,l0[0])
+        lhat2 = torch.div(self.w_con_loss,l0[1])
+        lhat3 = torch.div(self.w_enc_loss,l0[2])
 
         lhat_avg = torch.div((lhat1+lhat2+lhat3), nTasks)
         
@@ -270,8 +270,6 @@ class GanomalyModel():
         # Updating loss weights
         self.optimizer_weights.step()
         
-        print('***********')
-        print(Lgrad.item())
         
     def optimize_gen(self, loss_gen, l0):
         
