@@ -203,6 +203,8 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
 
     plt.figure(figsize=figsize)
     
+    __plottingThresholds(performance, h)
+    
     sn.distplot(anomalies, bins=bins, kde=False,
                 hist=True, norm_hist=True, label='Anomaly Score')
     sn.distplot(normals, bins=bins, kde=False,
