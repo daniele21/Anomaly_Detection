@@ -215,17 +215,17 @@ def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
     plt.xlabel('Score')
     plt.show()
     
-    return normals
+    return 
     
-def __plottingDistributions(x, norm_distr, anom_distr, c_norm='#f06b6b', c_anom='#b9d6f4'):
+def __plottingDistributions(x, norm_distr, anom_distr, c_norm='#ffcc99', c_anom='#dceaf9'):
     
     pdf_norm = norm_distr.pdf(x)
     pdf_anom = anom_distr.pdf(x)
     
-    plt.fill_between(x, pdf_anom, color=c_anom)
+    plt.fill_between(x, pdf_anom, color=c_anom, label='Normal Distr')
     plt.plot(x, pdf_anom, c=c_anom, ls='--')
     
-    plt.fill_between(x, pdf_norm, color=c_norm)
+    plt.fill_between(x, pdf_norm, color=c_norm, label='Anomaly Distr')
     plt.plot(x, pdf_norm, c=c_norm)
 
 def __plottingThresholds(performance, h, distr=None):
@@ -241,7 +241,7 @@ def __plottingThresholds(performance, h, distr=None):
               'median' : performance['median']['AUC'],
               'gauss' : performance['gauss']['AUC']}
     
-    colors = ['#ffce00', 'green', 'black', 'brown']
+    colors = ['r', 'green', 'black', 'brown']
     i = 0
     
     
