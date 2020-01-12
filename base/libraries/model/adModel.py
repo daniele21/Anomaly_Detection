@@ -584,7 +584,7 @@ class AnomalyDetectionModel():
         
         if(save):
 #            plt.savefig(self.folder_save + self.opt.name + '/'+ 'plot')
-            plt.savefig(self.folder_save + 'plot')
+            plt.savefig(self.results_folder + 'plot')
        
         plt.show()
     
