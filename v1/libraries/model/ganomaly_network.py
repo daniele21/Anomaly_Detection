@@ -270,6 +270,8 @@ class GanomalyModel():
         # Updating loss weights
         self.optimizer_weights.step()
         
+        print('***********')
+        print(Lgrad.item())
         
     def optimize_gen(self, loss_gen, l0):
         
