@@ -115,7 +115,7 @@ class EarlyStopping():
     
     """
     
-    def __init__(self, opt, verbose=True, delta=0):
+    def __init__(self, patience, verbose=True, delta=0):
         """
         PARAMS:
             
@@ -126,8 +126,8 @@ class EarlyStopping():
             - delta (float): Minimum change in the monitored quantity to qualify as an improvement.
                             Default: 0
         """
-        print(opt)  
-        self.patience = opt.patience
+#        print(opt)  
+        self.patience = patience
         self.verbose = verbose
         self.counter = 0
         self.best_score = None

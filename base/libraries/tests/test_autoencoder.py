@@ -59,10 +59,11 @@ opt.lr = 1e-05
 aeModel.train_model(epochs)
 #%%
 
-distScores(aeModel.anomaly_scores, aeModel.gt_labels, aeModel.performance)
+data = distScores(aeModel.anomaly_scores, aeModel.gt_labels,
+                  aeModel.performance)
 
 
-#%% LOAD MODEL
+ #%% LOAD MODEL
 opt = Options()
 opt.name = 'AE_v3.1'
 nome_ckp = 'AE_v3.1_lr:1e-05|Epoch:29|Loss:0.0448.pth.tar'
