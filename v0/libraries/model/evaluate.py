@@ -94,7 +94,6 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
         labels = labels
         scores = scores
     
-    
     fpr, tpr, threshold = roc_curve(labels, scores)
     
     opt_threshold = _getOptimalThreshold(fpr, tpr, threshold)
@@ -142,6 +141,7 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
         ax3.set_title('Anomaly Scores Trend _{}_'.format(info))
         ax3.hist(scores, bins=100)
         
+        fig.tight_layout()        
         
         # SAVING PLOTS
         if(folder_save is not None):
