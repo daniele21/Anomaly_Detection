@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
 #%% IMPORTS
-from network import Encoder, Decoder, Generator, Discriminator
-from model_options import Options
-from dataset import generateDataloader
-from dataset import getCifar10 as cifar
+from libraries.model.network import Encoder, Decoder, Generator, Discriminator
+from libraries.model.options import Options
+from libraries.model.dataset import generateDataloader
+from libraries.model.dataset import getCifar10 as cifar
+
+from libraries.torchsummary import summary
 #%% VARIABLE
 
 opt = Options(in_channels=3)
-opt.out_channels = 128
+opt.out_channels = 64
 
 #%%
 dataloader = cifar()
@@ -29,7 +31,10 @@ decoder = Decoder(opt)
 
 #%% TEST GENERATOR
 
-Generator(opt)
+net = Generator(opt)
+print(net)
+
+summary(net.cuda(), (3,32,32))
 
 #%%
 discr = Discriminator(opt)

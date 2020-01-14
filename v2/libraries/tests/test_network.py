@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 #%% IMPORTS
-from network import Encoder, Decoder, Generator, Discriminator
-from model_options import Options
-from dataset import generateDataloader
-from dataset import getCifar10 as cifar
+from libraries.model.network import Encoder, Decoder, Generator, Discriminator
+from libraries.model.options import Options
+#from dataset import generateDataloader
+#from dataset import getCifar10 as cifar
 #%% VARIABLE
 
 opt = Options(in_channels=3)

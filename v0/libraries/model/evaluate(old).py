@@ -106,7 +106,7 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
        
     
     if(plot):
-        fig, [ax1, ax2, ax3] = plt.subplots(3,1, figsize=(8,10))
+        fig, [ax1, ax2] = plt.subplots(2,1, figsize=(8,12))
         
         lw = 2
         
@@ -123,25 +123,9 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
         ax1.set_title('Receiver operating characteristic _{}_'.format(info))
         ax1.legend(loc="lower right")
         
-        # PLOTTING PRECISION-RECALL
-        avg_prec = average_precision_score(labels, scores)
-        precision, recall, thresholds = precision_recall_curve(labels, scores)
-    
-        ax2.fill_between(recall, precision, alpha=0.7, color='b')
-        ax2.axhline(avg_prec, color='r', ls='--', label='Average Precision')
-        ax2.legend()
-        ax2.plot(recall, precision)
-        
-        ax2.set_xlabel('Recall')
-        ax2.set_ylabel('Precision')
-        ax2.set_ylim([0.0, 1.05])
-        ax2.set_xlim([0.0, 1.0])
-        ax2.set_title('2-class Precision-Recall curve: Avg_Prec={0:0.2f}'.format(avg_prec))
-    
         # PLOTTING TREND SCORES
-        ax3.set_title('Anomaly Scores Trend _{}_'.format(info))
-        ax3.hist(scores, bins=100)
-        
+        ax2.set_title('Anomaly Scores Trend _{}_'.format(info))
+        ax2.plot(scores)
         
         # SAVING PLOTS
         if(folder_save is not None):
@@ -178,7 +162,7 @@ def precision_recall(labels, scores, plot=False, folder_save=None):
         plt.fill_between(recall, precision, alpha=0.7, color='b')
         plt.axhline(avg_prec, color='r', ls='--', label='Average Precision')
         plt.legend()
-        plt.plot(recall, precision)
+        #plt.plot(recall, precision)
         
         plt.xlabel('Recall')
         plt.ylabel('Precision')

@@ -34,8 +34,10 @@ class MultiTaskLoss(nn.Module):
     def forward(self, x):
         # OUTPUT DECODER OF GENERATOR
         x_prime = self.shared_layer(x)
+        
         # OUTPUT LAST ENCODER
         z_prime = self.encoder_enc(x_prime)
+        
         # OUTPUTS ADVERSARIAL ENCODER
         feat_real = self.encoder_adv(x)
         feat_fake = self.encoder_adv(x_prime)

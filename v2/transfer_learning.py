@@ -23,8 +23,8 @@ vgg
 summary(vgg, (3,256,1600))
 
 #%%
-modules = list(vgg.children())[:-1]
-modules.append(nn.Sequential(nn.Conv2d(512,100,7)))
+modules = list(vgg.children())[:-2]
+modules.append(nn.Sequential(nn.Conv2d(512,100,(8,50))))
 modules
 
 #for param in vgg.parameters():
@@ -46,6 +46,44 @@ summary(encoder.cuda(), (3,256,1600))
 
 
 #%%
+k1, k2 = 3,3
+
+decoder = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear'),
+            nn.ConvTranspose2d(512, 256, (k1,k2), stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+            
+            nn.Upsample(scale_factor=2, mode='bilinear'),
+            nn.ConvTranspose2d(256, 128, (k1,k2), stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+            
+            nn.Upsample(scale_factor=2, mode='bilinear'),
+            nn.ConvTranspose2d(128, 64, (k1,k2), stride=1, padding=1),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+            
+            nn.Upsample(scale_factor=2, mode='bilinear'),
+            nn.ConvTranspose2d(64, 32, (k1,k2), stride=1, padding=1),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(),
+            
+            nn.Upsample(scale_factor=2, mode='bilinear'),
+            nn.ConvTranspose2d(32, 16, (k1,k2), stride=1, padding=1),
+            nn.BatchNorm2d(16),
+            nn.LeakyReLU(),
+
+            
+#            nn.ConvTranspose2d(32, 3, (2,2), stride=2),
+##            nn.Tanh(),
+            nn.Conv2d(16, 1, 1),
+            nn.Sigmoid()
+            
+            )
+#%%
+
+summary(decoder.cuda(), (512,8,50))
 k1, k2 = 4, 25
 
 decoder = nn.Sequential(
