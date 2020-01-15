@@ -516,10 +516,11 @@ class ClassifierFCONNModel():
         
         prediction = ['Anomalous Image', 1] if score >= thr else ['Normal Image', 0]
         
-        if(prediction):
-            print('Anomalous Patch')
-        else:
-            print('Normal Patch')
+        if(verbose):
+            if(prediction):
+                print('Anomalous Patch')
+            else:
+                print('Normal Patch')
         
         return prediction, anomaly_score.item(), thr
         
