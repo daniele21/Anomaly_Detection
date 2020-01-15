@@ -323,6 +323,7 @@ class ClassifierFCONNModel():
             return performance, eval_data,  spent_time
         
     def _trainingStep(self, epochs, save):
+        
         for self.epoch in range(epochs):
             print('\n')
             print('Epoch {}/{}'.format(self.epoch+1, epochs))
@@ -496,48 +497,17 @@ class ClassifierFCONNModel():
     def predict(self, image, target=None, threshold=None, 
                 info=None, verbose=0):
         
-        if(self.opt.in_channels == 1):
-            cmap = 'gray'
-            grayMode = True
-            
-        elif(self.opt.in_channels == 3):
-            cmap = None
-            grayMode = False
-        
         image_transf = Transforms.ToTensor()(image)
         image_unsqueeze = image_transf.unsqueeze_(0)
         x = Variable(image_unsqueeze).cuda()
 
         with torch.no_grad():
-            x_prime = self.model(x)
+            output = self.model(x)
+            output = output.reshape(-1)            
             
-        # SCORE
-        
-        #torch.Size([1, 3, 32, 32])
-        
-        x_score = x.reshape(x.size(0), x.size(1)*x.size(2)*x.size(3))
-        x_prime_score = x_prime.reshape(x_prime.size(0), x_prime.size(1)*x_prime.size(2)*x_prime.size(3))
-        
-        score = torch.mean(torch.pow((x_score-x_prime_score), 2), dim=1)
-        
-        # NORM SCORE
-#        anomaly_score = (score - torch.min(score)) / (torch.max(score) - torch.min(score))
+        # SCORE    
+        score = output.cpu()
         anomaly_score = score
-        
-        output = x_prime.cpu().numpy()
-        output = np.transpose(output[0], (2,1,0))
-
-        if(grayMode):
-            output = output[0].reshape(self.opt.img_size, self.opt.img_size)
-
-        final_output = output
-#        final_output = (output * 0.5) / 0.5
-        final_output = np.flip(final_output, 1)
-        final_output = np.rot90(final_output, 1)
-        
-#        plt.imshow(image, cmap='gray')
-#        plt.show()
-#        plt.imshow(image)
         
         if(threshold is not None):
             thr = threshold
@@ -545,38 +515,12 @@ class ClassifierFCONNModel():
             thr = self.threshold
         
         prediction = ['Anomalous Image', 1] if score >= thr else ['Normal Image', 0]
-#        print(prediction)
-        if(verbose):
-            
-            fig, [ax1, ax2] = plt.subplots(2,1, figsize=(10,10))
-            results = '------------ RESULTS -------------\n' + \
-                       'Threshold: {:.3f}\n'.format(thr) + \
-                       'Score: {:.3f}\n'.format(anomaly_score.item()) + \
-                       '---------------------------------\n\n' + \
-                       'Original image --> {}'.format(prediction[0])
-                       
-            ax1.set_title(results)
-            ax1.imshow(image, cmap=cmap)
-            ax2.set_title('Reconstructed image')
-            ax2.imshow(final_output, cmap=cmap)
-            
-            print('')
-            print('\n------------ RESULTS -------------')
-            print('Threshold: \t{:.3f}'.format(thr))
-            print('Score: \t\t{:.3f}'.format(anomaly_score.item()))
-            print('')
-            print('Original image --> ', prediction[0])
-            print('----------------------------------')
-            
-            if(info is not None):
-                print('..Saving..')
-                if(prediction[0] == 'Normal Image'):    
-                    plt.savefig(self.folder_save + 'Normal_{}'.format(info))
-                elif(prediction[0] == 'Anomalous Image'):
-                    plt.savefig(self.folder_save + 'Anomaly_{}'.format(info))
-                else:
-                    raise Exception('Wrong Predicion')
-            
+        
+        if(prediction):
+            print('Anomalous Patch')
+        else:
+            print('Normal Patch')
+        
         return prediction, anomaly_score.item(), thr
         
     def tuneLearningRate(self, inf_bound, sup_bound):
