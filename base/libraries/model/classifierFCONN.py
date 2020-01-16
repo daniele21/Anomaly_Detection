@@ -68,6 +68,7 @@ class ClassifierFCONN(nn.Module):
         # LAYER 4
         net.add_module('4_Conv-2D', nn.Conv2d(in_channels, out_channels,
                                                      kernel_size=3, stride=1))
+        net.add_module('4_ReLu', nn.ReLU())
         
         self.features = net
         
@@ -516,11 +517,11 @@ class ClassifierFCONNModel():
         
         prediction = ['Anomalous Image', 1] if score >= thr else ['Normal Image', 0]
         
-        if(verbose):
-            if(prediction):
-                print('Anomalous Patch')
-            else:
-                print('Normal Patch')
+#        if(verbose):
+#            if(prediction):
+#                print('Anomalous Patch')
+#            else:
+#                print('Normal Patch')
         
         return prediction, anomaly_score.item(), thr
         

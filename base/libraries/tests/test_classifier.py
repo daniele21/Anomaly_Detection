@@ -23,6 +23,7 @@ model = ClassifierFCONV(opt)
 summary(model.cuda(), (3,32,32))
 
 #%%
+opt = Options()
 model = ClassifierFCONN(opt)
 
 summary(model.cuda(), (3,32,32))
@@ -82,7 +83,7 @@ i = 0
 #%%
 image = testloader.dataset.data[anom_index[i]]
 target = testloader.dataset.targets[anom_index[i]]
-adModel.predict(image, target, i, verbose=1)
+model.predict(image, target, i, verbose=1)
 i += 1
 
 

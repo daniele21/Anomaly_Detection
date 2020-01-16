@@ -43,7 +43,7 @@ def computeEvaluation(mask_true, mask_pred, info, folder_save):
     
     writeDataResults(results, folder_save)
 
-def evaluateResult(model, img, mask):
+def evaluateResult(model, img, mask, thrs=['standard','conv','median','gauss']):
   
     # 2.PREDICTION ANOMALY THRESHOLDING OVER EACH BATCH
 #    dataTest = generateDataloaderTest(img.patches, model.opt)
@@ -55,7 +55,7 @@ def evaluateResult(model, img, mask):
     outcomes = []
     thr_dict = {}
     
-    for x in ['standard','conv','median','gauss']:
+    for x in thrs:
         
         try:
             thr_dict.update({x : model.performance[x]['Threshold']})
@@ -105,7 +105,7 @@ def evaluateResult(model, img, mask):
 #            computeEvaluation(mask, maj_mask_1, info, img.folder_save)
 
     
-def automaticEvaluation(model, samples, stride):
+def automaticEvaluation(model, samples, stride, thrs=['standard','conv','median','gauss']):
     
     shape = Shape(32,32)
     model_name = model.opt.name
@@ -114,6 +114,6 @@ def automaticEvaluation(model, samples, stride):
     
     for index in samples:        
         img, _, mask = dm.extractPatchesForTest(train, index, shape, stride, model_name)
-        evaluateResult(model, img, mask)
+        evaluateResult(model, img, mask, thrs)
         
 
