@@ -11,29 +11,42 @@ import torch.nn as nn
 from torchvision import models
 from libraries.torchsummary import summary
 from libraries.model.options import Options, FullImagesOptions
-from libraries.model.network import FCN_Generator
+from libraries.model.network import FCN_Generator, EncoderTL, GeneratorTL
 from libraries.model.dataset import dataloaderPatchMasks
 
 from matplotlib import pyplot as plt
 #%%
-vgg = models.vgg16(pretrained=True).cuda()
-vgg
+opt = Options()
+encTL = GeneratorTL(opt)
+encTL
+#%%
+summary(encTL.cuda(), (3, 32, 32))
 
 #%%
-summary(vgg, (3,256,1600))
+vgg = models.vgg16(pretrained=True).cuda()
+vgg
+#%%
+for param in vgg.parameters():
+    param.require_grad = False
+#%%
+summary(vgg, (3,32,32))
 
 #%%
 modules = list(vgg.children())[:-2]
 modules.append(nn.Sequential(nn.Conv2d(512,100,(8,50))))
 modules
+#%%
+modules = list(vgg.children())[:-2][0]
+features = list(modules)[:-3]
+encoder = nn.Sequential(*features)
+encoder.add_module('Final conv2D', nn.Conv2d(512, 1024, 2))
+encoder
 
-#for param in vgg.parameters():
-#    param.requires_grad = False
-#
-#vgg.features[30] = nn.Sequential(
-#                        nn.Linear(4096, 256),
-#                        nn.ReLU(),
-#                        nn.Linear())
+#%%
+encoder = nn.Sequential(*features)
+encoder
+#%%
+summary(encoder.cuda(), (3,32,32))
 
 #%%
 

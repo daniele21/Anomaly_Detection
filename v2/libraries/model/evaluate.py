@@ -12,10 +12,13 @@ import pandas as pd
 import numpy as np
 from inspect import signature
 from sklearn.metrics import confusion_matrix
+from libraries.utils import ensure_folder
 
-def evaluate(labels, scores, metric='roc', plot=False, folder_save=None):
+EXTENSION = '.png'
+
+def evaluate(labels, scores, metric='roc', plot=False, folder_save=None, info=''):
     if metric == 'roc':
-        return roc(labels, scores, plot, folder_save)
+        return roc(labels, scores, plot=plot, folder_save=folder_save, info=info)
     elif metric == 'avg_prec':
         return average_precision_score(labels, scores)
     elif metric == 'recall':
@@ -36,6 +39,7 @@ def evaluate(labels, scores, metric='roc', plot=False, folder_save=None):
         raise NotImplementedError("Check the evaluation metric.")
 
 def precision(y_true, y_pred):
+#    print(confuseMatrix(y_true, y_pred))
     TN, FP, FN, TP = confuseMatrix(y_true, y_pred).ravel()
     return TP / (TP+FP)
 
@@ -47,18 +51,20 @@ def recall(y_true, y_pred):
     TN, FP, FN, TP = confuseMatrix(y_true, y_pred).ravel()
     return TP/ (TP+FN)
 
-def confuseMatrix(y_true, y_pred):
-    return confusion_matrix(y_true, y_pred)
-
 def IoU(pred_mask, true_mask):
+#    print(pred_mask)
+#    print(true_mask)
     SMOOTH = 1e-06
     
     intersection = pred_mask & true_mask
     union = pred_mask | true_mask
     
     iou = (intersection.sum() + SMOOTH) / (union.sum() + SMOOTH)
-
-    return intersection, union, iou
+    
+    return iou
+    
+def confuseMatrix(y_true, y_pred):
+    return confusion_matrix(y_true, y_pred)
 
 def _getOptimalThreshold(fpr, tpr, threshold):
     #
@@ -75,7 +81,7 @@ def _getOptimalThreshold(fpr, tpr, threshold):
 
 #%%
 
-def roc(labels, scores, plot=False, folder_save=None):
+def roc(labels, scores, info='', plot=False, folder_save=None):
     """Compute ROC curve and ROC area for each class"""
     fpr = dict()
     tpr = dict()
@@ -88,9 +94,6 @@ def roc(labels, scores, plot=False, folder_save=None):
         labels = labels
         scores = scores
     
-#    print(scores)
-
-    # True/False Positive Rates.
     fpr, tpr, threshold = roc_curve(labels, scores)
     
     opt_threshold = _getOptimalThreshold(fpr, tpr, threshold)
@@ -99,40 +102,72 @@ def roc(labels, scores, plot=False, folder_save=None):
 
     # Equal Error Rate
     eer = brentq(lambda x: 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
-#    print(eer)
+       
     
     if(plot):
-        plt.figure()
+        fig, [ax1, ax2, ax3] = plt.subplots(3,1, figsize=(8,10))
+        
         lw = 2
-    #    plt.plot(0,0)
-        plt.plot(fpr, tpr, color='darkorange', lw=lw, label='(AUC = %0.2f, EER = %0.2f)' % (roc_auc, eer))
-        plt.plot([eer], [1-eer], marker='o', markersize=5, color="navy")
-        plt.fill_between(fpr, tpr, alpha=0.3, color='orange')
-        plt.plot([0, 1], [1, 0], color='navy', lw=1, linestyle=':')
-        plt.plot(fpr, threshold, markeredgecolor='r',linestyle='dashed', color='r', label='Threshold')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic')
-        plt.legend(loc="lower right")
-#        plt.show()
-
-        print(folder_save)
+        
+        # PLOTTING AUC
+        ax1.plot(fpr, tpr, color='darkorange', lw=lw, label='(AUC = %0.3f, EER = %0.3f)' % (roc_auc, eer))
+        ax1.plot([eer], [1-eer], marker='o', markersize=5, color="navy")
+        ax1.fill_between(fpr, tpr, alpha=0.3, color='orange')
+        ax1.plot([0, 1], [1, 0], color='navy', lw=1, linestyle=':')
+        ax1.plot(fpr, threshold, markeredgecolor='r',linestyle='dashed', color='r', label='Threshold = {:.5f}'.format(opt_threshold))
+        ax1.set_xlim([0.0, 1.0])
+        ax1.set_ylim([0.0, 1.05])
+        ax1.set_xlabel('False Positive Rate')
+        ax1.set_ylabel('True Positive Rate')
+        ax1.set_title('Receiver operating characteristic _{}_'.format(info))
+        ax1.legend(loc="lower right")
+        
+        # PLOTTING PRECISION-RECALL
+        avg_prec = average_precision_score(labels, scores)
+        precision, recall, thresholds = precision_recall_curve(labels, scores)
+    
+        ax2.fill_between(recall, precision, alpha=0.7, color='b')
+        ax2.axhline(avg_prec, color='r', ls='--', label='Average Precision')
+        ax2.legend()
+        ax2.plot(recall, precision)
+        
+        ax2.set_xlabel('Recall')
+        ax2.set_ylabel('Precision')
+        ax2.set_ylim([0.0, 1.05])
+        ax2.set_xlim([0.0, 1.0])
+        ax2.set_title('2-class Precision-Recall curve: Avg_Prec={0:0.2f}'.format(avg_prec))
+    
+        # PLOTTING TREND SCORES
+        ax3.set_title('Anomaly Scores Trend _{}_'.format(info))
+        ax3.hist(scores, bins=100)
+        
+        fig.tight_layout()        
+        
+        # SAVING PLOTS
         if(folder_save is not None):
+            # SAVING ROC CURVE PLOT
             print('.. saving at {}'.format(folder_save))
-            plt.savefig(folder_save + '/roc curve')
+            ensure_folder(folder_save)
+            plt.savefig(folder_save + 'evaluation_' + str(info) + EXTENSION)
+            plt.show()    
             
-        plt.show()
+
+    print('> AUC {}      :\t{:.3f}'.format(str(info), roc_auc))
+    print('> EER {}      :\t{:.3f}'.format(str(info), eer))
+    print('> Threshold {}:\t{:.5f}\n'.format(str(info), opt_threshold))
 
     return roc_auc, opt_threshold
 
-def precision_recall(labels, scores, plot, folder_save):
-    scores = scores.cpu()
-    labels = labels.cpu()
+def precision_recall(labels, scores, plot=False, folder_save=None):
     
-    ap = average_precision_score(labels, scores)
+    try:
+        labels = labels.cpu()
+        scores = scores.cpu()
+    except:
+        labels = labels
+        scores = scores
     
+    avg_prec = average_precision_score(labels, scores)
     
     precision, recall, thresholds = precision_recall_curve(labels, scores)
 #    return precision.shape, recall.shape, thresholds.shape
@@ -141,24 +176,24 @@ def precision_recall(labels, scores, plot, folder_save):
     if(plot):
         
         plt.fill_between(recall, precision, alpha=0.7, color='b')
-        plt.axhline(ap, color='r', ls='--', label='Average Precision')
+        plt.axhline(avg_prec, color='r', ls='--', label='Average Precision')
         plt.legend()
-        #plt.plot(recall, precision)
+        plt.plot(recall, precision)
         
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.ylim([0.0, 1.05])
         plt.xlim([0.0, 1.0])
-        plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(ap))
+        plt.title('2-class Precision-Recall curve: Avg_Prec={0:0.2f}'.format(avg_prec))
 #        plt.show()
         
         if(folder_save is not None):
             print('.. saving at {}'.format(folder_save))
-            plt.savefig(folder_save + '/prec-recall curve')
+            plt.savefig(folder_save + '/prec-recall curve' + EXTENSION)
             
         plt.show()
         
-    return ap
+    return avg_prec
 
 
 

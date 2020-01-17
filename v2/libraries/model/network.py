@@ -141,7 +141,35 @@ class Encoder(nn.Module):
        
        return output
     
-   
+class EncoderTL(nn.Module):
+    
+    def __init__(self, opt, z_size=None):
+        super().__init__()
+        
+        if(z_size is None):
+            z_size = opt.z_size
+        else:
+            z_size = z_size
+        
+        vgg = models.vgg16(pretrained=True).cuda()
+        
+        for param in vgg.parameters():
+            param.require_grad = False
+            
+        modules = list(vgg.children())[:-2][0]
+        features = list(modules)[:-3]
+        self.net = nn.Sequential(*features)
+        self.net.add_module('Final conv2D', nn.Conv2d(512, z_size, 2))
+        self.net
+        
+    def forward(self, x):
+        
+        x = self.net(x)
+        
+        return x
+        
+        
+        
 #%%    
  
     
@@ -265,6 +293,34 @@ class Generator(nn.Module):
         z_prime = self.encoder2(x_prime)     
         
         return x_prime, z, z_prime
+    
+class GeneratorTL(nn.Module):
+    
+    def __init__(self, opt, xavier_init=True):
+        super().__init__()
+        
+        self.encoder1 = EncoderTL(opt)
+        self.decoder  = Decoder(opt)
+        self.encoder2 = Encoder(opt)
+        
+        # INITIALIZATION
+        if(xavier_init):
+            self.encoder1.apply(weights_init)
+            self.decoder.apply(weights_init)
+            self.encoder2.apply(weights_init)
+        
+    def forward(self, x):
+
+        # LATENT REPRESENTATION
+        z       = self.encoder1(x)
+        
+        # RECONSTRUCTED IMAGE
+        x_prime = self.decoder(z)
+
+        # RECONSTRUCTED LATENT REPRESENTATION
+        z_prime = self.encoder2(x_prime)     
+        
+        return x_prime, z, z_prime    
     
 class Discriminator(nn.Module):
     

@@ -6,6 +6,7 @@ from libraries.model.dataset import generateDataloader, getCifar10
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE, loadModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
+from libraries.model.postprocessing import distScores
 paths = Paths()
 
 from matplotlib import pyplot as plt
@@ -24,7 +25,7 @@ opt.name = 'Ganom_v1_v4.0'
 #opt.in_channels = 1 # GRAYSCALE
 opt.in_channels = 3 # RGB
 
-opt.nFolders = 60
+opt.nFolders = 2
 opt.patch_per_im = 500
 
 #opt.nFolders = 30
@@ -75,7 +76,7 @@ opt.lr_discr = 5*1e-05
 opt.patience = 5
 
 opt.w_adv = 1
-opt.w_con = 1
+opt.w_con = 50
 opt.w_enc = 1
 
 opt.weightedLosses = False
@@ -95,6 +96,7 @@ print(path_file)
 #adModel = torch.load(path_file)
 adModel = loadModel(path_file, trainloader, validLoader, testloader)
 #ckp = loadModel(, trainloader, validLoader, testloader)
+
 #%% MULTI TASK LOSS WEIGHTS
 adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
                                 trainloader, validLoader, testloader) 
@@ -104,13 +106,13 @@ optim = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
 mtl.train(40, optim)
 
 #%% TRAINING MODEL
-epochs = 30
+epochs = 5
 
 # NORM GRAD
 #opt.weightedLosses=False
 #optimizer_weights = None
 
-opt.weightedLosses=True
+opt.weightedLosses=False
 optimizer_weights = optimizer_gen
 
 # WEIGHTED LOSS TRAINING
@@ -180,3 +182,16 @@ content = '\n- Norm_Error: {:.3f}'.format(normalError)
 adModel.addInfo(content)
 
 #%%
+adModel = torch.load('../../ckp_v1/Ganom_v1_v3_best_ckp.pth.tar')
+
+thresholds = {'standard' : adModel.performance['standard']['Threshold'],
+              'conv' : adModel.performance['conv']['Threshold'],
+              'median' : adModel.performance['median']['Threshold'],
+              'gauss' : adModel.performance['gauss']['Threshold']}
+
+aucs = {'standard' : adModel.performance['standard']['AUC'],
+          'conv' : adModel.performance['conv']['AUC'],
+          'median' : adModel.performance['median']['AUC'],
+          'gauss' : adModel.performance['gauss']['AUC']}
+
+

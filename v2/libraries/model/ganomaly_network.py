@@ -6,7 +6,7 @@ Created on Tue Nov 26 12:02:01 2019
 @author: daniele
 """
 #%% IMPORTS
-from libraries.model.network import Generator, Discriminator, weights_init
+from libraries.model.network import GeneratorTL, Discriminator, weights_init
 from libraries.model import loss
 from libraries.model.options import Options
 
@@ -22,7 +22,7 @@ class GanomalyModel():
     
     def __init__(self, opt):
         
-        self.generator = Generator(opt).to(device)
+        self.generator = GeneratorTL(opt).to(device)
         self.discriminator = Discriminator(opt).to(device)
         
         self.lr_gen = opt.lr_gen
