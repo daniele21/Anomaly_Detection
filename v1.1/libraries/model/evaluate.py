@@ -7,6 +7,7 @@ from sklearn.metrics import roc_curve, auc, average_precision_score, recall_scor
 from sklearn.metrics import f1_score, precision_recall_curve, precision_score, accuracy_score
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
+from scipy.stats import cumfreq
 from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
@@ -62,13 +63,21 @@ def IoU(pred_mask, true_mask):
     iou = (intersection.sum() + SMOOTH) / (union.sum() + SMOOTH)
     
     return iou
+
+def dice(pred_mask, true_mask):
+    SMOOTH = 1e-06
+    
+    intersection = pred_mask & true_mask
+    denom = pred_mask.sum() + true_mask.sum()
+    
+    dice_score = 2*(intersection.sum() + SMOOTH) / (denom + SMOOTH)
+    
+    return dice_score
     
 def confuseMatrix(y_true, y_pred):
     return confusion_matrix(y_true, y_pred)
 
 def _getOptimalThreshold(fpr, tpr, threshold):
-    #
-    # tpr - (1-fpr) should be 0 or near to 0
     
     i = np.arange(len(tpr)) 
     roc = pd.DataFrame({'tf' : pd.Series(tpr-(1-fpr), index=i),
@@ -86,13 +95,6 @@ def roc(labels, scores, info='', plot=False, folder_save=None):
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
-    
-    try:
-        labels = labels.cpu()
-        scores = scores.cpu()
-    except:
-        labels = labels
-        scores = scores
     
     fpr, tpr, threshold = roc_curve(labels, scores)
     
@@ -195,7 +197,21 @@ def precision_recall(labels, scores, plot=False, folder_save=None):
         
     return avg_prec
 
+#%%
+def getThreshold(scores, prob, hist):
+    
+    values = hist[0]
+    bins = hist[1]
+    density = np.cumsum(values)/np.cumsum(values)[-1]
+    
+    index = np.where(density >= prob)[0][0]
+    
+    threshold = bins[index]
+    
+    return threshold
 
+
+    
 
 
 

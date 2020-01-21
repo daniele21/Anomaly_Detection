@@ -766,7 +766,33 @@ def extractPatchesOptimized(train, start, end, nPatches, shape):
 
         count += 1
 #        print(count)
-            
+         
+
+#def extractPatchesFromImage(image, mask, patch_size, stride):
+#    patch_shape = Shape(patch_size, patch_size)
+#    startRow = patch_shape.y//2
+#    startCol = patch_shape.x//2
+#
+#    rows = len(image)
+#    
+#    for row in range(startRow, rows-startRow+1, stride):
+#        cols = len(image[row])
+#        
+#        for col in range(startCol, cols-startCol+1, stride):
+#            origin = Point(col,row)
+#            patchIMG = getPatchImage(image, origin, patch_shape)
+#    #               
+#            if(checkMedianThreshold(patchIMG)==False):
+#    #                    print('Non-considerable patch at {}x{}'.format(origin.y, origin.x))
+#                pass
+#            else:
+#                patch = PatchClass(origin, patch_shape, patchIMG)
+#    
+#                if(mask is not None):         
+#                    patch.anomaly = checkAnomaly(patch, mask)
+#                
+#                self.patches.append(patch)
+#            self.drawPatch(patch, COLOR_PATCH)
  
 def extractPatchesForTest(train, index, shape, stride, model_name):
 

@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from time import time
 from libraries.utils import timeSpent
+from libraries.dataset_package.dataset_manager import checkMedianThreshold
 #%%
 
 def anomalyScoreFromDataset(model, dataset, stride, patch_size):
@@ -14,8 +15,8 @@ def anomalyScoreFromDataset(model, dataset, stride, patch_size):
     
     start = time()
     
-    for image, mask in dataset:
-        
+    for image, mask in dataset.dataset:
+
         anom_score, gt = anomalyScoreFromImage(model, image, mask,
                                                stride, patch_size)
         
@@ -26,7 +27,9 @@ def anomalyScoreFromDataset(model, dataset, stride, patch_size):
     
     timeSpent(end-start)
     
-    return anomalyScoreMap, gtMap
+    
+    
+    return np.array(anomalyScoreMap), np.array(gtMap)
 
 def anomalyScoreFromImage(model, image, mask, stride, patch_size):
     h = image.shape[0]
@@ -40,11 +43,20 @@ def anomalyScoreFromImage(model, image, mask, stride, patch_size):
     
     counter = 0
     
-    anomalyMap = np.zeros([bound_y, bound_x]) - 1
-    maskMap = np.zeros([bound_y, bound_x]) - 1
+    anomalyMap = np.zeros([bound_y, bound_x])
+    maskMap = np.zeros([bound_y, bound_x])
 #    print(anomalyMap.shape)
     
-    patch = nextPatch(image, x, y, stride, patch_size)
+    valid_patch, patch = nextPatch(image, x, y, stride, patch_size)
+    while(valid_patch == False):
+        indexes = __updateIndexes(x, y, i, j, 
+                                  bound_x, bound_y, stride, patch_size)
+        
+        assert indexes is not None, 'Wrong patch'
+        x, y, i, j = indexes
+        
+        valid_patch, patch = nextPatch(image, x, y, stride, patch_size)
+        
     center_x = patch[1]
     center_y = patch[2]
 
@@ -61,22 +73,44 @@ def anomalyScoreFromImage(model, image, mask, stride, patch_size):
 #        print(center_y)
         maskMap[j,i] = mask[center_y, center_x]
         
-        if(i < bound_x-1):
-            i += 1
-            x = x + stride
-            
-        elif(j < bound_y-1):
-            j += 1
-            i = 0
-            y = y + stride
-            x = patch_size//2
-            
+        indexes = __updateIndexes(x, y, i, j, 
+                                  bound_x, bound_y, stride, patch_size)
+        if(indexes is not None):
+            x,y,i,j = indexes
         else:
             return anomalyMap, maskMap
         
-        patch = nextPatch(image, x, y, stride, patch_size)
+        valid_patch, patch = nextPatch(image, x, y, stride, patch_size)
+        while(valid_patch == False):
+            indexes = __updateIndexes(x, y, i, j, 
+                                  bound_x, bound_y, stride, patch_size)
+            
+            if(indexes is not None):
+                x,y,i,j = indexes
+            else:
+                return anomalyMap, maskMap
+            
+            valid_patch, patch = nextPatch(image, x, y, stride, patch_size)
+            
         center_x = patch[1]
         center_y = patch[2]
+        
+def __updateIndexes(x, y, i, j, bound_x, bound_y, stride, patch_size):
+    
+    if(i < bound_x-1):
+            i += 1
+            x = x + stride
+            
+    elif(j < bound_y-1):
+        j += 1
+        i = 0
+        y = y + stride
+        x = patch_size//2
+    
+    else:
+        return None   
+    
+    return x, y, i, j
     
 def nextPatch(image, x, y, stride, patch_size):
     
@@ -98,9 +132,12 @@ def nextPatch(image, x, y, stride, patch_size):
         
     patch = image[y - patch_size//2 : y + patch_size//2, x - patch_size//2 : x + patch_size//2]
     
-    return [patch, x, y]
+    valid_patch = checkMedianThreshold(patch)
+
+    return valid_patch, [patch, x, y]
 
 def anomalyScore(model, patch):
+#    print(patch.shape)
     prediction, score, _ = model.predict(patch)
     
     return score

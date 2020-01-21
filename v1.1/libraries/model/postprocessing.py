@@ -7,47 +7,51 @@ import seaborn as sn
 
 from scipy.stats import norm, gaussian_kde
 from scipy.signal import medfilt
-from scipy.ndimage.filters import gaussian_filter1d
+from scipy.ndimage import convolve, median_filter
+from astropy.convolution import Gaussian2DKernel
 
 import statsmodels.api as sm
 
 from libraries.model.evaluate import evaluate
+from libraries.model.evaluate import getThreshold
 from libraries.utils import ensure_folder
 #%% FUNCTIONS
 
-def convFilterScores(scores, kernel_size):
+def createKernel(kernel_size, dim=2):
     
-    try:
-        scores = scores.cpu()
-    except:
-        scores = scores
+    assert dim == 2 or dim == 3, 'Wrong dimensione param'
+    
+    if(dim==2):
+        kernel = np.ones([kernel_size, kernel_size])
         
-    kernel = np.ones(kernel_size) / kernel_size
+    elif(dim==3):
+        kernel = np.ones([1, kernel_size, kernel_size])
     
-    conv_scores = np.convolve(scores, kernel, mode='same')
+    return kernel
+
+def convFilterScores(scores, kernel):
+    
+#    conv_scores = convolve(scores, kernel, mode='constant')
+#    conv_scores = convolve(scores, kernel, mode='nearest')
+    conv_scores = convolve(scores, kernel)
         
     return conv_scores
 
 
 def medFilterScores(scores, kernel_size):
     
-    try:
-        scores = scores.cpu()
-    except:
-        scores = scores
+    size = (1, kernel_size, kernel_size)
     
-    med_scores = medfilt(scores, kernel_size=kernel_size)
+    med_scores = median_filter(scores, size)
 
     return med_scores
 
 def gaussFilterScores(scores, sigma):
     
-    try:
-        scores = scores.cpu()
-    except:
-        scores = scores
+    kernel = Gaussian2DKernel(sigma).array
+    kernel = kernel.reshape((1, kernel.shape[0], kernel.shape[1]))
     
-    gauss_scores = gaussian_filter1d(scores, sigma=sigma)
+    gauss_scores = convolve(scores, kernel)
 
     return gauss_scores
 
@@ -266,27 +270,80 @@ def __plottingThresholds(performance, h, distr=None):
         plt.plot(x, y, marker='o', c=colors[i], label=label)
         
         i += 1
+
+def computeFilters(as_map, params):
     
-def getCDF(cdf, value):
+    kernel = createKernel(params['conv'], dim=3)
+    conv_map = convFilterScores(as_map, kernel)
     
-    bins = len(cdf)
-    xmin = min(cdf)
-    xmax = max(cdf)
-    x = xmax - xmin
+    kernel_size = params['med']
+    med_map = medFilterScores(as_map, kernel_size)
     
-    x_values = np.arange(xmin, xmax, x/bins)
-#    print(x_values)
-    i=0
-    for x in x_values:
-#        print(x)
-        if(x > value):
-            return cdf[i]
-        
-        i += 1
+    sigma = params['gauss']
+    gauss_map = gaussFilterScores(as_map, sigma)
     
+    return conv_map, med_map, gauss_map
+
+def hist_data(data, bins, my_range, thr=None, title='', color='r', label=''):
     
+    plt.title('Histogram ' + title)
+    hist = plt.hist(data, bins=bins, color='#ffcc99', 
+                    range=my_range, density=True)
     
+    if(isinstance(thr, list) and isinstance(color, list) and isinstance(label, list)):
+        for i in range(len(thr)):
+            lab = label[i] + ': {:.3f}'.format(thr[i])
+            
+            plt.plot([thr[i], thr[i]], [0, max(hist[0])], c=color[i],
+                     marker='o', label=lab)
     
+    elif(thr is not None):
+        label = label + ': {:.3f}'.format(thr)
+        plt.plot([thr, thr], [0, max(hist[0])], c=color, marker='o', label=label)
+    
+    plt.legend(loc='best')
+    
+    plt.show()
+    
+    return hist
+
+def computeThresholds(as_map, kernel_params, hist_params, prob):
+    
+    conv_map, med_map, gauss_map = computeFilters(as_map, kernel_params)
+    
+    std_hist = hist_data(as_map.ravel(), hist_params['bins'], hist_params['range'], title='Standard')
+    conv_hist = hist_data(conv_map.ravel(), hist_params['bins'], hist_params['range'], title='Conv')
+    med_hist = hist_data(med_map.ravel(), hist_params['bins'], hist_params['range'], title='Median')
+    gauss_hist = hist_data(gauss_map.ravel(), hist_params['bins'], hist_params['range'], title='Gaussian')
+    
+    std_thr = getThreshold(as_map.ravel(), prob, std_hist)
+    conv_thr = getThreshold(conv_map.ravel(), prob, conv_hist)
+    med_thr = getThreshold(med_map.ravel(), prob, med_hist)
+    gauss_thr = getThreshold(gauss_map.ravel(), prob, gauss_hist)
+    
+    thrs = [std_thr, conv_thr, med_thr, gauss_thr]
+    labels = ['Standard', 'Conv       ', 'Median   ', 'Gaussian']
+    colors = ['brown', 'r', 'b', 'green']
+    
+    # STANDARD THRESHOLD
+    hist_data(as_map.ravel(), hist_params['bins'], hist_params['range'], thr=std_thr,label='Standard',
+                     title='Conv', color=colors[0])
+    # CONV THRESHOLD
+    hist_data(conv_map.ravel(), hist_params['bins'], hist_params['range'], thr=conv_thr,label='Conv',
+                     title='Conv', color=colors[1])
+    # MEDIAN THRESHOLD
+    hist_data(med_map.ravel(), hist_params['bins'], hist_params['range'], thr=med_thr,label='Med',
+                     title='Med', color=colors[2])
+    # GAUSSIAN THRESHOLD    
+    hist_data(gauss_map.ravel(), hist_params['bins'], hist_params['range'], thr=gauss_thr,label='Gauss',
+                     title='Gauss', color=colors[3])
+    
+    # ALL THRESHOLDS
+    hist_data(as_map.ravel(), hist_params['bins'], hist_params['range'],
+                     thr=thrs,label=labels, color=colors, title='Anomaly Scores')
+    
+    return std_thr, conv_thr, med_thr, gauss_thr
+
     
     
     

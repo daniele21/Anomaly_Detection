@@ -3,8 +3,9 @@
 #%% IMPORTS
 
 import libraries.model.evaluate as ev
+import seaborn as sn
 import numpy as np
-
+from scipy.stats import cumfreq
 #%%
 labels = np.zeros(100)
 labels
@@ -16,13 +17,28 @@ scores
 ev.roc(labels, scores)
 
 #%%
-mask = np.array([[0,0,0],[0,1,1],[0,1,1]])
-mask
+scores = as_map
+labels = gt_map
 
-label = np.array([[0,0,1],[0,1,1],[0,1,0]])
-label
+#%%
+as_flatten = scores.ravel()
+gt_flatten = labels.ravel()
+#%%
+ev.roc(gt_flatten, as_flatten)
+#%%
+my_range = (0, 0.03)
 
-inter, union, iou = ev.IoU(mask, label)
-print(iou)
-print(inter)
-print(union)
+hist = plt.hist(as_flatten, bins=50, density=True,
+                            range=my_range)
+
+plt.plot([thr,thr], [0, max(hist[0])], c='r', marker='o')
+
+#%%
+a = plt.hist(as_flatten, bins=50, density=True, cumulative=True, range=my_range)
+density = np.cumsum(n) / np.cumsum(n)[-1]
+
+prob = 0.95
+
+index = np.where(density >= prob)[0][0]
+
+thr = bins[index]

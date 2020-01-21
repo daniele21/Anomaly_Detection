@@ -491,18 +491,18 @@ def dataloaderPatchMasks(opt):
     
     return dataloader
 
-def dataloaderSingleSet(opt, start, end):
+def dataloaderSingleSet(start, end, batch_size):
     
     dataset = {}
     dataset['DATA'], dataset['LABELS'] = getImages(start, end)
     
-    dataset = FullSteelDataset(opt, dataset, test=True)
+    dataset = ImagesDataset(dataset)
 
     dataloader = DataLoader(dataset = dataset,
-                            batch_size = opt.batch_size,
+                            batch_size = batch_size,
                             drop_last  = True,
 #                            shuffle = shuffle[x],
-                            num_workers= opt.n_workers
+                            num_workers= 8
                             )
     
     return dataloader
@@ -905,7 +905,23 @@ class FullSteelDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+class ImagesDataset(Dataset):
+    
+    def __init__(self, dataset):
+        self.data = dataset['DATA']
+        self.targets = dataset['LABELS']
+        
+        self.data = np.vstack(self.data).reshape(-1, 256, 1600, 3)
+        print(self.data.shape)
+        
+    def __getitem__(self, index):
 
+        image, target = self.data[index], self.targets[index]
+        
+        return image, target
+    
+    def __len__(self):
+        return len(self.data)
 #%%
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
