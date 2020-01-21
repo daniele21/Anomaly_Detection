@@ -187,43 +187,10 @@ adModel.addInfo(content)
 ckp = '/media/daniele/Data/Tesi/Thesis/Results/v1/Ganom_v1_v3_training_result/Ganom_v1_v3_best_ckp.pth.tar'
 model = torch.load(ckp)
 
-test_set = dataloaderSingleSet(1000, 1005, 1)
+test_set = dataloaderSingleSet(1000, 1050, 1)
 
 as_map, gt_map = anomalyScoreFromDataset(model, test_set, 8, 32)
 
-#%%
-params = {'conv':3,
-          'med': 3,
-          'gauss':3}
-
-conv, med, gauss = pp.computeFilters(as_map, params)
-
-std_hist = pp.hist_data(as_map.ravel(), 50, (0, 0.1), title='Standard')
-conv_hist = pp.hist_data(conv.ravel(), 50, (0, 0.1), title='Conv')
-med_hist = pp.hist_data(med.ravel(), 50, (0, 0.1), title='Median')
-gauss_hist = pp.hist_data(gauss.ravel(), 50, (0, 0.1), title='Gaussian')
-
-prob = 0.95
-
-std_thr = getThreshold(as_map.ravel(), prob, std_hist)
-conv_thr = getThreshold(conv.ravel(), prob, conv_hist)
-med_thr = getThreshold(med.ravel(), prob, med_hist)
-gauss_thr = getThreshold(gauss.ravel(), prob, gauss_hist)
-
-thrs = [std_thr, conv_thr, med_thr, gauss_thr]
-labels = ['Standard', 'Conv       ', 'Median   ', 'Gaussian']
-colors = ['brown', 'r', 'b', 'green']
-
-a = pp.hist_data(as_map.ravel(), 50, (0, 0.10), thr=std_thr,label='Standard',
-                 title='Conv', color=colors[0])
-a = pp.hist_data(conv.ravel(), 50, (0, 0.10), thr=conv_thr,label='Conv',
-                 title='Conv', color=colors[1])
-a = pp.hist_data(med.ravel(), 50, (0, 0.10), thr=med_thr,label='Med',
-                 title='Med', color=colors[2])
-a = pp.hist_data(gauss.ravel(), 50, (0, 0.10), thr=gauss_thr,label='Gauss',
-                 title='Gauss', color=colors[3])
-
-a = pp.hist_data(as_map.ravel(), 50, (0, 0.10), thr=thrs,label=labels, color=colors)
 #%%
 
 kernel_params = {'conv':3,
@@ -235,7 +202,12 @@ hist_params = {'bins':50,
 
 prob = 0.95
 
-pp.computeThresholds(as_map, kernel_params, hist_params, prob)
+std_thr, conv_thr, med_thr, gauss_thr = pp.computeThresholds(as_map, kernel_params, hist_params, prob)
+
+adModel.performance['standard']['Threshold'] = std_thr
+adModel.performance['conv']['Threshold'] = conv_thr
+adModel.performance['median']['Threshold'] = med_thr
+adModel.performance['gauss']['Threshold'] = gauss_thr
 
 
 
