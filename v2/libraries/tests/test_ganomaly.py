@@ -85,11 +85,13 @@ epochs = 30
 
 #%% TUNING MODEL
 tuning = adModel.tuneLearningRate(-6, -7, -6, -7)
-
+#%%
+nome_ckp = '/media/daniele/Data/Tesi/Thesis/Results/v2/Ganom_v2_v1_training_result/Ganom_v2_v1_best_ckp.pth.tar'
+adModel = torch.load(nome_ckp)
 #%% LOAD MODEL
 #opt = Options()
 opt.name = 'Ganom_v1_v3.0'
-nome_ckp = 'CKP_Ganom_v1_v3.0_lr_5e-05_Epoch_36_Auc_0.783_Loss_155.4654.pth.tar'
+nome_ckp = '/media/daniele/Data/Tesi/Thesis/Ganom_v2_v0_best_ckp.pth.tar'
 path_file = paths.checkpoint_folder + opt.name + '/' + nome_ckp
 print(path_file)
 
@@ -182,16 +184,10 @@ content = '\n- Norm_Error: {:.3f}'.format(normalError)
 adModel.addInfo(content)
 
 #%%
-adModel = torch.load('../../ckp_v1/Ganom_v1_v3_best_ckp.pth.tar')
+from libraries.tests.test_result import computeEvaluation, evaluateResult, automaticEvaluation
 
-thresholds = {'standard' : adModel.performance['standard']['Threshold'],
-              'conv' : adModel.performance['conv']['Threshold'],
-              'median' : adModel.performance['median']['Threshold'],
-              'gauss' : adModel.performance['gauss']['Threshold']}
+samples = [1087]
 
-aucs = {'standard' : adModel.performance['standard']['AUC'],
-          'conv' : adModel.performance['conv']['AUC'],
-          'median' : adModel.performance['median']['AUC'],
-          'gauss' : adModel.performance['gauss']['AUC']}
+automaticEvaluation(adModel, samples, 16)
 
 

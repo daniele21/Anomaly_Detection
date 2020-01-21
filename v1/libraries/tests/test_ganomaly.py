@@ -2,7 +2,7 @@
 #%%
 from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.options import Options
-from libraries.model.dataset import generateDataloader, getCifar10
+from libraries.model.dataset import generateDataloader, dataloaderSingleSet
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE, loadModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
@@ -46,6 +46,7 @@ opt.descr = 'augmentation - validation con norm - no weighting losses - thr over
 
 opt.augmentation = True
 my_dataloader = generateDataloader(opt)
+performance_set = dataloaderSingleSet(opt, 1000, 1100)
 
 #%% LOAD DATASET
 

@@ -179,11 +179,15 @@ class LR_decay():
     def __call__(self, decay):
         self.lr = self.lr * decay
     
-                     
-#%%
-#opt = Options()
-#saveInfo(opt)
+
 #%% FUNCTIONS
+
+def adjustTime(time_sample):
+    
+    minutes = floor(time_sample / 60)
+    seconds = ((time_sample / 60) - minutes) * 60
+      
+#    return '{} min {:.0f} sec'.format(minutes, seconds)
 
 def computeAnomError(model, anom_set, thr=None):
     anomalies = 0
