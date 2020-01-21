@@ -25,6 +25,8 @@ def anomalyScoreFromDataset(model, dataset, stride, patch_size):
     end = time()
     
     timeSpent(end-start)
+    
+    return anomalyScoreMap, gtMap
 
 def anomalyScoreFromImage(model, image, mask, stride, patch_size):
     h = image.shape[0]
