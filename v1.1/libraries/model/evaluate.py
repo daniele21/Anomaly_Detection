@@ -210,9 +210,63 @@ def getThreshold(scores, prob, hist):
     
     return threshold
 
-
+def evaluateRoc(scores, mask, info='', plot=True, thr=None, color='r'):
     
+    fpr, tpr, threshold = roc_curve(mask, scores)
+    opt_threshold = _getOptimalThreshold(fpr, tpr, threshold)
+    
+    roc_auc = auc(fpr, tpr)
+    eer = brentq(lambda x: 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
+    
+    if(plot):
+        fig, [ax1, ax2, ax3] = plt.subplots(3,1, figsize=(8,10))
+        
+        lw = 2
+        
+        # PLOTTING AUC
+        ax1.plot(fpr, tpr, color='darkorange', lw=lw, label='(AUC = %0.3f, EER = %0.3f)' % (roc_auc, eer))
+        ax1.plot([eer], [1-eer], marker='o', markersize=5, color="navy")
+        ax1.fill_between(fpr, tpr, alpha=0.3, color='orange')
+        ax1.plot([0, 1], [1, 0], color='navy', lw=1, linestyle=':')
+        ax1.plot(fpr, threshold, markeredgecolor='r',linestyle='dashed', color='r', label='Threshold = {:.5f}'.format(opt_threshold))
+        ax1.set_xlim([0.0, 1.0])
+        ax1.set_ylim([0.0, 1.05])
+        ax1.set_xlabel('False Positive Rate')
+        ax1.set_ylabel('True Positive Rate')
+        ax1.set_title('Receiver operating characteristic _{}_'.format(info))
+        ax1.legend(loc="lower right")
+        
+        # PLOTTING PRECISION-RECALL
+        avg_prec = average_precision_score(mask, scores)
+        precision, recall, thresholds = precision_recall_curve(mask, scores)
+    
+        ax2.fill_between(recall, precision, alpha=0.7, color='b')
+        ax2.axhline(avg_prec, color='r', ls='--', label='Average Precision')
+        ax2.legend()
+        ax2.plot(recall, precision)
+        
+        ax2.set_xlabel('Recall')
+        ax2.set_ylabel('Precision')
+        ax2.set_ylim([0.0, 1.05])
+        ax2.set_xlim([0.0, 1.0])
+        ax2.set_title('2-class Precision-Recall curve: Avg_Prec={0:0.2f}'.format(avg_prec))
+    
+        # PLOTTING TREND SCORES
+        ax3.set_title('Anomaly Scores Trend _{}_'.format(info))
+        n, bins, _ = ax3.hist(scores, bins=50, density=True, range=(0, max(scores)/4))
+        if(thr is not None):
+            ax3.plot([thr, thr], [0, max(n)], c=color, label='Threshold' )
+        ax3.plot([opt_threshold, opt_threshold], [0, max(n)], c='green', label='Best Threshold' )
+        
+        ax3.legend(loc='best')
+        
+        fig.tight_layout()
+        
+    print('> AUC {}      :\t{:.3f}'.format(str(info), roc_auc))
+    print('> EER {}      :\t{:.3f}'.format(str(info), eer))
+    print('> Threshold {}:\t{:.5f}\n'.format(str(info), opt_threshold))
 
+    return roc_auc, opt_threshold
 
 
 

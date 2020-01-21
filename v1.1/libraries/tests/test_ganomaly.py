@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #%%
-from libraries.model.evaluate import getThreshold
+from libraries.model.evaluate import getThreshold, evaluateRoc
 from libraries.model.options import Options
 from libraries.model.dataset import generateDataloader, dataloaderSingleSet
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
@@ -187,7 +187,7 @@ adModel.addInfo(content)
 ckp = '/media/daniele/Data/Tesi/Thesis/Results/v1/Ganom_v1_v3_training_result/Ganom_v1_v3_best_ckp.pth.tar'
 model = torch.load(ckp)
 
-test_set = dataloaderSingleSet(1000, 1050, 1)
+test_set = dataloaderSingleSet(1000, 1005, 1)
 
 as_map, gt_map = anomalyScoreFromDataset(model, test_set, 8, 32)
 
@@ -202,12 +202,16 @@ hist_params = {'bins':50,
 
 prob = 0.95
 
+conv_map, med_map, gauss_map = pp.computeFilters(as_map, kernel_params)
 std_thr, conv_thr, med_thr, gauss_thr = pp.computeThresholds(as_map, kernel_params, hist_params, prob)
 
 adModel.performance['standard']['Threshold'] = std_thr
 adModel.performance['conv']['Threshold'] = conv_thr
 adModel.performance['median']['Threshold'] = med_thr
 adModel.performance['gauss']['Threshold'] = gauss_thr
+
+#%%
+evaluateRoc(as_map.ravel(), gt_map.ravel(), info='Standard')
 
 
 
