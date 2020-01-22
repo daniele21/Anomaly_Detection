@@ -187,7 +187,7 @@ adModel.addInfo(content)
 ckp = '/media/daniele/Data/Tesi/Thesis/Results/v1/Ganom_v1_v3_training_result/Ganom_v1_v3_best_ckp.pth.tar'
 model = torch.load(ckp)
 
-test_set = dataloaderSingleSet(1000, 1005, 1)
+test_set = dataloaderSingleSet([1005, 1007], 1)
 masked_images = test_set.dataset.masked
 as_map, gt_map = anomalyScoreFromDataset(model, test_set, 8, 32)
 
@@ -198,7 +198,8 @@ kernel_params = {'conv':3,
                  'gauss':3}
 
 hist_params = {'bins':50,
-               'range': (0,0.1)}
+               'range': (0,0.1),
+               'figsize':(10,5)}
 
 prob = 0.95
 
@@ -234,8 +235,10 @@ thr_filters = {'standard':std_thr,
                'med':med_thr,
                'gauss':gauss_thr}
 
-index = 0
-res = pp.compute_anomalies_all_filters(index, gt_map[index], as_filters, thr_filters)
+index = 1
+anomaly_map, res = pp.compute_anomalies_all_filters(index, gt_map[index], as_filters, thr_filters)
+
+final_masks = pp.overlapAnomalies(masked_images[index], anomaly_map)
 
 evaluation = pp.resultsPerEvaluation(res)
 
@@ -262,4 +265,21 @@ anomaly_map, masked, ev, bests = pp.complete_evaluation(index, gt_map, as_filter
                                                 masked_images)
 pp.plotAnomalies(as_filters, anomaly_map, masked, index, bests=bests)
 
-
+#%%
+filters = ['standard', 'conv', 'med', 'gauss'] 
+#%%
+for f in filters:
+    plt.imshow(anomaly_map[f])
+    plt.show()
+#%%
+for f in filters:
+    plt.imshow(final_masks[f])
+    plt.show()
+#%%
+for i in range(len(masked_images)):
+    plt.imshow(masked_images[i])
+    plt.show()
+#%%
+for f in filters:
+    plt.imshow(final_masks[f])
+    plt.show()

@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sn
 import cv2
+from copy import deepcopy
 
 from scipy.stats import norm, gaussian_kde
 from scipy.signal import medfilt
@@ -247,19 +248,24 @@ def computeThresholds(as_map, kernel_params, hist_params, prob):
     colors = ['brown', 'r', 'b', 'green']
     
     # STANDARD THRESHOLD
+    plt.figure(figsize=hist_params['figsize'])
     hist_data(as_map.ravel(), hist_params['bins'], hist_params['range'], thr=std_thr,label='Standard',
                      title='Conv', color=colors[0])
     # CONV THRESHOLD
+    plt.figure(figsize=hist_params['figsize'])
     hist_data(conv_map.ravel(), hist_params['bins'], hist_params['range'], thr=conv_thr,label='Conv',
                      title='Conv', color=colors[1])
     # MEDIAN THRESHOLD
+    plt.figure(figsize=hist_params['figsize'])
     hist_data(med_map.ravel(), hist_params['bins'], hist_params['range'], thr=med_thr,label='Med',
                      title='Med', color=colors[2])
     # GAUSSIAN THRESHOLD    
+    plt.figure(figsize=hist_params['figsize'])
     hist_data(gauss_map.ravel(), hist_params['bins'], hist_params['range'], thr=gauss_thr,label='Gauss',
                      title='Gauss', color=colors[3])
     
     # ALL THRESHOLDS
+    plt.figure(figsize=hist_params['figsize'])
     hist_data(as_map.ravel(), hist_params['bins'], hist_params['range'],
                      thr=thrs,label=labels, color=colors, title='Anomaly Scores')
     
@@ -319,7 +325,7 @@ def tuning_gauss_filter(as_map, gt_map):
     
 def compute_anomalies(as_image, gt_image, thr, info=''):
     
-    print('> {} Anomaly Scores'.format(info))
+    print('> {} Anomaly Scores'.format(info.upper()))
     
     anom_image = as_image > thr
     anom_image = anom_image * 1
@@ -439,23 +445,57 @@ def overlapAnomalies(masked_image, anomaly_map, interp=cv2.INTER_LINEAR):
     masked_images = {}
     
     for f in filters: 
+#        plt.imshow(anomaly_map[f])
+#        plt.show()
+        
         resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=interp)
-        masked_image[resized_anom==1, 0] = 255
-        masked_images[f] = masked_image
+        plt.imshow(resized_anom)
+        plt.show()
+        
+#        resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=cv2.INTER_NEAREST)
+#        plt.imshow(resized_anom)
+#        plt.show()
+        
+#        resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=cv2.INTER_CUBIC)
+#        plt.imshow(resized_anom)
+#        plt.show()
+#        
+#        resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=cv2.INTER_AREA)
+#        plt.imshow(resized_anom)
+#        plt.show()
+#        
+#        resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=cv2.INTER_LANCZOS4)
+#        plt.imshow(resized_anom)
+#        plt.show()
+        
+        
+#        plt.imshow(resized_anom)
+#        plt.show()
+        masked_im = deepcopy(masked_image)
+        masked_im[resized_anom==1, 0] = 255
+#        plt.imshow(masked_im)
+#        plt.show()
+        
+        
+        masked_images[f] = masked_im
+        
+#        plt.imshow(masked_images[f])
+#        plt.show()
         
     return masked_images
 
 def complete_evaluation(index, gt_map, as_filters, thr_filters, masked_images):
     
+    
     anomaly_map, res_per_filter = compute_anomalies_all_filters(index, gt_map[index],as_filters, thr_filters)
     
-    masked_image = overlapAnomalies(masked_images[index], anomaly_map)
+    final_masks = overlapAnomalies(masked_images[index], anomaly_map)
     
     evaluation = resultsPerEvaluation(res_per_filter)
     
     bests = best_performance(evaluation)
     
-    return anomaly_map, masked_image, evaluation, bests
+    return anomaly_map, final_masks, evaluation, bests
 
 
 

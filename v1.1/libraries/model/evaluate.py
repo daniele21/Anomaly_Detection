@@ -237,7 +237,7 @@ def evaluateRoc(scores, mask, info='', plot=True,
         ax1.set_ylim([0.0, 1.05])
         ax1.set_xlabel('False Positive Rate')
         ax1.set_ylabel('True Positive Rate')
-        ax1.set_title('Receiver operating characteristic _{}_'.format(info))
+        ax1.set_title('Receiver operating characteristic _{}_'.format(info.upper()))
         ax1.legend(loc="lower right")
         
         # PLOTTING PRECISION-RECALL
