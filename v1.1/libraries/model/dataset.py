@@ -61,6 +61,33 @@ def getImages(start, end):
     
     return images, masks, masked_images
 
+def getImagesFromSamples(samples):
+    train = pd.read_csv(paths.csv_directory + 'train_unique.csv')
+    
+    images = []
+    masks = []
+    masked_images = []
+    
+    count = 0
+    
+    for row in samples:
+        print('Image n. {}'.format(count))
+        filename    = train.iloc[row].Image_Id
+        enc_pixels  = train.iloc[row].Encoded_Pixels
+        
+        img = cv2.imread(paths.images_path + filename)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        mask = computeMask(enc_pixels, img)  
+        masked_image = applyMask(img, mask)
+        
+        images.append(img)
+        masks.append(mask)
+        masked_images.append(masked_image)
+        
+        count += 1
+    
+    return images, masks, masked_images
+
 def getPatchesFromImages(start, end, shape):
     train = pd.read_csv(paths.csv_directory + 'train_unique.csv')
     
@@ -501,10 +528,26 @@ def dataloaderPatchMasks(opt):
     
     return dataloader
 
-def dataloaderSingleSet(start, end, batch_size):
+#def dataloaderSingleSet(start, end, batch_size):
+#    
+#    dataset = {}
+#    dataset['DATA'], dataset['LABELS'], dataset['MASKED'] = getImages(start, end)
+#    
+#    dataset = ImagesDataset(dataset)
+#
+#    dataloader = DataLoader(dataset = dataset,
+#                            batch_size = batch_size,
+#                            drop_last  = True,
+##                            shuffle = shuffle[x],
+#                            num_workers= 8
+#                            )
+#    
+#    return dataloader
+
+def dataloaderSingleSet(samples, batch_size):
     
     dataset = {}
-    dataset['DATA'], dataset['LABELS'], dataset['MASKED'] = getImages(start, end)
+    dataset['DATA'], dataset['LABELS'], dataset['MASKED'] = getImagesFromSamples(samples)
     
     dataset = ImagesDataset(dataset)
 
