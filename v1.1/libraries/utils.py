@@ -188,10 +188,10 @@ def timeSpent(time_sample):
     minutes = floor(time_sample / 60)
     seconds = ((time_sample / 60) - minutes) * 60
      
-    print('****************')
+    print('--------------------')
     print ('> Time Spent')
     print('> {} min {:.0f} sec'.format(minutes, seconds))
-    print('****************')
+    print('--------------------')
 
 def computeAnomError(model, anom_set, thr=None):
     anomalies = 0

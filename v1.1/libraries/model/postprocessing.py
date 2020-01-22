@@ -13,7 +13,8 @@ from astropy.convolution import Gaussian2DKernel
 import statsmodels.api as sm
 
 from libraries.model.evaluate import evaluate
-from libraries.model.evaluate import getThreshold
+from libraries.model.evaluate import getThreshold, evaluateRoc
+from libraries.model import evaluate as ev
 from libraries.utils import ensure_folder
 #%% FUNCTIONS
 
@@ -56,88 +57,7 @@ def gaussFilterScores(scores, sigma):
     return gauss_scores
 
     
-def tune_kernelSize(model, mode='conv'):
-    '''
-        mode :  'conv' or 'median' or 'gauss'
-
-    '''
-    
-    assert mode in ['conv', 'median', 'gauss'], 'Wrong mode input'
-
-    results = {'param':[], 'AUC':[], 'Thr':[]}
-    
-    kernel_sizes  = np.arange(3,33,2)
-        
-    best = {'auc':0, 'k':0, 'thr':0}
-
-    for k in kernel_sizes:
-        
-        auc, thr = model.evaluateRoc(mode=mode, param=k, plot=False)
-        
-        if(auc > best['auc']):
-            best['auc'] = auc
-            best['param'] = k
-            best['thr'] = thr
-            
-        results['param'].append(k)
-        results['AUC'].append(auc)
-        results['Thr'].append(thr)
-
-    __print_tuningResults(results, mode)
-    print('\n\n_____Best Option____\n')
-    print('> kernel_size: \t{}'.format(best['param']))
-    print('> auc        : \t{}'.format(best['auc']))
-    print('> threshold  : \t{}'.format(best['thr']))
-    
-    return best['param'], best['thr']
-
-def tune_sigma(model, mode='gauss'):
-    '''
-        mode :  'conv' or 'median' or 'gauss'
-
-    '''
-    
-    assert mode is 'gauss', 'Wrong mode input'
-
-    results = {'param':[], 'AUC':[], 'Thr':[]}
-    
-    sigmas  = np.arange(1,20,0.1)
-        
-    best = {'auc':0, 'param':0, 'thr':0}
-
-    for s in sigmas:
-        
-        auc, thr = model.evaluateRoc(mode=mode, param=s, plot=False)
-        
-        if(auc > best['auc']):
-            best['auc'] = auc
-            best['param'] = s
-            best['thr'] = thr
-            
-        results['param'].append(s)
-        results['AUC'].append(auc)
-        results['Thr'].append(thr)
-
-    __print_tuningResults(results, mode)
-    print('\n\n_____Best Option____\n')
-    print('> kernel_size: \t{}'.format(best['param']))
-    print('> auc        : \t{}'.format(best['auc']))
-    print('> threshold  : \t{}'.format(best['thr']))
-    
-    return best['param'], best['thr'] 
-    
-def __print_tuningResults(results, mode):
-    
-    print('\nResults Tuning {}'.format(mode))
-    
-    
-    for i in range(len(results['param'])):
-        print('\n')
-        
-        for x in ['param', 'AUC', 'Thr']:
-            print(str(x) + ':\t\t{:.4f}'.format(results[x][i]))
-            
-    
+  
 def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
                folder_save=None, bins=1000, h=None, x_limit=None):
     
@@ -344,6 +264,198 @@ def computeThresholds(as_map, kernel_params, hist_params, prob):
     
     return std_thr, conv_thr, med_thr, gauss_thr
 
+def tuning_conv_filter(as_map, gt_map):
+    
+    ks = np.arange(3, 23, 2)
+    best = {'auc':0,
+            'k':0}
+    
+    for k in ks:
+        kernel = createKernel(k, dim=3)
+        conv_map = convFilterScores(as_map, kernel)
+        
+        auc, _ = evaluateRoc(conv_map.ravel(), gt_map.ravel(), plot=False)
+    
+        if(auc > best['auc']):
+            best['auc'] = auc
+            best['k'] = k
+            
+    return best
+
+def tuning_med_filter(as_map, gt_map):
+    
+    ks = np.arange(3, 23, 2)
+    best = {'auc':0,
+            'k':0}
+    
+    for k in ks:
+        conv_map = medFilterScores(as_map, k)
+        
+        auc, _ = evaluateRoc(conv_map.ravel(), gt_map.ravel(), plot=False)
+    
+        if(auc > best['auc']):
+            best['auc'] = auc
+            best['k'] = k
+            
+    return best
+
+def tuning_gauss_filter(as_map, gt_map):
+    
+    sigmas = np.arange(1, 10, 0.1)
+    best = {'auc':0,
+            'sigma':0}
+    
+    for sigma in sigmas:
+        conv_map = gaussFilterScores(as_map, sigma)
+        
+        auc, _ = evaluateRoc(conv_map.ravel(), gt_map.ravel(), plot=False)
+    
+        if(auc > best['auc']):
+            best['auc'] = auc
+            best['sigma'] = sigma
+            
+    return best
+    
+def compute_anomalies(as_image, gt_image, thr, info=''):
+    
+    print('> {} Anomaly Scores'.format(info))
+    
+    anom_image = as_image > thr
+    
+    auc = evaluateRoc(as_image.ravel(), gt_image.ravel(),
+                      info=info, thr=thr)
+    
+    precision = ev.precision(gt_image.ravel(), anom_image.ravel())
+    
+    iou = ev.IoU(gt_image, anom_image)
+    
+    recall = ev.recall(gt_image.ravel(), anom_image.ravel())
+    
+    dice = ev.dice(gt_image, anom_image)
+    
+    result = {'auc':auc, 
+              'prec':precision,
+              'iou':iou,
+              'recall':recall,
+              'dice':dice}
+    
+    return anom_image, result
+    
+def compute_anomalies_all_filters(index, gt_mask, as_filters, thr_filters):
+    
+    '''
+        Computing results per filters
+    '''
+    
+    filters = ['standard', 'conv', 'med', 'gauss']
+    output = {}
+    results = {}
+    
+    
+    for f in filters:
+        as_image = as_filters[f]
+        thr = thr_filters[f]
+        
+        output[f], results[f] = compute_anomalies(as_image[index], gt_mask, thr, info=f)
+        
+    return output, results
+    
+def resultsPerEvaluation(results):
+    
+    '''
+        Computing results per evaluation('auc', 'prec', ...)
+    '''
+    
+    filters = ['standard', 'conv', 'med', 'gauss']
+    
+    auc = {}
+    prec = {}
+    recall = {}
+    iou = {}
+    dice = {}
+    
+    readable_results = {}
+    
+    for f in filters:
+        auc[f] = results[f]['auc'][0]
+        prec[f] = results[f]['prec']
+        recall[f] = results[f]['recall']
+        iou[f] = results[f]['iou']
+        dice[f] = results[f]['dice']
+        
+    readable_results  = {'auc':auc,
+                           'prec':prec,
+                           'recall':recall,
+                           'iou':iou,
+                           'dice':dice}
+    
+    return readable_results 
+    
+def readEvaluation(criterium, eval_results):
+    
+    assert criterium in ['auc', 'prec', 'recall', 'iou', 'dice'], 'Evaluation has to be one of these: auc, prec, recall, iou, dice'
+    
+    filters = ['standard', 'conv', 'med', 'gauss'] 
+    best = {'value':0,
+            'filter':''}
+    
+    print('**************************')
+    print('> -------- {} --------'.format(criterium.upper()))
+    print('>')
+    
+    for f in filters:
+        perf = eval_results[criterium][f]
+        if(perf > best['value']):
+            best['value'] = perf
+            best['filter'] = f.upper()
+            
+        print('> {}   \t: {:.3f}'.format(f.upper(), eval_results[criterium][f]))
+        
+    print('>')
+    print('> Best filter: {}'.format(best['filter']))
+    print('**************************')
+    
+    return best
+    
+def best_performance(evaluation):
+    
+    performance = ['auc', 'prec', 'recall', 'iou', 'dice']
+    
+    bests = {}
+    
+    for perf in performance:
+        bests[perf] = readEvaluation(perf, evaluation)
+    
+    return bests
+    
+    
+def complete_evaluation(index, gt_map, as_filters, thr_filters):
+    
+    output, res_per_filter = compute_anomalies_all_filters(index, gt_map[index],as_filters, thr_filters)
+    
+    evaluation = resultsPerEvaluation(res_per_filter)
+    
+    bests = best_performance(evaluation)
+    
+    return output, evaluation, bests
+    
+def plotAnomalies(as_filters, output, index, figsize=(8,15), bests=None):
+    
+    filters = ['standard', 'conv', 'med', 'gauss'] 
+
+    for f in filters:
+        plt.figure(figsize=figsize)
+        plt.title('{} Anomaly Scores'.format(f.upper()))
+        plt.imshow(as_filters[f][index])
+        plt.show()
+        
+        plt.figure(figsize=figsize)
+        plt.title('{} Detection'.format(f.upper()))
+        plt.imshow(output[f])
+        plt.show()
+        
+    if(bests):
+        display(bests)
     
     
     

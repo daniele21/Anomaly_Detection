@@ -40,7 +40,6 @@ def evaluate(labels, scores, metric='roc', plot=False, folder_save=None, info=''
         raise NotImplementedError("Check the evaluation metric.")
 
 def precision(y_true, y_pred):
-#    print(confuseMatrix(y_true, y_pred))
     TN, FP, FN, TP = confuseMatrix(y_true, y_pred).ravel()
     return TP / (TP+FP)
 
@@ -53,8 +52,9 @@ def recall(y_true, y_pred):
     return TP/ (TP+FN)
 
 def IoU(pred_mask, true_mask):
-#    print(pred_mask)
-#    print(true_mask)
+    true_mask = true_mask.astype(int)
+    pred_mask = pred_mask.astype(int)
+
     SMOOTH = 1e-06
     
     intersection = pred_mask & true_mask
@@ -65,6 +65,9 @@ def IoU(pred_mask, true_mask):
     return iou
 
 def dice(pred_mask, true_mask):
+    true_mask = true_mask.astype(int)
+    pred_mask = pred_mask.astype(int)
+    
     SMOOTH = 1e-06
     
     intersection = pred_mask & true_mask
@@ -210,7 +213,8 @@ def getThreshold(scores, prob, hist):
     
     return threshold
 
-def evaluateRoc(scores, mask, info='', plot=True, thr=None, color='r'):
+def evaluateRoc(scores, mask, info='', plot=True,
+                thr=None, color='r', figsize=(8,10)):
     
     fpr, tpr, threshold = roc_curve(mask, scores)
     opt_threshold = _getOptimalThreshold(fpr, tpr, threshold)
@@ -219,7 +223,7 @@ def evaluateRoc(scores, mask, info='', plot=True, thr=None, color='r'):
     eer = brentq(lambda x: 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
     
     if(plot):
-        fig, [ax1, ax2, ax3] = plt.subplots(3,1, figsize=(8,10))
+        fig, [ax1, ax2, ax3] = plt.subplots(3,1, figsize=figsize)
         
         lw = 2
         
@@ -253,9 +257,13 @@ def evaluateRoc(scores, mask, info='', plot=True, thr=None, color='r'):
     
         # PLOTTING TREND SCORES
         ax3.set_title('Anomaly Scores Trend _{}_'.format(info))
-        n, bins, _ = ax3.hist(scores, bins=50, density=True, range=(0, max(scores)/4))
+        if(thr is None):
+            thr = max(scores)/6
+        
+        n, bins, _ = ax3.hist(scores, bins=50, density=True, range=(0, thr*100/95))
         if(thr is not None):
             ax3.plot([thr, thr], [0, max(n)], c=color, label='Threshold' )
+
         ax3.plot([opt_threshold, opt_threshold], [0, max(n)], c='green', label='Best Threshold' )
         
         ax3.legend(loc='best')

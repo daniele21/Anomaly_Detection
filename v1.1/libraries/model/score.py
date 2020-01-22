@@ -15,6 +15,7 @@ def anomalyScoreFromDataset(model, dataset, stride, patch_size):
     
     start = time()
     i=0
+    print('***************************')
     print('> Computing Anomaly Score')
     print('>')
     for image, mask in dataset.dataset:
@@ -27,6 +28,7 @@ def anomalyScoreFromDataset(model, dataset, stride, patch_size):
         gtMap.append(gt)
     
     print('> ')
+    print('***************************')
     end = time()
     
     timeSpent(end-start)
