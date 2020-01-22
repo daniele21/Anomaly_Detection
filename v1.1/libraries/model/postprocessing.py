@@ -449,8 +449,8 @@ def overlapAnomalies(masked_image, anomaly_map, interp=cv2.INTER_LINEAR):
 #        plt.show()
         
         resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=interp)
-        plt.imshow(resized_anom)
-        plt.show()
+#        plt.imshow(resized_anom)
+#        plt.show()
         
 #        resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=cv2.INTER_NEAREST)
 #        plt.imshow(resized_anom)
