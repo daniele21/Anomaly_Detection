@@ -188,10 +188,10 @@ ckp = '/media/daniele/Data/Tesi/Thesis/Results/v1/Ganom_v1_v3_training_result/Ga
 model = torch.load(ckp)
 
 test_set = dataloaderSingleSet(1000, 1005, 1)
-
+masked_images = test_set.dataset.masked
 as_map, gt_map = anomalyScoreFromDataset(model, test_set, 8, 32)
 
-#%%
+#%% CREATE FILTERED ANOMALY SCORES
 
 kernel_params = {'conv':3,
                  'med': 3,
@@ -202,21 +202,20 @@ hist_params = {'bins':50,
 
 prob = 0.95
 
+# FILTERED ANOMALY SCORES
 conv_map, med_map, gauss_map = pp.computeFilters(as_map, kernel_params)
+
+# THRESHOLD FOR EACH FILTER
 std_thr, conv_thr, med_thr, gauss_thr = pp.computeThresholds(as_map, kernel_params, hist_params, prob)
 
-model.performance['standard']['Threshold'] = std_thr
-model.performance['conv']['Threshold'] = conv_thr
-model.performance['median']['Threshold'] = med_thr
-model.performance['gauss']['Threshold'] = gauss_thr
+#%% EVALUATION ROC CURVE
 
-#%%
 auc_std, best_thr_std = evaluateRoc(as_map.ravel(), gt_map.ravel(), info='Standard', thr=std_thr)
 auc_conv, best_thr_conv = evaluateRoc(conv_map.ravel(), gt_map.ravel(), info='Conv', thr=conv_thr)
 auc_med, best_thr_med = evaluateRoc(med_map.ravel(), gt_map.ravel(), info='Median', thr=med_thr)
 auc_gauss, best_thr_gauss = evaluateRoc(gauss_map.ravel(), gt_map.ravel(), info='Gaussian', thr=gauss_thr)
 
-#%%
+#%% TUNING KERNELS
 
 pp.tuning_conv_filter(as_map, gt_map)
 
@@ -224,32 +223,7 @@ pp.tuning_med_filter(as_map, gt_map)
 
 pp.tuning_gauss_filter(as_map, gt_map)
 
-#%%
-anom_map = conv_map[0] > conv_thr
-plt.imshow(anom_map)
-#plt.imshow(gt_map[0])
-plt.show()
-
-anom_map = med_map[0] > med_thr
-plt.imshow(anom_map)
-#plt.imshow(gt_map[0])
-plt.show()
-
-anom_map = gauss_map[0] > gauss_thr
-plt.imshow(anom_map)
-#plt.imshow(gt_map[0])
-plt.show()
-
-anom_map = as_map[0] > std_thr
-plt.imshow(anom_map)
-plt.show()
-
-plt.imshow(gt_map[0])
-plt.show()
-
-#%%
-conv_results = pp.compute_anomalies(conv_map[0], gt_map[0], conv_thr, info='Conv')
-
+#%%  STEPS FOR EVALUATING
 as_filters = {'standard':as_map,
               'conv':conv_map,
               'med':med_map,
@@ -267,20 +241,25 @@ evaluation = pp.resultsPerEvaluation(res)
 
 bests = pp.best_performance(evaluation)
 
-#%%
+#%% COMPLETE EVALUATION EXAMPLE
 index = 0
-output, ev, bests = pp.complete_evaluation(index, gt_map, as_filters, thr_filters)
-pp.plotAnomalies(as_filters, output, index, bests=bests)
+anomaly_map, masked, ev, bests = pp.complete_evaluation(index, gt_map,as_filters, thr_filters,
+                                                masked_images)
+pp.plotAnomalies(as_filters, anomaly_map, masked, index, bests=bests)
 
 index = 1
-output, ev, bests = pp.complete_evaluation(index, gt_map, as_filters, thr_filters)
-pp.plotAnomalies(as_filters, output, index, bests=bests)
+anomaly_map, masked, ev, bests = pp.complete_evaluation(index, gt_map, as_filters, thr_filters,
+                                                masked_images)
+pp.plotAnomalies(as_filters, anomaly_map, masked, index, bests=bests)
 
 index = 2
-output, ev, bests = pp.complete_evaluation(index, gt_map, as_filters, thr_filters)
-pp.plotAnomalies(as_filters, output, index, bests=bests)
+anomaly_map, masked, ev, bests = pp.complete_evaluation(index, gt_map, as_filters, thr_filters,
+                                                masked_images)
+pp.plotAnomalies(as_filters, anomaly_map, masked, index, bests=bests)
 
 index = 3
-output, ev, bests = pp.complete_evaluation(index, gt_map, as_filters, thr_filters)
-pp.plotAnomalies(as_filters, output, index, bests=bests)
+anomaly_map, masked, ev, bests = pp.complete_evaluation(index, gt_map, as_filters, thr_filters,
+                                                masked_images)
+pp.plotAnomalies(as_filters, anomaly_map, masked, index, bests=bests)
+
 

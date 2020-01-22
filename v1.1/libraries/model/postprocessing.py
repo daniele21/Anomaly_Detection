@@ -4,6 +4,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sn
+import cv2
 
 from scipy.stats import norm, gaussian_kde
 from scipy.signal import medfilt
@@ -321,6 +322,8 @@ def compute_anomalies(as_image, gt_image, thr, info=''):
     print('> {} Anomaly Scores'.format(info))
     
     anom_image = as_image > thr
+    anom_image = anom_image * 1
+    anom_image = anom_image.astype(np.float32)
     
     auc = evaluateRoc(as_image.ravel(), gt_image.ravel(),
                       info=info, thr=thr)
@@ -348,7 +351,7 @@ def compute_anomalies_all_filters(index, gt_mask, as_filters, thr_filters):
     '''
     
     filters = ['standard', 'conv', 'med', 'gauss']
-    output = {}
+    anomaly_map = {}
     results = {}
     
     
@@ -356,9 +359,9 @@ def compute_anomalies_all_filters(index, gt_mask, as_filters, thr_filters):
         as_image = as_filters[f]
         thr = thr_filters[f]
         
-        output[f], results[f] = compute_anomalies(as_image[index], gt_mask, thr, info=f)
+        anomaly_map[f], results[f] = compute_anomalies(as_image[index], gt_mask, thr, info=f)
         
-    return output, results
+    return anomaly_map, results
     
 def resultsPerEvaluation(results):
     
@@ -428,18 +431,36 @@ def best_performance(evaluation):
     
     return bests
     
+   
+def overlapAnomalies(masked_image, anomaly_map, interp=cv2.INTER_LINEAR):
+    h, w, _ = masked_image.shape
     
-def complete_evaluation(index, gt_map, as_filters, thr_filters):
+    filters = ['standard', 'conv', 'med', 'gauss'] 
+    masked_images = {}
     
-    output, res_per_filter = compute_anomalies_all_filters(index, gt_map[index],as_filters, thr_filters)
+    for f in filters: 
+        resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=interp)
+        masked_image[resized_anom==1, 0] = 255
+        masked_images[f] = masked_image
+        
+    return masked_images
+
+def complete_evaluation(index, gt_map, as_filters, thr_filters, masked_images):
+    
+    anomaly_map, res_per_filter = compute_anomalies_all_filters(index, gt_map[index],as_filters, thr_filters)
+    
+    masked_image = overlapAnomalies(masked_images[index], anomaly_map)
     
     evaluation = resultsPerEvaluation(res_per_filter)
     
     bests = best_performance(evaluation)
     
-    return output, evaluation, bests
-    
-def plotAnomalies(as_filters, output, index, figsize=(8,15), bests=None):
+    return anomaly_map, masked_image, evaluation, bests
+
+
+
+
+def plotAnomalies(as_filters, anomaly_map, masked_image, index, figsize=(8,15), bests=None):
     
     filters = ['standard', 'conv', 'med', 'gauss'] 
 
@@ -451,8 +472,14 @@ def plotAnomalies(as_filters, output, index, figsize=(8,15), bests=None):
         
         plt.figure(figsize=figsize)
         plt.title('{} Detection'.format(f.upper()))
-        plt.imshow(output[f])
+        plt.imshow(anomaly_map[f])
         plt.show()
+        
+        plt.figure(figsize=figsize)
+        plt.title('{} Detection'.format(f.upper()))
+        plt.imshow(masked_image[f])
+        plt.show()
+        
         
     if(bests):
         display(bests)
