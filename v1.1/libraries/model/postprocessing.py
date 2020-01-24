@@ -293,6 +293,7 @@ def saveFullMasked(full_masked_maps, save_folder):
         for key in keys:
             filename = '{}_{}_full_masked_map'.format(key, f.upper())
             saveImage(anom_map[key], save_folder, filename)
+            saveImage(anom_map[key], save_folder + '/comparison/', filename)
         
 def saveImage(image, save_folder, filename, figsize=(160,25)):
     fig = plt.figure(frameon=False, figsize=figsize)
@@ -697,6 +698,7 @@ def setSaveFoldersResults(samples):
         save_folder = '{}{}_images/{}/'.format(paths.results_path, str(len(samples)), str(sample))
         ensure_folder(save_folder)
         ensure_folder(save_folder + 'filters/')
+        ensure_folder(save_folder + 'comparison/')
         save_folders[str(sample)] = save_folder
         
     save_folders['general'] = paths.results_path + '{}_images/'.format(str(len(samples)))

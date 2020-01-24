@@ -272,7 +272,7 @@ def evaluateRoc(scores, mask, info='', plot=True,
         fig.tight_layout()
         
         if(save_folder is not None):
-            filename = 'roc_auc.png'
+            filename = 'roc_auc_{}.png'.format(info.upper())
             plt.savefig(save_folder + filename, transparent=True)
             print('> Saving \'{}\' at {}'.format(filename, save_folder))
         
