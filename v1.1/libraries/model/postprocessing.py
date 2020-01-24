@@ -734,6 +734,7 @@ def writeResults(res, bests, key, save_folder):
     content = content + '_______________________\n\n\n'
     
     f = open(save_folder + filename, 'a')
+    f = open(save_folder + 'comparison/' + filename, 'a')
     f.write(content)
     f.close()
     
