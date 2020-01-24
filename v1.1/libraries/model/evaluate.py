@@ -214,7 +214,8 @@ def getThreshold(scores, prob, hist):
     return threshold
 
 def evaluateRoc(scores, mask, info='', plot=True,
-                thr=None, color='r', figsize=(8,10)):
+                thr=None, color='r', figsize=(8,12),
+                save_folder=None):
     
     fpr, tpr, threshold = roc_curve(mask, scores)
     opt_threshold = _getOptimalThreshold(fpr, tpr, threshold)
@@ -269,6 +270,13 @@ def evaluateRoc(scores, mask, info='', plot=True,
         ax3.legend(loc='best')
         
         fig.tight_layout()
+        
+        if(save_folder is not None):
+            filename = 'roc_auc.png'
+            plt.savefig(save_folder + filename, transparent=True)
+            print('> Saving \'{}\' at {}'.format(filename, save_folder))
+        
+        plt.show()
         
     print('> AUC {}      :\t{:.3f}'.format(str(info), roc_auc))
     print('> EER {}      :\t{:.3f}'.format(str(info), eer))

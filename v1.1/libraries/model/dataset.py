@@ -548,6 +548,7 @@ def dataloaderSingleSet(samples, batch_size):
     
     dataset = {}
     dataset['DATA'], dataset['LABELS'], dataset['MASKED'] = getImagesFromSamples(samples)
+    dataset['SAMPLES'] = samples
     
     dataset = ImagesDataset(dataset)
 
@@ -964,15 +965,17 @@ class ImagesDataset(Dataset):
         self.data = dataset['DATA']
         self.targets = dataset['LABELS']
         self.masked = dataset['MASKED']
+        self.samples = dataset['SAMPLES']
         
         self.data = np.vstack(self.data).reshape(-1, 256, 1600, 3)
         print(self.data.shape)
         
     def __getitem__(self, index):
 
-        image, target = self.data[index], self.targets[index]
+        sample, image, target = self.samples[index], self.data[index], self.targets[index]
+        masked = self.masked[index]
         
-        return image, target
+        return sample, image, target, masked
     
     def __len__(self):
         return len(self.data)

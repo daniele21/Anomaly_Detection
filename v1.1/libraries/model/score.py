@@ -7,35 +7,65 @@ from time import time
 from libraries.utils import timeSpent
 from libraries.dataset_package.dataset_manager import checkMedianThreshold
 #%%
+#def anomalyScoreFromDataset(model, dataset, stride, patch_size):
+#    
+#    anomalyScores = []
+#    gts = []
+#    
+#    
+#    start = time()
+#    i=0
+#    print('***************************')
+#    print('> Computing Anomaly Score')
+#    print('>')
+#    for sample, image, mask in dataset.dataset:
+#        i += 1
+#        print('> Image n° {}/{}'.format(i, len(dataset.dataset)))
+#        anom_score, gt = anomalyScoreFromImage(model, image, mask,
+#                                               stride, patch_size)
+#         
+#        anomalyScores.append(anom_score)
+#        gts.append(gt)
+#    
+#    print('> ')
+#    print('***************************')
+#    end = time()
+#    
+#    timeSpent(end-start)
+#    
+#    return np.array(anomalyScores), np.array(gts)
 
 def anomalyScoreFromDataset(model, dataset, stride, patch_size):
     
-    anomalyScoreMap = []
-    gtMap = []
+    anomalyScores = []
+    gts = []
+    
+    anomalyScoreMap = {}
+    gtMap = {}
+    maskedMap = {}
     
     start = time()
     i=0
     print('***************************')
     print('> Computing Anomaly Score')
     print('>')
-    for image, mask in dataset.dataset:
+    for sample, image, mask, masked in dataset.dataset:
         i += 1
         print('> Image n° {}/{}'.format(i, len(dataset.dataset)))
         anom_score, gt = anomalyScoreFromImage(model, image, mask,
                                                stride, patch_size)
         
-        anomalyScoreMap.append(anom_score)
-        gtMap.append(gt)
+        anomalyScoreMap[str(sample)] = anom_score
+        gtMap[str(sample)] = gt
+        maskedMap[str(sample)] = masked
     
     print('> ')
     print('***************************')
     end = time()
     
-    timeSpent(end-start)
+    timeSpent(end-start)   
     
-    
-    
-    return np.array(anomalyScoreMap), np.array(gtMap)
+    return anomalyScoreMap, gtMap, maskedMap
 
 def anomalyScoreFromImage(model, image, mask, stride, patch_size):
     h = image.shape[0]

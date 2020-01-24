@@ -5,7 +5,7 @@ from libraries.model.options import Options
 from libraries.model.dataset import generateDataloader, dataloaderSingleSet
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE, loadModel
-from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
+from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError, ensure_folder
 from libraries.model.postprocessing import distScores
 from libraries.model import postprocessing as pp
 from libraries.model.score import anomalyScoreFromDataset
@@ -183,14 +183,23 @@ adModel.addInfo(content)
 content = '\n- Norm_Error: {:.3f}'.format(normalError)
 adModel.addInfo(content)
 
-#%%
+#%% -------------POSTPROCESSING----------------
+
 ckp = '/media/daniele/Data/Tesi/Thesis/Results/v1/Ganom_v1_v3_training_result/Ganom_v1_v3_best_ckp.pth.tar'
 model = torch.load(ckp)
 
-test_set = dataloaderSingleSet([1005, 1007], 1)
-masked_images = test_set.dataset.masked
-as_map, gt_map = anomalyScoreFromDataset(model, test_set, 8, 32)
+samples = [1000, 1002, 1004]
+test_set = dataloaderSingleSet(samples, 1)
 
+#masked_images = test_set.dataset.masked
+
+save_folders = pp.setSaveFoldersResults(samples)
+save_folders
+
+as_map, gt_map, masked_map = anomalyScoreFromDataset(model, test_set, 8, 32)
+
+# SAVING MASKED MAP
+pp.saveMasks(masked_map, save_folders)
 #%% CREATE FILTERED ANOMALY SCORES
 
 kernel_params = {'conv':3,
@@ -204,17 +213,18 @@ hist_params = {'bins':50,
 prob = 0.95
 
 # FILTERED ANOMALY SCORES
-conv_map, med_map, gauss_map = pp.computeFilters(as_map, kernel_params)
+as_maps = pp.computeFilters(as_map, kernel_params)
+pp.saveFilters(as_maps, save_folders)
 
 # THRESHOLD FOR EACH FILTER
-std_thr, conv_thr, med_thr, gauss_thr = pp.computeThresholds(as_map, kernel_params, hist_params, prob)
+thrs = pp.computeThresholds(as_map, kernel_params, hist_params, prob, save_folders['general'])
 
 #%% EVALUATION ROC CURVE
 
-auc_std, best_thr_std = evaluateRoc(as_map.ravel(), gt_map.ravel(), info='Standard', thr=std_thr)
-auc_conv, best_thr_conv = evaluateRoc(conv_map.ravel(), gt_map.ravel(), info='Conv', thr=conv_thr)
-auc_med, best_thr_med = evaluateRoc(med_map.ravel(), gt_map.ravel(), info='Median', thr=med_thr)
-auc_gauss, best_thr_gauss = evaluateRoc(gauss_map.ravel(), gt_map.ravel(), info='Gaussian', thr=gauss_thr)
+auc_std, best_thr_std = evaluateRoc(std_as.ravel(), gt_map.ravel(), info='Standard', thr=std_thr)
+auc_conv, best_thr_conv = evaluateRoc(conv_as.ravel(), gt_map.ravel(), info='Conv', thr=conv_thr)
+auc_med, best_thr_med = evaluateRoc(med_as.ravel(), gt_map.ravel(), info='Median', thr=med_thr)
+auc_gauss, best_thr_gauss = evaluateRoc(gauss_as.ravel(), gt_map.ravel(), info='Gaussian', thr=gauss_thr)
 
 #%% TUNING KERNELS
 
@@ -225,26 +235,39 @@ pp.tuning_med_filter(as_map, gt_map)
 pp.tuning_gauss_filter(as_map, gt_map)
 
 #%%  STEPS FOR EVALUATING
-as_filters = {'standard':as_map,
-              'conv':conv_map,
-              'med':med_map,
-              'gauss':gauss_map}
-
-thr_filters = {'standard':std_thr,
-               'conv':conv_thr,
-               'med':med_thr,
-               'gauss':gauss_thr}
 
 index = 1
-anomaly_map, res = pp.compute_anomalies_all_filters(index, gt_map[index], as_filters, thr_filters)
+keys = list(save_folders.keys())
+key = keys[index]
+key
 
-final_masks = pp.overlapAnomalies(masked_images[index], anomaly_map)
+# ANOMALY DETECTION MAPS
+anomaly_maps, res = pp.compute_anomalies_all_filters(index, gt_map, as_maps,
+                                                    thrs, save_folders[key])
 
+pp.saveAnomalyMaps(anomaly_maps, save_folders[key])
+
+# OVERLAPPING GT
+full_masked_maps = pp.overlapAnomalies(index, masked_map, anomaly_maps)
+pp.saveFullMasked(full_masked_maps, save_folders[key])
+#%% EVALUATION
 evaluation = pp.resultsPerEvaluation(res)
+evaluation
+
+pp.writeResults(res, bests, key, save_folders[key])
+
 
 bests = pp.best_performance(evaluation)
-
+bests
 #%% COMPLETE EVALUATION EXAMPLE
+for i in range(len(samples)):
+    key = str(samples[i])
+    
+    anomaly_maps, full_masked_maps, ev, bests = pp.complete_evaluation(i, gt_map, as_maps,
+                                                                       masked_map, thrs,
+                                                                       save_folders[key])
+
+
 index = 0
 anomaly_map, masked, ev, bests = pp.complete_evaluation(index, gt_map,as_filters, thr_filters,
                                                 masked_images)
@@ -269,7 +292,7 @@ pp.plotAnomalies(as_filters, anomaly_map, masked, index, bests=bests)
 filters = ['standard', 'conv', 'med', 'gauss'] 
 #%%
 for f in filters:
-    plt.imshow(anomaly_map[f])
+    plt.imshow(anomaly_map[f]['1002'])
     plt.show()
 #%%
 for f in filters:
@@ -283,3 +306,30 @@ for i in range(len(masked_images)):
 for f in filters:
     plt.imshow(final_masks[f])
     plt.show()
+#%%
+for key in full_masked_map:
+    plt.imshow(full_masked_map[key])
+    plt.show()
+    
+#%%
+for key in as_map:
+    plt.imshow(as_map[key])
+    plt.show()
+#%%
+a = masked['conv']
+#plt.title('Conv')
+#fig = plt.figure(frameon = False)
+#fig.set_size_inches(7, 2)
+fig = plt.figure(figsize=(18, 3))
+plt.axis('off')
+plt.imshow(a)
+plt.savefig('./prova.png', 
+               transparent=True,
+               dpi=1000)
+plt.close(fig)
+plt.show()
+
+    
+    
+    
+    

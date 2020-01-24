@@ -18,6 +18,7 @@ class Paths():
         
 #        self.test_images = self.dataset_path + 'test_images/'
         self.test_images = 'test_results/'
+        self.results_path = '../../Results_v1/'
         
 #        self.test_labeled = self.test_images + 'labeled_images/'
 #        self.test_patched = self.test_images + 'patched_images/'
@@ -184,11 +185,15 @@ class LR_decay():
 #opt = Options()
 #saveInfo(opt)
 #%% FUNCTIONS
-def timeSpent(time_sample):
+def timeSpent(time_sample, task=None):
     minutes = floor(time_sample / 60)
     seconds = ((time_sample / 60) - minutes) * 60
      
+    
     print('--------------------')
+    if(task is not None):
+        print('>   {}  '.format(task))
+        print('>')
     print ('> Time Spent')
     print('> {} min {:.0f} sec'.format(minutes, seconds))
     print('--------------------')

@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 import seaborn as sn
 import cv2
 from copy import deepcopy
+from time import time 
 
 from scipy.stats import norm, gaussian_kde
 from scipy.signal import medfilt
@@ -17,7 +18,10 @@ import statsmodels.api as sm
 from libraries.model.evaluate import evaluate
 from libraries.model.evaluate import getThreshold, evaluateRoc
 from libraries.model import evaluate as ev
-from libraries.utils import ensure_folder
+from libraries.utils import ensure_folder, Paths, timeSpent
+
+paths = Paths()
+filters = ['standard', 'conv', 'med', 'gauss']
 #%% FUNCTIONS
 
 def createKernel(kernel_size, dim=2):
@@ -36,6 +40,7 @@ def convFilterScores(scores, kernel):
     
 #    conv_scores = convolve(scores, kernel, mode='constant')
 #    conv_scores = convolve(scores, kernel, mode='nearest')
+
     conv_scores = convolve(scores, kernel)
         
     return conv_scores
@@ -194,23 +199,128 @@ def __plottingThresholds(performance, h, distr=None):
         i += 1
 
 def computeFilters(as_map, params):
+
+    as_maps = {}
+    
+    conv_map, med_map, gauss_map = {}, {}, {}
+    
+    std_as = np.array(list(as_map.values()))
+    keys = list(as_map.keys())
     
     kernel = createKernel(params['conv'], dim=3)
-    conv_map = convFilterScores(as_map, kernel)
+    conv_as = convFilterScores(std_as, kernel)
+    conv_map = createMap(keys, conv_as)
     
     kernel_size = params['med']
-    med_map = medFilterScores(as_map, kernel_size)
+    med_as = medFilterScores(std_as, kernel_size)
+    med_map = createMap(keys, med_as)
     
     sigma = params['gauss']
-    gauss_map = gaussFilterScores(as_map, sigma)
+    gauss_as = gaussFilterScores(std_as, sigma)
+    gauss_map = createMap(keys, gauss_as)
     
-    return conv_map, med_map, gauss_map
+    as_maps['standard'] = as_map
+    as_maps['conv'] = conv_map
+    as_maps['med'] = med_map
+    as_maps['gauss'] = gauss_map
+    
+    return as_maps
 
-def hist_data(data, bins, my_range, thr=None, title='', color='r', label=''):
+def saveFilters(maps, save_folder, figsize=(160,25)):
+    start = time()
     
+    for f in filters:
+        as_map = maps[f]
+        
+        for key in as_map:
+            as_filtered = as_map[key]
+            
+            filename = '{}_{}_anomaly score'.format(key, f.upper())
+            folder = save_folder[key] + 'filters/'
+            saveImage(as_filtered, folder, filename, figsize)
+            
+    end = time()
+
+    timeSpent(end-start, 'Saving Filtered Anomaly Score')   
+    
+def saveMasks(masked_map, save_folder):
+
+    for f in filters:
+        for key in list(masked_map.keys()):
+            image = masked_map[key]
+            image = cv2.resize(image, (1600,256), interpolation=cv2.INTER_LINEAR)
+            filename = '{}_{}_anomaly'.format(key, f.upper())
+            saveImage(image, save_folder[key], filename) 
+
+def saveAnomalyMaps(anom_maps, save_folder):
+    
+    for f in filters:
+        anom_map = anom_maps[f]
+        keys = list(anom_map.keys())
+        
+        for key in keys:
+            image = anom_map[key]
+            image = cv2.resize(image, (1600,256), interpolation=cv2.INTER_LINEAR)
+            filename = '{}_{}_anomaly_detection'.format(key, f.upper())
+            saveImage(image, save_folder, filename)
+            
+#            image = anom_map[key]
+#            image = cv2.resize(image, (1600,256), interpolation=cv2.INTER_NEAREST)
+#            filename = '{}_{}_anomaly_detection2'.format(key, f.upper())
+#            saveImage(image, save_folder, filename)
+#            
+#            image = anom_map[key]
+#            image = cv2.resize(image, (1600,256), interpolation=cv2.INTER_CUBIC)
+#            filename = '{}_{}_anomaly_detection3'.format(key, f.upper())
+#            saveImage(image, save_folder, filename)
+#            
+#            image = anom_map[key]
+#            image = cv2.resize(image, (1600,256), interpolation=cv2.INTER_LANCZOS4)
+#            filename = '{}_{}_anomaly_detection4'.format(key, f.upper())
+#            saveImage(image, save_folder, filename)
+#            
+#            image = anom_map[key]
+#            image = cv2.resize(image, (1600,256), interpolation=cv2.INTER_AREA)
+#            filename = '{}_{}_anomaly_detection5'.format(key, f.upper())
+#            saveImage(image, save_folder, filename)
+    
+def saveFullMasked(full_masked_maps, save_folder):
+    
+    for f in filters:
+        anom_map = full_masked_maps[f]
+        keys = list(anom_map.keys())
+        
+        for key in keys:
+            filename = '{}_{}_full_masked_map'.format(key, f.upper())
+            saveImage(anom_map[key], save_folder, filename)
+        
+def saveImage(image, save_folder, filename, figsize=(160,25)):
+    fig = plt.figure(frameon=False, figsize=figsize)
+    plt.axis('off')
+    plt.imshow(image)
+    print('> Saving \'{}\' at {}'.format(filename, save_folder))
+    plt.savefig(save_folder + filename + '.png',
+                bbox_inches='tight', transparent=True,
+                pad_inches=0, dpi=10)
+    plt.close(fig)
+    plt.show()    
+
+def createMap(keys, anom_scores):
+    
+    as_map = {}
+    
+    for i in range(len(keys)):
+        as_map[keys[i]] = anom_scores[i]
+        
+    return as_map
+
+def hist_data(data, bins, my_range, thr=None, title='', color='r', label='',
+              figsize=(12,3), plot=True, save_folder=None, filename=None):
+    
+    fig = plt.figure(figsize=figsize)
     plt.title('Histogram ' + title)
     hist = plt.hist(data, bins=bins, color='#ffcc99', 
-                    range=my_range, density=True)
+                    range=my_range, density=True, label='Anomaly Score')
     
     if(isinstance(thr, list) and isinstance(color, list) and isinstance(label, list)):
         for i in range(len(thr)):
@@ -224,52 +334,56 @@ def hist_data(data, bins, my_range, thr=None, title='', color='r', label=''):
         plt.plot([thr, thr], [0, max(hist[0])], c=color, marker='o', label=label)
     
     plt.legend(loc='best')
+    if(save_folder is not None and filename is not None):
+        print('> Saving \'{}\' at {}'.format(filename, save_folder + 'histogram'))
+        plt.savefig(save_folder + 'histogram/' + filename + '.png')
+
+    if(plot==False):
+        plt.close(fig)
     
     plt.show()
     
     return hist
 
-def computeThresholds(as_map, kernel_params, hist_params, prob):
+def computeThresholds(as_map, kernel_params, hist_params, prob, save_folder=None):
     
-    conv_map, med_map, gauss_map = computeFilters(as_map, kernel_params)
+    maps = {}
+    thrs = {}
     
-    std_hist = hist_data(as_map.ravel(), hist_params['bins'], hist_params['range'], title='Standard')
-    conv_hist = hist_data(conv_map.ravel(), hist_params['bins'], hist_params['range'], title='Conv')
-    med_hist = hist_data(med_map.ravel(), hist_params['bins'], hist_params['range'], title='Median')
-    gauss_hist = hist_data(gauss_map.ravel(), hist_params['bins'], hist_params['range'], title='Gaussian')
+    # COMPUTE FILTERED ANOMALY SCORES
+    maps = computeFilters(as_map, kernel_params)
+
     
-    std_thr = getThreshold(as_map.ravel(), prob, std_hist)
-    conv_thr = getThreshold(conv_map.ravel(), prob, conv_hist)
-    med_thr = getThreshold(med_map.ravel(), prob, med_hist)
-    gauss_thr = getThreshold(gauss_map.ravel(), prob, gauss_hist)
-    
-    thrs = [std_thr, conv_thr, med_thr, gauss_thr]
     labels = ['Standard', 'Conv       ', 'Median   ', 'Gaussian']
     colors = ['brown', 'r', 'b', 'green']
     
-    # STANDARD THRESHOLD
-    plt.figure(figsize=hist_params['figsize'])
-    hist_data(as_map.ravel(), hist_params['bins'], hist_params['range'], thr=std_thr,label='Standard',
-                     title='Conv', color=colors[0])
-    # CONV THRESHOLD
-    plt.figure(figsize=hist_params['figsize'])
-    hist_data(conv_map.ravel(), hist_params['bins'], hist_params['range'], thr=conv_thr,label='Conv',
-                     title='Conv', color=colors[1])
-    # MEDIAN THRESHOLD
-    plt.figure(figsize=hist_params['figsize'])
-    hist_data(med_map.ravel(), hist_params['bins'], hist_params['range'], thr=med_thr,label='Med',
-                     title='Med', color=colors[2])
-    # GAUSSIAN THRESHOLD    
-    plt.figure(figsize=hist_params['figsize'])
-    hist_data(gauss_map.ravel(), hist_params['bins'], hist_params['range'], thr=gauss_thr,label='Gauss',
-                     title='Gauss', color=colors[3])
+    i = 0
+    for f in filters:
+        as_array = np.array(list(maps[f].values()))
+        
+        # HISTOGRAM FOR EACH MAP
+        hist = hist_data(as_array.ravel(), hist_params['bins'], hist_params['range'],
+                         title=f.upper(), figsize=hist_params['figsize'], plot=False)
+        
+        # THRESHOLDS FOR EACH MAP
+        thr = getThreshold(as_array.ravel(), prob, hist)
+        thrs[f] = thr
+        
+        # HISTOGRAM WITH THRESHOLDS
+        hist_data(as_array.ravel(), hist_params['bins'], hist_params['range'], thr=thr, label=f,
+                     title=f.upper(), color=colors[i], figsize=hist_params['figsize'], plot=True,
+                     save_folder=save_folder, filename='{}_histogram'.format(f.upper()))
+        
+        i += 1
     
     # ALL THRESHOLDS
-    plt.figure(figsize=hist_params['figsize'])
-    hist_data(as_map.ravel(), hist_params['bins'], hist_params['range'],
-                     thr=thrs,label=labels, color=colors, title='Anomaly Scores')
+    std_as = np.array(list(as_map.values()))
+    hist_data(std_as.ravel(), hist_params['bins'], hist_params['range'],
+                     thr=list(thrs.values()),label=labels, color=colors, title='Anomaly Scores',
+                     figsize=hist_params['figsize'], plot=True, save_folder=save_folder,
+                     filename='Anomaly_score_thrs')
     
-    return std_thr, conv_thr, med_thr, gauss_thr
+    return thrs
 
 def tuning_conv_filter(as_map, gt_map):
     
@@ -323,24 +437,26 @@ def tuning_gauss_filter(as_map, gt_map):
             
     return best
     
-def compute_anomalies(as_image, gt_image, thr, info=''):
+def compute_anomalies(as_map, gt_map, index, thr, info='', save_folder=None):
     
     print('> {} Anomaly Scores'.format(info.upper()))
     
-    anom_image = as_image > thr
+    keys = list(as_map.keys())
+    key = keys[index]
+    as_array = np.array(list(as_map[key]))
+    gt_array = np.array(list(gt_map[key]))
+    
+    anom_image = as_array > thr
     anom_image = anom_image * 1
     anom_image = anom_image.astype(np.float32)
     
-    auc = evaluateRoc(as_image.ravel(), gt_image.ravel(),
-                      info=info, thr=thr)
+    auc = evaluateRoc(as_array.ravel(), gt_array.ravel(),
+                      info=info, thr=thr, save_folder=save_folder)
     
-    precision = ev.precision(gt_image.ravel(), anom_image.ravel())
-    
-    iou = ev.IoU(gt_image, anom_image)
-    
-    recall = ev.recall(gt_image.ravel(), anom_image.ravel())
-    
-    dice = ev.dice(gt_image, anom_image)
+    precision = ev.precision(gt_array.ravel(), anom_image.ravel())
+    iou = ev.IoU(gt_array, anom_image)
+    recall = ev.recall(gt_array.ravel(), anom_image.ravel())
+    dice = ev.dice(gt_array, anom_image)
     
     result = {'auc':auc, 
               'prec':precision,
@@ -348,24 +464,23 @@ def compute_anomalies(as_image, gt_image, thr, info=''):
               'recall':recall,
               'dice':dice}
     
-    return anom_image, result
+    anom_image_dict = {key:anom_image}
     
-def compute_anomalies_all_filters(index, gt_mask, as_filters, thr_filters):
+    return anom_image_dict, result
     
+def compute_anomalies_all_filters(index, gt_map, as_maps, thrs, save_folder=None):
     '''
         Computing results per filters
     '''
-    
-    filters = ['standard', 'conv', 'med', 'gauss']
     anomaly_map = {}
     results = {}
     
-    
     for f in filters:
-        as_image = as_filters[f]
-        thr = thr_filters[f]
+        as_map = as_maps[f]        
+        thr = thrs[f]
         
-        anomaly_map[f], results[f] = compute_anomalies(as_image[index], gt_mask, thr, info=f)
+        anomaly_map[f], results[f] = compute_anomalies(as_map, gt_map, index,
+                   thr, info=f.upper(), save_folder=save_folder)
         
     return anomaly_map, results
     
@@ -438,21 +553,23 @@ def best_performance(evaluation):
     return bests
     
    
-def overlapAnomalies(masked_image, anomaly_map, interp=cv2.INTER_LINEAR):
-    h, w, _ = masked_image.shape
+def overlapAnomalies(index, masked_maps, anomaly_maps, interp=cv2.INTER_LINEAR):
+    keys = list(masked_maps.keys())
+    key = keys[index]
     
-    filters = ['standard', 'conv', 'med', 'gauss'] 
-    masked_images = {}
+    h, w, _ = masked_maps[key].shape
+    
+    full_masked_maps = {}
     
     for f in filters: 
 #        plt.imshow(anomaly_map[f])
 #        plt.show()
         
-        resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=interp)
+        resized_anom = cv2.resize(anomaly_maps[f][key], (w,h), interpolation=interp)
 #        plt.imshow(resized_anom)
 #        plt.show()
         
-#        resized_anom = cv2.resize(anomaly_map[f], (w,h), interpolation=cv2.INTER_NEAREST)
+#        resized_anom = cv2.resize(anomaly_maps[f][key], (w,h), interpolation=cv2.INTER_NEAREST)
 #        plt.imshow(resized_anom)
 #        plt.show()
         
@@ -471,31 +588,37 @@ def overlapAnomalies(masked_image, anomaly_map, interp=cv2.INTER_LINEAR):
         
 #        plt.imshow(resized_anom)
 #        plt.show()
-        masked_im = deepcopy(masked_image)
+        masked_im = deepcopy(masked_maps[key])
         masked_im[resized_anom==1, 0] = 255
 #        plt.imshow(masked_im)
 #        plt.show()
         
-        
-        masked_images[f] = masked_im
+        masked_map = {key:masked_im}
+        full_masked_maps[f] = masked_map
         
 #        plt.imshow(masked_images[f])
 #        plt.show()
         
-    return masked_images
+    return full_masked_maps
 
-def complete_evaluation(index, gt_map, as_filters, thr_filters, masked_images):
+def complete_evaluation(index, gt_map, as_maps, masked_map, thrs, save_folder=None):
+    save = save_folder is not None
+    
+    anomaly_maps, res_per_filter = compute_anomalies_all_filters(index, gt_map, as_maps, thrs, save_folder)
+    
+    full_masked_maps = overlapAnomalies(index, masked_map, anomaly_maps)
     
     
-    anomaly_map, res_per_filter = compute_anomalies_all_filters(index, gt_map[index],as_filters, thr_filters)
-    
-    final_masks = overlapAnomalies(masked_images[index], anomaly_map)
-    
+    if(save):
+        saveAnomalyMaps(anomaly_maps, save_folder)
+#        saveMasks(masked_map, save_folder)
+        saveFullMasked(full_masked_maps, save_folder)
+        
     evaluation = resultsPerEvaluation(res_per_filter)
     
     bests = best_performance(evaluation)
     
-    return anomaly_map, final_masks, evaluation, bests
+    return anomaly_maps, full_masked_maps, evaluation, bests
 
 
 
@@ -523,6 +646,95 @@ def plotAnomalies(as_filters, anomaly_map, masked_image, index, figsize=(8,15), 
         
     if(bests):
         display(bests)
+    
+def saveAnomalies(as_filters, anomaly_map, masked_image, index,
+                  folder_save, figsize=(18,3)):
+    
+    filters = ['standard', 'conv', 'med', 'gauss'] 
+
+    for f in filters:
+        # ANOMALY SCORE
+        fig = plt.figure(figsize=figsize)
+        plt.title('{} Anomaly Scores'.format(f.upper()))
+        plt.axis('off')
+        plt.imshow(as_filters[f][index])
+        
+        filename = '{}_Anomaly Scores.png'
+        plt.savefig(folder_save + filename, transparent=True, dpi=1000)
+        
+        plt.close(fig)
+        plt.show()
+        
+        # ANOMALY DETECTION
+        fig = plt.figure(figsize=figsize)
+        plt.title('{} Detection'.format(f.upper()))
+        plt.axis('off')
+        plt.imshow(anomaly_map[f])
+
+        filename = '{}_Anomaly Detector.png'
+        plt.savefig(folder_save + filename, transparent=True, dpi=1000)
+                
+        plt.close(fig)
+        plt.show()
+        
+        # FULL MASKED IMAGE
+        fig = plt.figure(figsize=figsize)
+        plt.title('{} Detection'.format(f.upper()))
+        plt.axis('off')
+        plt.imshow(masked_image[f])
+        
+        filename = '{}_Anomaly Detection.png'
+        plt.savefig(folder_save + filename, transparent=True, dpi=1000)
+        
+        plt.close(fig)
+        plt.show()
+    
+def setSaveFoldersResults(samples):
+    
+    save_folders = {}
+    
+    for sample in samples:
+        save_folder = '{}{}_images/{}/'.format(paths.results_path, str(len(samples)), str(sample))
+        ensure_folder(save_folder)
+        ensure_folder(save_folder + 'filters/')
+        save_folders[str(sample)] = save_folder
+        
+    save_folders['general'] = paths.results_path + '{}_images/'.format(str(len(samples)))
+    ensure_folder(save_folders['general'])
+    ensure_folder(save_folders['general'] + 'histogram/')
+    
+    return save_folders
+    
+def writeResults(res, bests, key, save_folder):
+    
+    filename = 'data_results: {}.txt'.format(key)
+    
+    content = '\t\tImage id: {}\n\n\n'.format(key)
+    
+    for f in filters:
+        result = res[f]
+        content = content + '-------- {} --------\n\n'.format(f.upper())
+        content = content + '- AUC:     {:.2f}\n'.format(result['auc'][0])
+        content = content + '- Prec:    {:.2f}\n'.format(result['prec'])
+        content = content + '- Recall:  {:.2f}\n'.format(result['recall'])
+        content = content + '- Iou:     {:.2f}\n'.format(result['iou'])
+        content = content + '- Dice:    {:.2f}\n\n'.format(result['dice'])
+#        content = content + '-  -  -  -  -  -  -  -  -\n\n'
+        
+    content = content + '_________________________\n\n\n'
+        
+    content = content + '--- Best Performance ---\n\n'
+    
+    for perf in bests:
+        content = content + '- {}:  \t{:.2f}   -->   {}\n'.format(perf, bests[perf]['value'], bests[perf]['filter'])
+    
+    content = content + '\n\n'
+    content = content + '_______________________\n\n\n'
+    
+    f = open(save_folder + filename, 'a')
+    f.write(content)
+    f.close()
+    
     
     
     
