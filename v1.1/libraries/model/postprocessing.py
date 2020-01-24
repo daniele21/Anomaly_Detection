@@ -619,10 +619,7 @@ def complete_evaluation(index, gt_map, as_maps, masked_map, thrs, save_folder=No
     
     bests = best_performance(evaluation)
     
-    return anomaly_maps, full_masked_maps, evaluation, bests
-
-
-
+    return anomaly_maps, full_masked_maps, res_per_filter, evaluation, bests
 
 def plotAnomalies(as_filters, anomaly_map, masked_image, index, figsize=(8,15), bests=None):
     
@@ -707,7 +704,7 @@ def setSaveFoldersResults(samples):
     
     return save_folders
     
-def writeResults(res, bests, key, save_folder):
+def writeResults(res, ev,  bests, key, save_folder):
     
     filename = 'data_results: {}.txt'.format(key)
     
@@ -716,11 +713,11 @@ def writeResults(res, bests, key, save_folder):
     for f in filters:
         result = res[f]
         content = content + '-------- {} --------\n\n'.format(f.upper())
-        content = content + '- AUC:     {:.2f}\n'.format(result['auc'][0])
-        content = content + '- Prec:    {:.2f}\n'.format(result['prec'])
-        content = content + '- Recall:  {:.2f}\n'.format(result['recall'])
-        content = content + '- Iou:     {:.2f}\n'.format(result['iou'])
-        content = content + '- Dice:    {:.2f}\n\n'.format(result['dice'])
+        content = content + '- AUC:     {:.3f}\n'.format(result['auc'][0])
+        content = content + '- Prec:    {:.3f}\n'.format(result['prec'])
+        content = content + '- Recall:  {:.3f}\n'.format(result['recall'])
+        content = content + '- Iou:     {:.3f}\n'.format(result['iou'])
+        content = content + '- Dice:    {:.3f}\n\n'.format(result['dice'])
 #        content = content + '-  -  -  -  -  -  -  -  -\n\n'
         
     content = content + '_________________________\n\n\n'
@@ -728,12 +725,25 @@ def writeResults(res, bests, key, save_folder):
     content = content + '--- Best Performance ---\n\n'
     
     for perf in bests:
-        content = content + '- {}:  \t{:.2f}   -->   {}\n'.format(perf, bests[perf]['value'], bests[perf]['filter'])
+        content = content + '- {}:  \t{:.3f}   -->   {}\n'.format(perf, bests[perf]['value'], bests[perf]['filter'])
     
     content = content + '\n\n'
     content = content + '_______________________\n\n\n'
     
+    content = content + '--- Ordered by Performance ---\n\n'
+    
+    for perf in ev:
+        content = content + '------- {} -------\n\n'.format(perf.upper())
+        content = content + '- Standard:  {:.3f}\n'.format(ev[perf]['standard'])
+        content = content + '- Conv:      {:.3f}\n'.format(ev[perf]['conv'])
+        content = content + '- Median:    {:.3f}\n'.format(ev[perf]['med'])
+        content = content + '- Gaussian:  {:.3f}\n\n'.format(ev[perf]['gauss'])
+    
+    print('Savind data at {}'.format(save_folder))
     f = open(save_folder + filename, 'a')
+    f.write(content)
+    f.close()
+    
     f = open(save_folder + 'comparison/' + filename, 'a')
     f.write(content)
     f.close()

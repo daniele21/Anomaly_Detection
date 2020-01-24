@@ -263,11 +263,21 @@ bests
 for i in range(len(samples)):
     key = str(samples[i])
     
-    anomaly_maps, full_masked_maps, ev, bests = pp.complete_evaluation(i, gt_map, as_maps,
+    anomaly_maps, full_masked_maps, res, ev, bests = pp.complete_evaluation(i, gt_map, as_maps,
                                                                        masked_map, thrs,
                                                                        save_folders[key])
+#%%
+i=0
+key = str(samples[i])
+
+anomaly_maps, full_masked_maps, res, ev, bests = pp.complete_evaluation(i, gt_map, as_maps,
+                                                                   masked_map, thrs,
+                                                                   save_folders[key])
+pp.writeResults(res, ev, bests, key, save_folders[key])
 
 
+
+#%%
 index = 0
 anomaly_map, masked, ev, bests = pp.complete_evaluation(index, gt_map,as_filters, thr_filters,
                                                 masked_images)
