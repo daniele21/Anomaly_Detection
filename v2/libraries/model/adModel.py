@@ -471,12 +471,12 @@ class AnomalyDetectionModel():
 
             valid_loss = self.val_loss['GENERATOR'][-1]
             
-            self.performance, eval_data, spent_time = self._test()
-            test_time = adjustTime(spent_time)
+#            self.performance, eval_data, spent_time = self._test()
+#            test_time = adjustTime(spent_time)
             
-            self.auc, self.threshold = self.performance['standard']['AUC'], self.performance['standard']['Threshold']           
-            self.gt_labels, self.anomaly_scores= eval_data['gt_labels'], eval_data['scores']
-            self.normal_scores = eval_data['normal_scores']
+#            self.auc, self.threshold = self.performance['standard']['AUC'], self.performance['standard']['Threshold']           
+#            self.gt_labels, self.anomaly_scores= eval_data['gt_labels'], eval_data['scores']
+#            self.normal_scores = eval_data['normal_scores']
             
             if(self.epoch % 5 == 0):
                 self.plotting()
@@ -490,7 +490,7 @@ class AnomalyDetectionModel():
             print('\n')
             print('>- Training Loss:   {:.3f} in {} sec'.format(self.train_loss[GENERATOR][-1], train_time) )
             print('>- Validation Loss: {:.3f} in {} sec'.format(self.val_loss[GENERATOR][-1], val_time))
-            print('>- AUC: {:.3f} \n>- Threshold: {:.3f} in {} sec'.format(self.auc, self.threshold, test_time))            
+#            print('>- AUC: {:.3f} \n>- Threshold: {:.3f} in {} sec'.format(self.auc, self.threshold, test_time))            
             
             
             saveCkp = self.es(valid_loss)
@@ -522,13 +522,14 @@ class AnomalyDetectionModel():
         self.saveCheckPoint(valid_loss, last=True)
         self.plotting()
         self.saveInfo()
-        self.evaluateRoc(folder_save=self.folder_save)
+#        self.evaluateRoc(folder_save=self.folder_save)
         
         print('\n> From {} to {} epochs'.format(start_epoch, end_epochs))
         
         return {'Validation_Loss' : valid_loss,
-                'AUC': self.auc,
-                'Threshold' : self.threshold}
+#                'AUC': self.auc,
+#                'Threshold' : self.threshold
+                }
         
         
     def train_model(self, epochs, save=True, lr_decay_value=None):
