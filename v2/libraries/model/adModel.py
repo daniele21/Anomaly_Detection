@@ -480,7 +480,7 @@ class AnomalyDetectionModel():
             
             if(self.epoch % 5 == 0):
                 self.plotting()
-                self.evaluateRoc()
+#                self.evaluateRoc()
             
 #            if(self.auc > self.best_auc['AUC']):
 #                self.best_auc['AUC'] = self.auc
@@ -495,6 +495,7 @@ class AnomalyDetectionModel():
             
             saveCkp = self.es(valid_loss)
             if(saveCkp and save):
+#                print(valid_loss)
                 self.saveCheckPoint(valid_loss)
                 
             if(self.es.early_stop):
@@ -771,12 +772,11 @@ class AnomalyDetectionModel():
     def saveCheckPoint(self, valid_loss, last=False):
         self.folder_save = paths.checkpoint_folder + self.opt.name + '/'
         ensure_folder(self.folder_save)
-        
-        path_file = '{0}/MODEL_{1}_lr:{2}|Epoch:{3}|Auc:{4:.3f}|Loss:{5:.4f}.pth.tar'.format(self.folder_save,
+#        print(valid_loss)
+        path_file = '{0}/MODEL_{1}_lr:{2}|Epoch:{3}|Loss:{4:.4f}.pth.tar'.format(self.folder_save,
                                                                              self.opt.name,
                                                                              self.opt.lr_gen,
                                                                              self.epoch,
-                                                                             self.auc,
                                                                              valid_loss)
         
         torch.save(self, path_file)

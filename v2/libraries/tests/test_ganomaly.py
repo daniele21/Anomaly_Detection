@@ -35,7 +35,7 @@ opt.patch_per_im = 500
 #opt.patch_per_im = 1500
 
 #opt.n_extra_layers=2
-
+opt.tl = 'resnet18'
 opt.batch_size = 64
 #opt.out_channels = 128
 
