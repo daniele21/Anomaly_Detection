@@ -723,12 +723,17 @@ def saveAnomalies(as_filters, anomaly_map, masked_image, index,
         plt.close(fig)
         plt.show()
     
-def setSaveFoldersResults(samples):
+def setSaveFoldersResults(samples, folder_extra_name=None):
     
     save_folders = {}
     
     for sample in samples:
         save_folder = '{}{}_images/{}/'.format(paths.results_path, str(len(samples)), str(sample))
+        
+        if(folder_extra_name is not None):
+            save_folder = '{}{}/{}_images/{}/'.format(paths.results_path, folder_extra_name,
+                                                       str(len(samples)), str(sample))
+        
         ensure_folder(save_folder)
         ensure_folder(save_folder + 'filters/')
         ensure_folder(save_folder + 'comparison/')
