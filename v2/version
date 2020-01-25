@@ -1,4 +1,4 @@
-	Ganomaly_code v1:
+	Ganomaly_code v2:
 
 - Anom over center patch
 //- Adaptive weight of multi loss
@@ -7,5 +7,5 @@
 - Test --> 20% --> normals/anom
 - Patch size = 32x32
 
-- Transfer Learning with VGG16
+- Transfer Learning with VGG16, Resnet18
 

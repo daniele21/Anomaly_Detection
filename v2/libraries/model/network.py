@@ -151,16 +151,28 @@ class EncoderTL(nn.Module):
         else:
             z_size = z_size
         
-        vgg = models.vgg16(pretrained=True).cuda()
-        
-        for param in vgg.parameters():
+        if(opt.tl == 'vgg16'):
+            tl = models.vgg16(pretrained=True).cuda()
+            
+            for param in tl.parameters():
             param.require_grad = False
             
-        modules = list(vgg.children())[:-2][0]
-        features = list(modules)[:-3]
-        self.net = nn.Sequential(*features)
-        self.net.add_module('Final conv2D', nn.Conv2d(512, z_size, 2))
-        self.net
+            modules = list(tl.children())[:-2][0]
+            features = list(modules)[:-3]
+            self.net = nn.Sequential(*features)
+            self.net.add_module('Final conv2D', nn.Conv2d(512, z_size, 2))
+            self.net
+            
+        elif(opt.tl == 'resnet18'):
+            tl = models.resnet18(pretrained=True).cuda()
+            
+            for param in tl.parameters():
+            param.require_grad = False
+            
+            modules = list(r18.children())[:-2]
+            net = nn.Sequential(*modules)
+            net.add_module('Final_Conv', nn.Conv2d(512, 100, 3, 1, 1))
+            self.net = net
         
     def forward(self, x):
         

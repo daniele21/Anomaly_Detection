@@ -46,6 +46,7 @@ class Options():
                  multiTaskLoss  = False,
                  kernel_size    = 3,
                  sigma          = 1,
+                 tl             = None,
                  
                  dataset        = '',
                  descr          = '',
@@ -100,6 +101,7 @@ class Options():
         self.multiTaskLoss = multiTaskLoss
         self.kernel_size    = kernel_size
         self.sigma          = sigma
+        self.tl             = tl
         
         self.dataset        = dataset
         self.descr          = descr
