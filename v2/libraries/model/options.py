@@ -46,7 +46,7 @@ class Options():
                  multiTaskLoss  = False,
                  kernel_size    = 3,
                  sigma          = 1,
-                 tl             = None,
+                 tl             = 'vgg16',
                  
                  dataset        = '',
                  descr          = '',
