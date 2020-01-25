@@ -27,8 +27,8 @@ filters = ['standard', 'conv', 'med', 'gauss']
 empty_line = pd.DataFrame({'Filter':'--------',
                            'auc':'--------',
                            'prec':'--------',
-                           'iou':'--------',
                            'recall':'--------',
+			   'iou':'--------',
                            'dice':'--------'}, index=[0])
 #%% FUNCTIONS
 
@@ -473,8 +473,8 @@ def compute_anomalies(as_map, gt_map, index, thr, info='', save_folder=None):
     
     result = {'auc':auc[0], 
               'prec':precision,
+	      'recall':recall,
               'iou':iou,
-              'recall':recall,
               'dice':dice}
     
     anom_image_dict = {key:anom_image}

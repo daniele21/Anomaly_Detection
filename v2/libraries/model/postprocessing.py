@@ -27,8 +27,8 @@ filters = ['standard', 'conv', 'med', 'gauss']
 empty_line = pd.DataFrame({'Filter':'--------',
                            'auc':'--------',
                            'prec':'--------',
-                           'iou':'--------',
                            'recall':'--------',
+			   'iou':'--------',
                            'dice':'--------'}, index=[0])
 #%% FUNCTIONS
 
@@ -337,13 +337,13 @@ def hist_data(data, bins, my_range, thr=None, title='', color='r', label='',
     
     if(isinstance(thr, list) and isinstance(color, list) and isinstance(label, list)):
         for i in range(len(thr)):
-            lab = label[i] + ': {:.3f}'.format(thr[i])
+            lab = label[i] + ': {:.4f}'.format(thr[i])
             
             plt.plot([thr[i], thr[i]], [0, max(hist[0])], c=color[i],
                      marker='o', label=lab)
     
     elif(thr is not None):
-        label = label + ': {:.3f}'.format(thr)
+        label = label + ': {:.4f}'.format(thr)
         plt.plot([thr, thr], [0, max(hist[0])], c=color, marker='o', label=label)
     
     plt.legend(loc='best')
@@ -473,8 +473,8 @@ def compute_anomalies(as_map, gt_map, index, thr, info='', save_folder=None):
     
     result = {'auc':auc[0], 
               'prec':precision,
+	      'recall':recall,
               'iou':iou,
-              'recall':recall,
               'dice':dice}
     
     anom_image_dict = {key:anom_image}
@@ -749,7 +749,7 @@ def writeResults(res, ev,  bests, key, save_folder):
     for f in filters:
         result = res[f]
         content = content + '-------- {} --------\n\n'.format(f.upper())
-        content = content + '- AUC:     {:.3f}\n'.format(result['auc'][0])
+        content = content + '- AUC:     {:.3f}\n'.format(result['auc'])
         content = content + '- Prec:    {:.3f}\n'.format(result['prec'])
         content = content + '- Recall:  {:.3f}\n'.format(result['recall'])
         content = content + '- Iou:     {:.3f}\n'.format(result['iou'])
