@@ -260,15 +260,48 @@ pp.writeResults(res, bests, key, save_folders[key])
 bests = pp.best_performance(evaluation)
 bests
 #%% COMPLETE EVALUATION EXAMPLE
-for i in range(len(samples)):
+pp.res_table = pp.res_table_init(save_folders['general'])
+for i in range(1):
     key = str(samples[i])
     
     anomaly_maps, full_masked_maps, res, ev, bests = pp.complete_evaluation(i, gt_map, as_maps,
-                                                                       masked_map, thrs,
-                                                                       save_folders[key])
+                                                                            masked_map, thrs,
+                                                                            key, save_folders)
+    
+#%% TEST RESULT TABLE
+    
+a = pd.DataFrame(res)
+
+b = pd.DataFrame(bests)
+b = b.transpose()    
+    
+c = a.merge(b, left_index=True, right_index=True)
+d = a.merge(b, left_index=True, right_index=True)
+    
+c = c.transpose()
+c.insert(0, 'Filter', ['Standard', 'Conv', 'Med', 'Gauss', 'Best_Filter', 'Value'])
+
+d = d.transpose()
+d.insert(0, 'Filter', ['Standard', 'Conv', 'Med', 'Gauss', 'Best_Filter', 'Value'])
+
+c.insert(0, 'Image', '1000')
+d.insert(0, 'Image', '1001')
+   
+d = d.set_index('Image') 
+c = c.set_index('Image')
+   
+e = c.concat(d)
+empty_line = pd.DataFrame({'Filter':'------',
+                           'auc':'------',
+                           'prec':'------',
+                           'iou':'------',
+                           'recall':'------',
+                           'dice':'------'}, index=[0])
+e = pd.concat([c,empty_line,d])    
 #%%
 i=0
 key = str(samples[i])
+
 
 anomaly_maps, full_masked_maps, res, ev, bests = pp.complete_evaluation(i, gt_map, as_maps,
                                                                    masked_map, thrs,

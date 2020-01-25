@@ -7,6 +7,7 @@ import seaborn as sn
 import cv2
 from copy import deepcopy
 from time import time 
+import pandas as pd
 
 from scipy.stats import norm, gaussian_kde
 from scipy.signal import medfilt
@@ -22,7 +23,18 @@ from libraries.utils import ensure_folder, Paths, timeSpent
 
 paths = Paths()
 filters = ['standard', 'conv', 'med', 'gauss']
+
+empty_line = pd.DataFrame({'Filter':'--------',
+                           'auc':'--------',
+                           'prec':'--------',
+                           'iou':'--------',
+                           'recall':'--------',
+                           'dice':'--------'}, index=[0])
 #%% FUNCTIONS
+
+def res_table_init(save_folder):
+    table = pd.DataFrame()
+    table.to_excel(save_folder + 'Result_table.xlsx')
 
 def createKernel(kernel_size, dim=2):
     
@@ -459,7 +471,7 @@ def compute_anomalies(as_map, gt_map, index, thr, info='', save_folder=None):
     recall = ev.recall(gt_array.ravel(), anom_image.ravel())
     dice = ev.dice(gt_array, anom_image)
     
-    result = {'auc':auc, 
+    result = {'auc':auc[0], 
               'prec':precision,
               'iou':iou,
               'recall':recall,
@@ -502,7 +514,7 @@ def resultsPerEvaluation(results):
     readable_results = {}
     
     for f in filters:
-        auc[f] = results[f]['auc'][0]
+        auc[f] = results[f]['auc']
         prec[f] = results[f]['prec']
         recall[f] = results[f]['recall']
         iou[f] = results[f]['iou']
@@ -521,8 +533,8 @@ def readEvaluation(criterium, eval_results):
     assert criterium in ['auc', 'prec', 'recall', 'iou', 'dice'], 'Evaluation has to be one of these: auc, prec, recall, iou, dice'
     
     filters = ['standard', 'conv', 'med', 'gauss'] 
-    best = {'value':0,
-            'filter':''}
+    best = {'filter':'',
+            'value':0}
     
     print('**************************')
     print('> -------- {} --------'.format(criterium.upper()))
@@ -602,24 +614,48 @@ def overlapAnomalies(index, masked_maps, anomaly_maps, interp=cv2.INTER_LINEAR):
         
     return full_masked_maps
 
-def complete_evaluation(index, gt_map, as_maps, masked_map, thrs, save_folder=None):
+def complete_evaluation(index, gt_map, as_maps, masked_map, thrs, key, save_folder=None):
     save = save_folder is not None
     
-    anomaly_maps, res_per_filter = compute_anomalies_all_filters(index, gt_map, as_maps, thrs, save_folder)
+    anomaly_maps, res_per_filter = compute_anomalies_all_filters(index, gt_map, as_maps, thrs, save_folder[key])
     
     full_masked_maps = overlapAnomalies(index, masked_map, anomaly_maps)
     
     
     if(save):
-        saveAnomalyMaps(anomaly_maps, save_folder)
+        saveAnomalyMaps(anomaly_maps, save_folder[key])
 #        saveMasks(masked_map, save_folder)
-        saveFullMasked(full_masked_maps, save_folder)
-        
+        saveFullMasked(full_masked_maps, save_folder[key])
+       
+    # RESULTS
     evaluation = resultsPerEvaluation(res_per_filter)
-    
     bests = best_performance(evaluation)
     
+    # TABLE RESULTS
+    fillResultTable(res_per_filter, bests, key, save_folder)
+    
     return anomaly_maps, full_masked_maps, res_per_filter, evaluation, bests
+
+def fillResultTable(res, bests, key, save_folder):
+    filepath = save_folder['general'] + 'Result_table.xlsx'
+    table = pd.read_excel(filepath, index_col=0)
+    
+    res_df = pd.DataFrame(res)
+    res_df = res_df.round(3)
+
+    bests_df = pd.DataFrame(bests)
+    bests_df = bests_df.transpose()    
+        
+    df = res_df.merge(bests_df, left_index=True, right_index=True)   
+    df = df.transpose()
+    
+    df.insert(0, 'Filter', ['Standard', 'Conv', 'Med', 'Gauss', 'Best_Filter', 'Value'])    
+    df.insert(0, 'Image', key)
+    df = df.set_index('Image')
+    
+    table = pd.concat([table, empty_line, df]) 
+    table.to_excel(filepath)
+  
 
 def plotAnomalies(as_filters, anomaly_map, masked_image, index, figsize=(8,15), bests=None):
     
