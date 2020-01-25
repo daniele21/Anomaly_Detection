@@ -314,7 +314,7 @@ class GeneratorTL(nn.Module):
         
         self.encoder1 = EncoderTL(opt)
         self.decoder  = Decoder(opt)
-        self.encoder2 = Encoder(opt)
+        self.encoder2 = EncoderTL(opt)
         
         # INITIALIZATION
         if(xavier_init):
