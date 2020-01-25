@@ -261,7 +261,7 @@ bests = pp.best_performance(evaluation)
 bests
 #%% COMPLETE EVALUATION EXAMPLE
 pp.res_table = pp.res_table_init(save_folders['general'])
-for i in range(1):
+for i in range(2):
     key = str(samples[i])
     
     anomaly_maps, full_masked_maps, res, ev, bests = pp.complete_evaluation(i, gt_map, as_maps,
@@ -271,6 +271,7 @@ for i in range(1):
 #%% TEST RESULT TABLE
     
 a = pd.DataFrame(res)
+a = a.round(3)
 
 b = pd.DataFrame(bests)
 b = b.transpose()    
@@ -290,7 +291,6 @@ d.insert(0, 'Image', '1001')
 d = d.set_index('Image') 
 c = c.set_index('Image')
    
-e = c.concat(d)
 empty_line = pd.DataFrame({'Filter':'------',
                            'auc':'------',
                            'prec':'------',

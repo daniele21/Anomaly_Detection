@@ -27,11 +27,19 @@ ANOM_PATH = paths.anom_patches_path
 NORMAL_LABEL = np.float64(0)
 ANOMALY_LABEL = np.float64(1)
 #%%
+def applyMask(image, mask):
+    
+    masked_image = deepcopy(image)    
+    masked_image[mask==1, 2] = 255
+    
+    return masked_image
+
 def getImages(start, end):
     train = pd.read_csv(paths.csv_directory + 'train_unique.csv')
     
     images = []
     masks = []
+    masked_images = []
     
     count = start
     
@@ -42,14 +50,43 @@ def getImages(start, end):
         
         img = cv2.imread(paths.images_path + filename)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        mask = computeMask(enc_pixels, img)    
+        mask = computeMask(enc_pixels, img)  
+        masked_image = applyMask(img, mask)
         
         images.append(img)
         masks.append(mask)
+        masked_images.append(masked_image)
         
         count += 1
     
-    return images, masks
+    return images, masks, masked_images
+
+def getImagesFromSamples(samples):
+    train = pd.read_csv(paths.csv_directory + 'train_unique.csv')
+    
+    images = []
+    masks = []
+    masked_images = []
+    
+    count = 0
+    
+    for row in samples:
+        print('Image n. {}'.format(count))
+        filename    = train.iloc[row].Image_Id
+        enc_pixels  = train.iloc[row].Encoded_Pixels
+        
+        img = cv2.imread(paths.images_path + filename)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        mask = computeMask(enc_pixels, img)  
+        masked_image = applyMask(img, mask)
+        
+        images.append(img)
+        masks.append(mask)
+        masked_images.append(masked_image)
+        
+        count += 1
+    
+    return images, masks, masked_images
 
 def getPatchesFromImages(start, end, shape):
     train = pd.read_csv(paths.csv_directory + 'train_unique.csv')
@@ -491,11 +528,43 @@ def dataloaderPatchMasks(opt):
     
     return dataloader
 
+#def dataloaderSingleSet(start, end, batch_size):
+#    
+#    dataset = {}
+#    dataset['DATA'], dataset['LABELS'], dataset['MASKED'] = getImages(start, end)
+#    
+#    dataset = ImagesDataset(dataset)
+#
+#    dataloader = DataLoader(dataset = dataset,
+#                            batch_size = batch_size,
+#                            drop_last  = True,
+##                            shuffle = shuffle[x],
+#                            num_workers= 8
+#                            )
+#    
+#    return dataloader
+
+def dataloaderSingleSet(samples, batch_size):
+    
+    dataset = {}
+    dataset['DATA'], dataset['LABELS'], dataset['MASKED'] = getImagesFromSamples(samples)
+    dataset['SAMPLES'] = samples
+    
+    dataset = ImagesDataset(dataset)
+
+    dataloader = DataLoader(dataset = dataset,
+                            batch_size = batch_size,
+                            drop_last  = True,
+#                            shuffle = shuffle[x],
+                            num_workers= 8
+                            )
+    
+    return dataloader
 
 def dataloaderFullImages(opt):
     
     dataset = {}
-    dataset['DATA'], dataset['LABELS'] = getImages(opt.start, opt.end)
+    dataset['DATA'], dataset['LABELS'], _ = getImages(opt.start, opt.end)
     
     training_set = {}
     validation_set = {}
@@ -890,7 +959,26 @@ class FullSteelDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+class ImagesDataset(Dataset):
+    
+    def __init__(self, dataset):
+        self.data = dataset['DATA']
+        self.targets = dataset['LABELS']
+        self.masked = dataset['MASKED']
+        self.samples = dataset['SAMPLES']
+        
+        self.data = np.vstack(self.data).reshape(-1, 256, 1600, 3)
+        print(self.data.shape)
+        
+    def __getitem__(self, index):
 
+        sample, image, target = self.samples[index], self.data[index], self.targets[index]
+        masked = self.masked[index]
+        
+        return sample, image, target, masked
+    
+    def __len__(self):
+        return len(self.data)
 #%%
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
