@@ -18,6 +18,7 @@ class Paths():
         
 #        self.test_images = self.dataset_path + 'test_images/'
         self.test_images = 'test_results/'
+        self.results_path = '../../Results_v1/'
         
 #        self.test_labeled = self.test_images + 'labeled_images/'
 #        self.test_patched = self.test_images + 'patched_images/'
@@ -115,7 +116,7 @@ class EarlyStopping():
     
     """
     
-    def __init__(self, opt, verbose=True, delta=0):
+    def __init__(self, patience, verbose=True, delta=0):
         """
         PARAMS:
             
@@ -126,8 +127,8 @@ class EarlyStopping():
             - delta (float): Minimum change in the monitored quantity to qualify as an improvement.
                             Default: 0
         """
-        print(opt)  
-        self.patience = opt.patience
+#        print(opt)  
+        self.patience = patience
         self.verbose = verbose
         self.counter = 0
         self.best_score = None
@@ -184,6 +185,18 @@ class LR_decay():
 #opt = Options()
 #saveInfo(opt)
 #%% FUNCTIONS
+def timeSpent(time_sample, task=None):
+    minutes = floor(time_sample / 60)
+    seconds = ((time_sample / 60) - minutes) * 60
+     
+    
+    print('--------------------')
+    if(task is not None):
+        print('>   {}  '.format(task))
+        print('>')
+    print ('> Time Spent')
+    print('> {} min {:.0f} sec'.format(minutes, seconds))
+    print('--------------------')
 
 def computeAnomError(model, anom_set, thr=None):
     anomalies = 0
@@ -222,7 +235,7 @@ def saveInfoAE(opt, path, auc):
     filename = opt.name + '_lr:{}'.format(opt.lr) + '_info'
     content = '\t\t' + opt.name + ' information\n\n'
     content = content + '- Dataset: {}\n'.format(opt.dataset)
-#    content = content + '- Anomaly at: {}%\n'.format(opt.anom_perc*100)
+    content = content + '- Anomaly at: {}%\n'.format(opt.anom_perc*100)
     content = content + '- Images: {}\n'.format(opt.nFolders)
     content = content + '- Patches per image: {}\n'.format(opt.patch_per_im)
     content = content + '- Patches: {}\n'.format(opt.nFolders*opt.patch_per_im)
@@ -276,8 +289,8 @@ def addInfoGanomaly(opt, path, info):
     f.write(content)
     f.close()
     
-def writeDataResults(results, stride, folder_save):
-    filename = 'data_results_stride:{}.txt'.format(stride)
+def writeDataResults(results, folder_save):
+    filename = 'data_results.txt'
 #    content = '\t\t' + model_name + ' results\n\n'
     
     content = results['info'] + '\n'
