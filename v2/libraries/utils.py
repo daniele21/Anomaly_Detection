@@ -337,6 +337,7 @@ def getNmeans(array, n):
 #        print(i)
         if(i + slot_size <= num_elem-slot_size):
 #            print('if: ', i)
+#            print(array[i : i+slot_size])
             mean = np.mean(array[i : i+slot_size])
             new_array.append(mean)
             i += slot_size

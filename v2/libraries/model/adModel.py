@@ -135,6 +135,7 @@ class AnomalyDetectionModel():
             
             # GENERATOR LOSS
             loss_gen, losses = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real, self.opt)
+#            print(loss_gen.item())
             if(self.epoch == 0):
                 self.l0 = losses
             
@@ -147,6 +148,7 @@ class AnomalyDetectionModel():
             self.model.optimize_discr(loss_discr)
             
             train_loss[GENERATOR].append(loss_gen.item()*images.size(0))
+#            print(train_loss[GENERATOR])
             train_loss[DISCRIMINATOR].append(loss_discr.item()*images.size(0))
             adv_loss.append(losses[0].item()*images.size(0))
             con_loss.append(losses[1].item()*images.size(0))
@@ -175,7 +177,7 @@ class AnomalyDetectionModel():
         return train_loss, [adv_loss, con_loss, enc_loss], spent_time
             
     def _validation(self):
-        
+        print('wdinfuqieruòvbqiòbvqiuvbqiuebvqiuebviuqrbv')
         curr_epoch = 0
         steps = 0
         
@@ -200,8 +202,8 @@ class AnomalyDetectionModel():
                 steps += 1
                 curr_epoch += self.opt.batch_size
                 
-                x = torch.Tensor(images).cuda()
-#                x = Variable(images).cuda()
+#                x = torch.Tensor(images).cuda()
+                x = Variable(images).cuda()
                 x_TL = torch.Tensor(images_TL).cuda()
                 
                 # GENERATOR FORWARD
@@ -211,12 +213,15 @@ class AnomalyDetectionModel():
                 
                 # GENERATOR LOSS
                 loss_gen, losses = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real, self.opt)
+                print(loss_gen)
+                print(loss_gen.item())
+                print('---------------------------')
                 # DISCRIMINATOR LOSS
                 loss_discr = self.model.loss_function_discr(pred_real, pred_fake)
-                
+#                print('-----------aaa {}'.format(loss_gen.item()))
                 valid_loss[GENERATOR].append(loss_gen.item()*images.size(0))
                 valid_loss[DISCRIMINATOR].append(loss_discr.item()*images.size(0))
-                
+
                 adv_loss.append(losses[0].item()*images.size(0))
                 con_loss.append(losses[1].item()*images.size(0))
                 enc_loss.append(losses[2].item()*images.size(0))
@@ -447,8 +452,9 @@ class AnomalyDetectionModel():
             
             # TRAINING
             loss, losses, train_time = self._trainOneEpoch()
-            self.train_loss[GENERATOR] = np.concatenate((self.train_loss[GENERATOR], getNmeans(loss[GENERATOR], plotUnit)))
-            self.train_loss[DISCRIMINATOR] = np.concatenate((self.train_loss[DISCRIMINATOR], getNmeans(loss[DISCRIMINATOR], plotUnit)))
+
+            self.train_loss[GENERATOR] = np.concatenate((self.train_loss[GENERATOR], [np.mean(loss[GENERATOR])]))
+            self.train_loss[DISCRIMINATOR] = np.concatenate((self.train_loss[DISCRIMINATOR], [np.mean(loss[DISCRIMINATOR])]))
 #            print(losses)
 #            print(losses[0])
             
@@ -462,12 +468,13 @@ class AnomalyDetectionModel():
             
             # VALIDATION
             loss, losses, val_time = self._validation()
-            self.val_loss[GENERATOR] = np.concatenate((self.val_loss[GENERATOR], getNmeans(loss[GENERATOR], plotUnit)))
-            self.val_loss[DISCRIMINATOR] = np.concatenate((self.val_loss[DISCRIMINATOR], getNmeans(loss[DISCRIMINATOR], plotUnit)))
+#            print(loss[GENERATOR])
+            self.val_loss[GENERATOR] = np.concatenate((self.val_loss[GENERATOR], [np.mean(loss[GENERATOR])]))
+            self.val_loss[DISCRIMINATOR] = np.concatenate((self.val_loss[DISCRIMINATOR], [np.mean(loss[DISCRIMINATOR])]))
             
-            self.valid_adv_loss = np.concatenate((self.valid_adv_loss, getNmeans(losses[0], plotUnit)))
-            self.valid_con_loss = np.concatenate((self.valid_con_loss, getNmeans(losses[1], plotUnit)))
-            self.valid_enc_loss = np.concatenate((self.valid_enc_loss, getNmeans(losses[2], plotUnit)))
+            self.valid_adv_loss = np.concatenate((self.valid_adv_loss, [np.mean(losses[0])]))
+            self.valid_con_loss = np.concatenate((self.valid_con_loss, [np.mean(losses[1])]))
+            self.valid_enc_loss = np.concatenate((self.valid_enc_loss, [np.mean(losses[2])]))
 #            val_loss[GENERATOR] = np.concatenate((val_loss[GENERATOR], loss[GENERATOR]))
 #            print(len(val_loss[GENERATOR]))
             val_time = adjustTime(val_time)

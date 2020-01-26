@@ -173,7 +173,7 @@ class GanomalyModel():
 #        print('> Loss gen:')
 #        print(loss_gen.item())
 #        print('-----------------------')
-        
+#        print(loss_gen.item())
         return loss_gen, [adv_loss, con_loss, enc_loss]
                        
     def loss_function_discr(self, pred_real, pred_fake):
