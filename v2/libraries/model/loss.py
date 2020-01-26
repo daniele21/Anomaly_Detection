@@ -14,6 +14,8 @@ def _l2_loss(input, target, size_average=True):
         return torch.pow((input-target), 2)
     
 def adversial_loss(input, target):
+#    print(input.shape)
+#    print(target.shape)
     return _l2_loss(input, target)
         
 def encoder_loss(input, target):

@@ -43,6 +43,11 @@ classifier, features = discr(item)
 
 print(len(classifier))
 print(len(features))
+#%%
+resnet = models.resnet18(pretrained=True)
+resnet.fc = nn.Linear(512, 100)
+summary(resnet.cuda(), (3,224,224))
+
 
 #%%
 resnet = models.resnet18(pretrained=True)

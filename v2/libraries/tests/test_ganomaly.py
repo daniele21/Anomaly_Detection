@@ -2,7 +2,7 @@
 #%%
 from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.options import Options
-from libraries.model.dataset import generateDataloader, getCifar10
+from libraries.model.dataset import generateDataloaderTL, getCifar10
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE, loadModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
@@ -45,8 +45,16 @@ opt.descr = 'augmentation - validation con norm - no weighting losses - thr over
 #%% GENERATE DATASET
 
 opt.augmentation = True
-my_dataloader = generateDataloader(opt)
+my_dataloader = generateDataloaderTL(opt)
 
+#%%
+
+final_output = np.transpose(output[0], (2,1,0))
+
+final_output = (output * 0.5) + 0.5
+final_output = np.flip(final_output, 1)
+final_output = np.rot90(final_output, 1)        
+        
 #%% LOAD DATASET
 
 with open(paths.dataloaders + 'v1_aug_60-500-30k.pickle', 'rb') as data:
