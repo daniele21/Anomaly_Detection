@@ -2,7 +2,11 @@
 
 #%% IMPORTS
 from libraries.model.network import Encoder, Decoder, Generator, Discriminator
+from libraries.model import network 
 from libraries.model.options import Options
+from torchvision import models
+from libraries.torchsummary import summary
+import torch.nn as nn
 #from dataset import generateDataloader
 #from dataset import getCifar10 as cifar
 #%% VARIABLE
@@ -39,3 +43,15 @@ classifier, features = discr(item)
 
 print(len(classifier))
 print(len(features))
+
+#%%
+resnet = models.resnet18(pretrained=True)
+
+modules = list(resnet.children())[:-2]
+modules = modules[:-1]
+modules
+net = nn.Sequential(*modules)
+net.add_module('Final_Conv', nn.Conv2d(256, 100, 3, 2, 1))
+
+summary(net.cuda(), (3,32,32))
+

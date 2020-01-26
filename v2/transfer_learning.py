@@ -201,9 +201,7 @@ plt.show()
 
 #%%
 from torchvision import models
-r101 = models.resnet101(pretrained=True)
-r152 = models.resnet152(pretrained=True)
+
 r18 = models.resnet18(pretrained=True)
-r34 = models.resnet34(pretrained=True)
-r50 = models.resnet50(pretrained=True)
+
 
