@@ -108,11 +108,6 @@ class AnomalyDetectionModel():
         
         start = time.time()
         
-#        for images, labels in tqdm(self.trainloader, leave=True, total=n_iter, desc='Training', file = sys.stdout):
-        
-#        for param in self.model.generator.parameters():
-#            param.requires_grad=False
-        
         if(self.opt.multiTaskLoss):
             w_adv, w_con, w_enc = self.mtl.train(20, patience=1)
             self.model.setWeights(w_adv, w_con, w_enc)
@@ -131,7 +126,8 @@ class AnomalyDetectionModel():
 
             # DISCRIMINATOR FORWARD
             pred_real, feat_real, pred_fake, feat_fake = self.model.forward_discr(x, x_prime) 
-            
+            print(feat_fake.shape)
+            print(feat_real.shape)
             # GENERATOR LOSS
             loss_gen, losses = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real, self.opt)
 #            print(loss_gen.item())
