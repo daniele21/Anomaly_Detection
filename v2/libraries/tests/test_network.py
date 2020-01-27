@@ -12,7 +12,7 @@ import torch.nn as nn
 #%% VARIABLE
 
 opt = Options(in_channels=3)
-opt.out_channels = 128
+opt.out_channels = 64
 
 #%%
 dataloader = cifar()
@@ -28,9 +28,11 @@ for elem in dataloader['train']:
 encoder = Encoder(opt)    
 encoder
 
+opt.tl = 'resnet18'
+#opt.tl = 'vgg16'
 encoderTL = EncoderTL(opt)
 encoderTL
-summary(encoderTL.cuda(), (3,224,224))
+summary(encoderTL.cuda(), (3,128,128))
 #%% TEST DECODER
 
 decoder = Decoder(opt)  

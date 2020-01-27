@@ -43,7 +43,7 @@ opt.descr = '-----'
 opt.descr = 'augmentation - validation con norm - no weighting losses - thr over norm/anom'
 
 #%% GENERATE DATASET
-
+opt.TL_size = 128
 opt.augmentation = True
 my_dataloader = generateDataloaderTL(opt)
 
@@ -55,13 +55,13 @@ testloader = dataloader['test']
 #%%
 
 for image, image_TL, target in validLoader:
-    print(image)
-    print(image_TL)
-    print(target)
+#    print(image)
+#    print(image_TL)
+#    print(target)
     break
 
-#image = image
-image = image_TL
+image = image
+#image = image_TL
 
 final_output = np.transpose(image[0], (2,1,0))
 

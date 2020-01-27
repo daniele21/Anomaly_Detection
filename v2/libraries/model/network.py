@@ -170,22 +170,22 @@ class EncoderTL(nn.Module):
             for param in tl.parameters():
                 param.require_grad = False
                 
-#            modules = list(tl.children())[:-2]
-#            net = nn.Sequential(*modules)
-#            net.add_module('Final_Conv2D', nn.Conv2d(512, 100, 3, 1, 1))
+            modules = list(tl.children())[:-2]
+            net = nn.Sequential(*modules)
+            net.add_module('Final_Conv2D', nn.Conv2d(512, z_size, 4))
             
-            tl.fc = nn.Linear(512, 100)
+#            tl.fc = nn.Linear(512, 100)
             
-            self.net = tl
+#            self.net = tl
                 
-#            self.net = net
+            self.net = net
         
     def forward(self, x):
         
         x = self.net(x)
 #        print(x.shape)
 #        print(x.reshape(x.size(0), x.size(1), 1, 1).shape)
-        x = x.reshape(x.size(0), x.size(1), 1, 1)
+#        x = x.reshape(x.size(0), x.size(1), 1, 1)
         
         return x
         
