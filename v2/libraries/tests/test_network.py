@@ -32,7 +32,7 @@ opt.tl = 'resnet18'
 #opt.tl = 'vgg16'
 encoderTL = EncoderTL(opt)
 encoderTL
-summary(encoderTL.cuda(), (3,128,128))
+summary(encoderTL.cuda(), (3,224,224))
 #%% TEST DECODER
 
 decoder = Decoder(opt)  

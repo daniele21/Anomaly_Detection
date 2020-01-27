@@ -170,9 +170,10 @@ class EncoderTL(nn.Module):
             for param in tl.parameters():
                 param.require_grad = False
                 
-            modules = list(tl.children())[:-3]
+            modules = list(tl.children())[:-2]
             net = nn.Sequential(*modules)
-            net.add_module('Final_Conv2D', nn.Conv2d(256, z_size, 2))
+#            net.add_module('Final_Conv2D', nn.Conv2d(256, z_size, 2))
+            net.add_module('Final_Conv2D', nn.Conv2d(512, z_size, 7))
             
 #            tl.fc = nn.Linear(512, 100)
             
@@ -322,7 +323,7 @@ class GeneratorTL(nn.Module):
         
         self.encoder1 = EncoderTL(opt)
         self.decoder  = Decoder(opt)
-#        self.encoder2 = EncoderTL(opt)
+#        self.encoder2 = Encoder(opt)
         self.encoder2 = EncoderTL(opt)
         
         # INITIALIZATION
