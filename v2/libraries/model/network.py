@@ -151,6 +151,7 @@ class EncoderTL(nn.Module):
         else:
             z_size = z_size
         
+        print(opt.tl)
         if(opt.tl == 'vgg16'):
             tl = models.vgg16(pretrained=True).cuda()
             
@@ -182,6 +183,8 @@ class EncoderTL(nn.Module):
     def forward(self, x):
         
         x = self.net(x)
+#        print(x.shape)
+#        print(x.reshape(x.size(0), x.size(1), 1, 1).shape)
         x = x.reshape(x.size(0), x.size(1), 1, 1)
         
         return x

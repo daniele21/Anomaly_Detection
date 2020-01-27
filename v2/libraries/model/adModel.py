@@ -213,9 +213,9 @@ class AnomalyDetectionModel():
                 
                 # GENERATOR LOSS
                 loss_gen, losses = self.model.loss_function_gen(x, x_prime, z, z_prime, feat_fake, feat_real, self.opt)
-                print(loss_gen)
-                print(loss_gen.item())
-                print('---------------------------')
+#                print(loss_gen)
+#                print(loss_gen.item())
+#                print('---------------------------')
                 # DISCRIMINATOR LOSS
                 loss_discr = self.model.loss_function_discr(pred_real, pred_fake)
 #                print('-----------aaa {}'.format(loss_gen.item()))

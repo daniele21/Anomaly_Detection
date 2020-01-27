@@ -47,14 +47,29 @@ opt.descr = 'augmentation - validation con norm - no weighting losses - thr over
 opt.augmentation = True
 my_dataloader = generateDataloaderTL(opt)
 
+dataloader = my_dataloader
+opt.dataset = 'steel dataset'
+trainloader = dataloader['train']
+validLoader = dataloader['validation']
+testloader = dataloader['test']
 #%%
 
-final_output = np.transpose(output[0], (2,1,0))
+for image, image_TL, target in validLoader:
+    print(image)
+    print(image_TL)
+    print(target)
+    break
 
-final_output = (output * 0.5) + 0.5
-final_output = np.flip(final_output, 1)
-final_output = np.rot90(final_output, 1)        
-        
+#image = image
+image = image_TL
+
+final_output = np.transpose(image[0], (2,1,0))
+
+final_output = (final_output* 0.5) + 0.5
+#final_output = np.flip(final_output, 1)
+#final_output = np.rot90(final_output, 1)        
+
+plt.imshow(final_output)        
 #%% LOAD DATASET
 
 with open(paths.dataloaders + 'v1_aug_60-500-30k.pickle', 'rb') as data:
@@ -91,31 +106,6 @@ opt.weightedLosses = False
 
 epochs = 30
 
-#%% TUNING MODEL
-tuning = adModel.tuneLearningRate(-6, -7, -6, -7)
-#%%
-nome_ckp = '/media/daniele/Data/Tesi/Thesis/Results/v2/Ganom_v2_v1_training_result/Ganom_v2_v1_best_ckp.pth.tar'
-adModel = torch.load(nome_ckp)
-#%% LOAD MODEL
-#opt = Options()
-opt.name = 'Ganom_v1_v3.0'
-nome_ckp = '/media/daniele/Data/Tesi/Thesis/Ganom_v2_v0_best_ckp.pth.tar'
-path_file = paths.checkpoint_folder + opt.name + '/' + nome_ckp
-print(path_file)
-
-#adModel = torch.load(path_file)
-adModel = loadModel(path_file, trainloader, validLoader, testloader)
-#ckp = loadModel(, trainloader, validLoader, testloader)
-
-#%% MULTI TASK LOSS WEIGHTS
-adModel = AnomalyDetectionModel(opt,optimizer_gen, optimizer_discr, optimizer_gen,
-                                trainloader, validLoader, testloader) 
-
-mtl = MultiLossWrapper(adModel, trainloader, 3)
-optim = torch.optim.Adam(mtl.multiTaskLoss.parameters(), lr=1e-03)
-mtl.train(40, optim)
-
-#%% TRAINING MODEL
 epochs = 5
 
 # NORM GRAD

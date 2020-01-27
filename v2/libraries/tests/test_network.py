@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #%% IMPORTS
-from libraries.model.network import Encoder, Decoder, Generator, Discriminator
+from libraries.model.network import Encoder, EncoderTL, Decoder, Generator, Discriminator
 from libraries.model import network 
 from libraries.model.options import Options
 from torchvision import models
@@ -27,6 +27,10 @@ for elem in dataloader['train']:
 
 encoder = Encoder(opt)    
 encoder
+
+encoderTL = EncoderTL(opt)
+encoderTL
+summary(encoderTL.cuda(), (3,224,224))
 #%% TEST DECODER
 
 decoder = Decoder(opt)  

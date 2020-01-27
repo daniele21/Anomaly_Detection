@@ -47,6 +47,7 @@ class Options():
                  kernel_size    = 3,
                  sigma          = 1,
                  tl             = 'vgg16',
+                 TL_size        = 200,
                  
                  dataset        = '',
                  descr          = '',
@@ -102,6 +103,7 @@ class Options():
         self.kernel_size    = kernel_size
         self.sigma          = sigma
         self.tl             = tl
+        self.TL_size        = TL_size
         
         self.dataset        = dataset
         self.descr          = descr

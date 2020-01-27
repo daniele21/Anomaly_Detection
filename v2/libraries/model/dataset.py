@@ -834,7 +834,7 @@ class TLSteelDataset(Dataset):
                                         [
         #                                    transforms.Resize(32, interpolation=Image.BILINEAR),
                                             Transforms.Grayscale(num_output_channels = opt.in_channels),
-                                            Transforms.Resize((224,224)),
+                                            Transforms.Resize((opt.TL_size,opt.TL_size)),
                                             Transforms.ToTensor(),
                                             
                                             Transforms.Normalize((0.5,),
@@ -846,7 +846,7 @@ class TLSteelDataset(Dataset):
             else:
                     transforms = Transforms.Compose(
                                         [
-                                            Transforms.Resize((224,224)),
+                                            Transforms.Resize((opt.TL_size,opt.TL_size)),
                                             # AUGMENTATION
                                             Transforms.ColorJitter(brightness=0.2,
                                                                     contrast=0.2, 
@@ -871,7 +871,7 @@ class TLSteelDataset(Dataset):
             transforms = Transforms.Compose(
                                     [
                                         Transforms.Grayscale(num_output_channels = opt.in_channels),
-                                        Transforms.Resize((224,224)),
+                                        Transforms.Resize((opt.TL_size,opt.TL_size)),
                                         Transforms.ToTensor(),
                                         Transforms.Normalize((0.5,),
                                                              (0.5,))  
