@@ -170,9 +170,9 @@ class EncoderTL(nn.Module):
             for param in tl.parameters():
                 param.require_grad = False
                 
-            modules = list(tl.children())[:-2]
+            modules = list(tl.children())[:-3]
             net = nn.Sequential(*modules)
-            net.add_module('Final_Conv2D', nn.Conv2d(512, z_size, 4))
+            net.add_module('Final_Conv2D', nn.Conv2d(256, z_size, 2))
             
 #            tl.fc = nn.Linear(512, 100)
             
