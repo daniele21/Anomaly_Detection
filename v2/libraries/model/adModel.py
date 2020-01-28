@@ -114,15 +114,15 @@ class AnomalyDetectionModel():
             print(self.model.w_losses)
         
         
-        for images, images_TL, labels in self.trainloader:
-#        for images, labels in self.trainloader:
+#        for images, images_TL, labels in self.trainloader:
+        for images, labels in self.trainloader:
 
             x = torch.Tensor(images).cuda()
-            x_TL = torch.Tensor(images_TL).cuda()
+#            x_TL = torch.Tensor(images_TL).cuda()
                 
             # GENERATOR FORWARD
-#            x_prime, z, z_prime = self.model.forward_gen(x)
-            x_prime, z, z_prime = self.model.forward_gen(x_TL)
+            x_prime, z, z_prime = self.model.forward_gen(x)
+#            x_prime, z, z_prime = self.model.forward_gen(x_TL)
 
             # DISCRIMINATOR FORWARD
             pred_real, feat_real, pred_fake, feat_fake = self.model.forward_discr(x, x_prime) 
@@ -191,19 +191,19 @@ class AnomalyDetectionModel():
         with torch.no_grad():
             
 
-            for images, images_TL, labels in self.validationloader:
-#            for images, labels in self.validationloader:
+#            for images, images_TL, labels in self.validationloader:
+            for images, labels in self.validationloader:
                 
                 steps += 1
                 curr_epoch += self.opt.batch_size
                 
 #                x = torch.Tensor(images).cuda()
                 x = Variable(images).cuda()
-                x_TL = torch.Tensor(images_TL).cuda()
+#                x_TL = torch.Tensor(images_TL).cuda()
                 
                 # GENERATOR FORWARD
-                x_prime, z, z_prime = self.model.forward_gen(x_TL)
-#                x_prime, z, z_prime = self.model.forward_gen(x)
+#                x_prime, z, z_prime = self.model.forward_gen(x_TL)
+                x_prime, z, z_prime = self.model.forward_gen(x)
                 # DISCRIMINATOR FORWARD
                 pred_real, feat_real, pred_fake, feat_fake = self.model.forward_discr(x, x_prime)    
                 
