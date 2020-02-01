@@ -155,8 +155,9 @@ class EncoderTL(nn.Module):
         if(opt.tl == 'vgg16'):
             tl = models.vgg16(pretrained=True).cuda()
             
-            for param in tl.parameters():
-                param.require_grad = False
+            # Trainable params -> False
+#            for param in tl.parameters():
+#                param.require_grad = False
                 
             modules = list(tl.children())[:-2][0]
             features = list(modules)[:-3]
@@ -173,7 +174,7 @@ class EncoderTL(nn.Module):
             modules = list(tl.children())[:-2]
             net = nn.Sequential(*modules)
 #            net.add_module('Final_Conv2D', nn.Conv2d(256, z_size, 2))
-#            net.add_module('Final_Conv2D', nn.Conv2d(512, z_size, 7))
+            net.add_module('Final_Conv2D', nn.Conv2d(512, z_size, 7))
             
 #            tl.fc = nn.Linear(512, 100)
             
