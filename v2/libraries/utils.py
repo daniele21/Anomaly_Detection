@@ -33,6 +33,7 @@ class Paths():
         
 #        self.images_path = self.dataset_path + 'images/'
         self.images_path = '../../images/'
+        self.images_defects = '../../defects/'
         self.patches_path = '../../patches/'
         self.normal_patches_path = self.patches_path + 'normals/'
         self.anom_patches_path = self.patches_path + 'anomalous/'

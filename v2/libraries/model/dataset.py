@@ -61,6 +61,57 @@ def getImages(start, end):
     
     return images, masks, masked_images
 
+def getImagesPerClass(n_samples):
+    path_file = './libraries/dataset_package/'
+    namefile = 'train_unique.csv'
+    
+    data = pd.read_csv(path_file + namefile, index_col=0)
+    data1 = data.loc[data.Class_Id == '1']
+    data2 = data.loc[data.Class_Id == '2']
+    data3 = data.loc[data.Class_Id == '3']
+    data4 = data.loc[data.Class_Id == '4']
+    
+    data = {1:data1,
+            2:data2,
+            3:data3,
+            4:data4}
+    
+    images = {1:[],
+              2:[],
+              3:[],
+              4:[]}
+    
+    masks = {1:[],
+              2:[],
+              3:[],
+              4:[]}
+    
+    data_list = [data1, data2, data3, data4]
+    defect = 1
+    i = 0
+    
+    for i_data in data_list:
+        i = 0
+        for row in range(n_samples):
+            index_file = i_data['index'].iloc[i]
+            print('Image_n°{}: im_{}'.format(i, index_file))
+            
+            filename    = i_data.iloc[row].Image_Id
+            enc_pixels  = i_data.iloc[row].Encoded_Pixels
+    
+            image = cv2.imread(paths.images_path + filename)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            mask = computeMask(enc_pixels, image)
+            
+            images[defect].append(image)
+            masks[defect].append(mask)
+            
+            i += 1
+    
+        defect += 1
+        
+    return images, masks
+
 def getImagesFromSamples(samples):
     train = pd.read_csv(paths.csv_directory + 'train_unique.csv')
     
@@ -461,6 +512,26 @@ def generateDataloaderTL(opt):
     
     return dataloader
 
+def generateDataloaderPerDefect(opt, n_samples):
+    
+    images, targets = getImagesPerClass(n_samples)
+    
+    dataset = {}
+    
+    for i in [1,2,3,4]:
+        dataset[i] = DefectDataset(images[i], targets[i], opt)
+    
+    dataloader = {x: DataLoader(dataset = dataset[x],
+                            batch_size = opt.batch_size,
+                            drop_last  = True,
+                            num_workers= opt.n_workers
+                            )
+              
+                  for x in [1, 2, 3, 4]}
+    
+    return dataloader
+
+
 def generateDataloaderFromDatasets(opt, training_set, validation_set, test_set):
     print('\n>Loading Steel Dataset')
     
@@ -740,6 +811,42 @@ def collectAnomalySamples(nImages, anom_per_img=None):
     
     return anomalyTest
 
+
+class DefectDataset(Dataset):
+    
+    def __init__(self, data, targets, opt):
+        self.data = data
+        self.targets = targets
+        
+        self.initTransform(opt)
+        
+    def initTransform(self, opt):
+        self.transforms = Transforms.Compose(
+                            [
+#                                    transforms.Resize(32, interpolation=Image.BILINEAR),
+                                Transforms.Grayscale(num_output_channels = opt.in_channels),
+                                Transforms.ToTensor(),
+                                Transforms.Normalize((0.5,),
+                                                     (0.5,)),
+#                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
+#                                    transforms.ToPILImage()
+                            ]
+                        )
+    def __getitem__(self, index):
+        
+        if torch.is_tensor(index):
+            index = index.tolist()
+            
+        image, target = self.data[index], self.targets[index]
+        image = Image.fromarray(image)
+           
+        image = self.transforms(image)
+        
+        return image, target
+    
+    def __len__(self):
+        return len(self.data)
+    
 class TestDataset(Dataset):
     
     def __init__(self, data, targets, opt):
@@ -753,8 +860,8 @@ class TestDataset(Dataset):
 #                                    transforms.Resize(32, interpolation=Image.BILINEAR),
                                 Transforms.Grayscale(num_output_channels = opt.in_channels),
                                 Transforms.ToTensor(),
-                                Transforms.Normalize((0.5, 0.5, 0.5),
-                                                     (0.5, 0.5, 0.5)),
+                                Transforms.Normalize((0.5,),
+                                                     (0.5,)),
 #                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
 #                                    transforms.ToPILImage()
                             ]

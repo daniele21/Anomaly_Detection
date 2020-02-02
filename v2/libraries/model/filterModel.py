@@ -11,15 +11,15 @@ from libraries.utils import plotMetrics
 
 class FilterModel():
     
-    def __init__(self, optmizer, trainloader, validloader):
+    def __init__(self, optmizer, trainloader, validloader, opt, k):
         
-        self.model = FilterNN()   
-        self.optim = optmizer
+        self.model = FilterNN(opt, k).cuda()
+        self.optim = optmizer(self.model.parameters(), opt.lr)
         self.loss_function = binaryCrossEntropy_loss()
         self.trainloader = trainloader
         self.validloader = validloader
 
-    def train_one_epoch(self):
+    def _train_one_epoch(self):
         
         self.model.train()
         
@@ -30,10 +30,10 @@ class FilterModel():
         for images, labels in self.trainloader:
             
             x = torch.Tensor(images).cuda()
-            labels = torch.Tensor(labels).cuda()
+            labels = labels.reshape(-1)
+            labels = torch.Tensor(labels.float()).cuda()
             
             # FORWARD
-            
             out = self.model(x)
             out = out.reshape(-1)
             loss = self.loss_function(out, labels)
@@ -57,7 +57,7 @@ class FilterModel():
         
         return {'LOSS':loss_value, 'ACC':accuracy_value}
     
-    def validation(self):
+    def _validation(self):
         
         losses = []
         correct = 0
@@ -68,7 +68,8 @@ class FilterModel():
             for images, labels in self.validloader:
                 
                 x = torch.Tensor(images).cuda()
-                labels = torch.Tensor(labels).cuda()
+                labels = labels.reshape(-1)
+                labels = torch.Tensor(labels.float()).cuda()
                 
                 out = self.model(x)
                 out = out.reshape(-1)
@@ -88,7 +89,7 @@ class FilterModel():
         return {'LOSS':loss_value, 'ACC':accuracy_value}
         
         
-    def training_step(self):
+    def _training_step(self):
         
         metrics = self._train_one_epoch()
         self.train['LOSS'].append(metrics['LOSS'])
@@ -115,11 +116,11 @@ class FilterModel():
             print('> Epoch {}/{}'.format(epoch, epochs-1))
             print('|')
             
-            self.training_step()
+            self._training_step()
             
             # PLOTTING METRICS
             if(epoch % plot_rate == 0 and epoch!=0):
-                plotMetrics()
+                plotMetrics(self)
                 
     def kernel(self):
         

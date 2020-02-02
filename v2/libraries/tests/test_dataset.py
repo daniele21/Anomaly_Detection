@@ -17,7 +17,7 @@ from matplotlib import pyplot as plt
 import torch
 import numpy as np
 import unittest
-from matplotlib import pyplot as plt
+
 #%%
 
 class test_dataset(unittest.TestCase):
@@ -147,7 +147,7 @@ class test_dataloader_patchmask(unittest.TestCase):
         for _, labels in dataloader['train']:
             max_value = torch.max(labels)
             min_value = torch.min(labels)
-            
+                    
             self.assertLessEqual(max_value, 1)
             self.assertGreaterEqual(min_value, 0)
 
@@ -185,5 +185,8 @@ training, validation, test = _setupDataset(opt, train='mixed', valid='mixed', te
 
 a = generateDataloaderFromDatasets(opt, training, validation, test)
 #%%
+opt = Options()
+opt.batch_size = 15
+n_samples = 150
 
-a = dataset.createAnomalousPatches(100)
+filter_data = dataset.generateDataloaderPerDefect(opt, n_samples)

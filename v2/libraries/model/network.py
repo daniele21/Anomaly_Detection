@@ -503,7 +503,11 @@ class FilterNN(nn.Module):
     def __init__(self, opt, kernel_size):
         super().__init__()        
         
-        self.conv = nn.Conv2d(opt.in_channels, opt.out_channels, kernel_size)
+        self.conv = nn.Conv2d(opt.in_channels,
+                              opt.out_channels,
+                              kernel_size,
+                              stride=1,
+                              padding=kernel_size//2)
         self.sig = nn.Sigmoid()
         
     def forward(self, x):

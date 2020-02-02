@@ -61,11 +61,15 @@ summary(resnet.cuda(), (3,224,224))
 vgg = models.vgg16(pretrained=True)
 
 #%%
-
-filterNN = network.FilterNN()
-
-#summary(filterNN.cuda(), (3,32,32))
-
+opt = Options(out_channels=1)
+filterNN = network.FilterNN(opt, 9)
+# 11 -> 5    
+# 5 -> 2
+# 7 -> 3
+# 9 -> 4
+# 3 -> 1
+summary(filterNN.cuda(), (3,256,1600))
+#%%
 filters = filterNN.conv.weight
 a = filters[0].cpu().detach()
 out = np.transpose(a, (2,1,0))
