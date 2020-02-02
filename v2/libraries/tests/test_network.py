@@ -7,6 +7,8 @@ from libraries.model.options import Options
 from torchvision import models
 from libraries.torchsummary import summary
 import torch.nn as nn
+
+from matplotlib import pyplot as plt
 #from dataset import generateDataloader
 #from dataset import getCifar10 as cifar
 #%% VARIABLE
@@ -56,13 +58,16 @@ summary(resnet.cuda(), (3,224,224))
 
 
 #%%
-resnet = models.resnet18(pretrained=True)
+vgg = models.vgg16(pretrained=True)
 
-modules = list(resnet.children())[:-2]
-modules = modules[:-1]
-modules
-net = nn.Sequential(*modules)
-net.add_module('Final_Conv', nn.Conv2d(256, 100, 3, 2, 1))
+#%%
 
-summary(net.cuda(), (3,32,32))
+filterNN = network.FilterNN()
 
+#summary(filterNN.cuda(), (3,32,32))
+
+filters = filterNN.conv.weight
+a = filters[0].cpu().detach()
+out = np.transpose(a, (2,1,0))
+
+plt.imshow(a[2])

@@ -324,8 +324,8 @@ class GeneratorTL(nn.Module):
         
         self.encoder1 = EncoderTL(opt)
         self.decoder  = Decoder(opt)
-#        self.encoder2 = Encoder(opt)
-        self.encoder2 = EncoderTL(opt)
+        self.encoder2 = Encoder(opt)
+#        self.encoder2 = EncoderTL(opt)
         
         # INITIALIZATION
         if(xavier_init):
@@ -498,7 +498,20 @@ class FCN_Generator(nn.Module):
         
     
     
-    
+class FilterNN(nn.Module):
+
+    def __init__(self, opt, kernel_size):
+        super().__init__()        
+        
+        self.conv = nn.Conv2d(opt.in_channels, opt.out_channels, kernel_size)
+        self.sig = nn.Sigmoid()
+        
+    def forward(self, x):
+        
+        h = self.conv(x)
+        out = self.sig(h)
+        
+        return out
     
     
     

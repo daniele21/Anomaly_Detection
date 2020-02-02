@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import numpy as np
 from math import floor, ceil
+from matplotlib import pyplot as plt
 #%% PATHS
 class Paths():
     
@@ -180,7 +181,18 @@ class LR_decay():
     def __call__(self, decay):
         self.lr = self.lr * decay
     
-                     
+
+def plotMetrics(model):
+    fig, [ax1, ax2] = plt.subplots(2,1, figsize=(6,10))
+    _subplot(ax1, model.train['LOSS'], model.valid['LOSS'], 'Loss')
+    _subplot(ax2, model.train['ACC'], model.valid['ACC'], 'Accuracy')
+    plt.show()
+
+def _subplot(ax, train, val, title):
+    ax.set_title(title)
+    ax.plot(train, color='r', label='Training')
+    ax.plot(val, color='b', label='Validation')
+    ax.legend()               
 #%%
 #opt = Options()
 #saveInfo(opt)
