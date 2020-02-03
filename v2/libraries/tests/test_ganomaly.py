@@ -212,7 +212,7 @@ validloader = filter_data[defect]
 
 k = 5
 opt.lr = 1e-03
-filter_model = FilterModel(optim, trainloader, validloader, opt, k, thr)
+filter_model = FilterModel(optim, trainloader, validloader, opt, k)
 
 filter_model .train_model(15, model.threshold)
 

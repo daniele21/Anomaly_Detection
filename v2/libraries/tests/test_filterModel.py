@@ -8,10 +8,8 @@ from libraries.model import postprocessing as pp
 from matplotlib import pyplot as plt
 #%%
 
-opt = Options()
-opt.in_channels = 1
-opt.out_channels = 1
-opt.batch_size = 10
+opt = Options(in_channels=1, out_channels=1, batch_size=10)
+
 n_samples = 10
 filter_data = generateDataloaderPerDefect(opt, n_samples)
 

@@ -514,35 +514,33 @@ def generateDataloaderTL(opt):
     
     return dataloader
 
-def generateDataloaderPerDefect(opt, adModel, n_samples, stride=8):
+def generateDataloaderPerDefect(opt, adModel, defect, n_samples, stride=8):
     
     images, targets = getImagesPerClass(n_samples)
  
-    as_scores = {1:[], 2:[], 3:[], 4:[]}
-    masks = {1:[], 2:[], 3:[], 4:[]}
+    as_scores = []
+    masks = []
     
     dataset = {}
     
-    for i in [1,2,3,4]:
-        print('> Defect: {}'.format(i))
-        j=0
-        for image in images[i]:
-            as_score, mask = score.anomalyScoreFromImage(adModel, image, targets[i][j],
-                                                                   stride, 32)
-            as_scores[i].append(as_score)
-            masks[i].append(mask)
-            j+=1
-        
-        
-        dataset[i] = DefectDataset(as_scores[i], masks[i], opt)
     
-    dataloader = {x: DataLoader(dataset = dataset[x],
+    print('> Defect: {}'.format(defect))
+    j=0
+    for image in images[defect]:
+        as_score, mask = score.anomalyScoreFromImage(adModel, image, targets[defect][j],
+                                                               stride, 32)
+        as_scores.append(as_score)
+        masks.append(mask)
+        j+=1
+        
+        
+    dataset = DefectDataset(as_scores, masks, opt)
+    
+    dataloader = DataLoader(dataset = dataset,
                             batch_size = opt.batch_size,
                             drop_last  = True,
                             num_workers= opt.n_workers
                             )
-              
-                  for x in [1, 2, 3, 4]}
     
     return dataloader
 
