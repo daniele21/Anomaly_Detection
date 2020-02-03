@@ -18,6 +18,8 @@ import pandas as pd
 import cv2
 
 from libraries.utils import Paths, ensure_folder
+from libraries.model import postprocessing as pp
+from libraries.model import score
 
 paths = Paths()
 
@@ -512,14 +514,25 @@ def generateDataloaderTL(opt):
     
     return dataloader
 
-def generateDataloaderPerDefect(opt, n_samples):
+def generateDataloaderPerDefect(opt, adModel, n_samples, stride=8):
     
     images, targets = getImagesPerClass(n_samples)
+ 
+    as_scores = {1:[], 2:[], 3:[], 4:[]}
     
     dataset = {}
     
     for i in [1,2,3,4]:
-        dataset[i] = DefectDataset(images[i], targets[i], opt)
+        print('> Defect: {}'.format(i))
+        j=0
+        for image in images[i]:
+            as_score, mask = score.anomalyScoreFromImage(adModel, image, targets[i][j],
+                                                                   stride, 32)
+            as_scores[i].append(as_score)
+            j+=1
+        
+        
+        dataset[i] = DefectDataset(as_scores[i], targets[i], opt)
     
     dataloader = {x: DataLoader(dataset = dataset[x],
                             batch_size = opt.batch_size,

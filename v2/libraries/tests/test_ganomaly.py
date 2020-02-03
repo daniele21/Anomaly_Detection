@@ -2,16 +2,19 @@
 #%%
 from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.options import Options
-from libraries.model.dataset import generateDataloaderTL, getCifar10
+from libraries.model.dataset import generateDataloaderTL, generateDataloaderPerDefect
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE, loadModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
-from libraries.model.postprocessing import distScores
+from libraries.model.filterModel import FilterModel
+from libraries.model import postprocessing as pp
+from libraries.model import score
 paths = Paths()
 
 from matplotlib import pyplot as plt
 import numpy as np
 import pickle
+import cv2
 
 import torch
 from torch.optim import Adam
@@ -181,11 +184,83 @@ adModel.addInfo(content)
 content = '\n- Norm_Error: {:.3f}'.format(normalError)
 adModel.addInfo(content)
 
+#%% POSTPROCESSING
+
+ckp = 'MODEL_Ganom_v2_v2_vgg_2enc_no-frezeeing_lr_7.000000000000001e-05_Epoch_250_Loss_187.2821.pth.tar'
+path = '/media/daniele/Data/Tesi/Thesis/Results/v2/'
+
+model = torch.load(path + ckp) 
+
 #%%
-from libraries.tests.test_result import computeEvaluation, evaluateResult, automaticEvaluation
+thr = 0.046
+model.threshold = thr
 
-samples = [1087]
+#%% FILTER MODEL
 
-automaticEvaluation(adModel, samples, 16)
+opt = Options(in_channels=1, out_channels=1, batch_size=10)
+
+n_samples = 10
+filter_data = generateDataloaderPerDefect(opt, n_samples)
+#%%
+defect = 3
+
+optim = torch.optim.Adam
+trainloader = filter_data[defect]
+validloader = filter_data[defect]
+
+#%%
+k = 5
+opt.lr = 1e-03
+filter_model = FilterModel(optim, trainloader, validloader, opt, k)
+
+filter_model .train_model(100)
+
+#%%
+
+kernel = filter_model.model.conv.weight
+kernel = kernel.cpu().detach().numpy()
+kernel = kernel.reshape(k,k)
+
+plt.imshow(kernel)
+kernel
+
+#%% COMPARISON FILTERS
+image = trainloader.dataset.data[0]
+plt.imshow(image)
+plt.show()
+
+label = trainloader.dataset.targets[0]
+plt.imshow(label)
+plt.show()
+
+#%%
+
+as_image, mask = score.anomalyScoreFromImage(model, image, label, 8, 32)
+#%%
+w, h = 1600,256
+as_image_resized = cv2.resize(as_image, (w,h), interpolation=cv2.INTER_LINEAR)
+
+conv_filter_model = pp.convFilterScores(as_image, kernel)
+conv_filter = pp.convFilterScores(as_image, pp.createKernel(3,2))
+
+anom_image = conv_filter > model.threshold
+anom_image = anom_image * 1
+anom_image = anom_image.astype(np.float32)
+
+anom_image_model = conv_filter_model > model.threshold
+anom_image_model = anom_image_model * 1
+anom_image_model = anom_image_model.astype(np.float32)
+
+plt.imshow(conv_filter)
+plt.show()
+
+plt.imshow(anom_image)
+plt.show()
+
+plt.imshow(conv_filter_model)
+plt.show()
+
+plt.imshow(anom_image_model)
+plt.show()
 
 

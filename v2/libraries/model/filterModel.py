@@ -7,6 +7,8 @@ import numpy as np
 from libraries.model.network import FilterNN
 from libraries.model.loss import binaryCrossEntropy_loss
 from libraries.utils import plotMetrics
+from libraries.model import score
+
 #%%
 
 class FilterModel():
@@ -19,7 +21,7 @@ class FilterModel():
         self.trainloader = trainloader
         self.validloader = validloader
 
-    def _train_one_epoch(self):
+    def _train_one_epoch(self, adModel):
         
         self.model.train()
         
@@ -30,8 +32,9 @@ class FilterModel():
         for images, labels in self.trainloader:
             
             x = torch.Tensor(images).cuda()
-            labels = labels.reshape(-1)
+#            labels = labels.reshape(-1)
             labels = torch.Tensor(labels.float()).cuda()
+            
             
             # FORWARD
             out = self.model(x)
@@ -89,9 +92,9 @@ class FilterModel():
         return {'LOSS':loss_value, 'ACC':accuracy_value}
         
         
-    def _training_step(self):
+    def _training_step(self, adModel):
         
-        metrics = self._train_one_epoch()
+        metrics = self._train_one_epoch(adModel)
         self.train['LOSS'].append(metrics['LOSS'])
         self.train['ACC'].append(metrics['ACC'])
         print('|>- Training:\tLoss: {:.3f} \t Accuracy: {:.3f}'.format(metrics['LOSS'],
@@ -104,7 +107,7 @@ class FilterModel():
                                                                      metrics['ACC']))
         print('|')
         
-    def train_model(self, epochs):
+    def train_model(self, epochs, adModel):
         
         self.train = {'LOSS':[], 'ACC':[]}
         self.valid = {'LOSS':[], 'ACC':[]}
@@ -116,7 +119,7 @@ class FilterModel():
             print('> Epoch {}/{}'.format(epoch, epochs-1))
             print('|')
             
-            self._training_step()
+            self._training_step(adModel)
             
             # PLOTTING METRICS
             if(epoch % plot_rate == 0 and epoch!=0):

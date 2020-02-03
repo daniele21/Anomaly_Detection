@@ -20,6 +20,7 @@ from libraries.model.evaluate import evaluate
 from libraries.model.evaluate import getThreshold, evaluateRoc
 from libraries.model import evaluate as ev
 from libraries.utils import ensure_folder, Paths, timeSpent
+from libraries.model import score
 
 paths = Paths()
 filters = ['standard', 'conv', 'med', 'gauss']
@@ -789,8 +790,20 @@ def writeResults(res, ev,  bests, key, save_folder):
     f.write(content)
     f.close()
     
+#%% SCORE
+
+def anomalyDetection(model, image, mask, stride, patch_size, kernel, filtering='conv'):
     
+    as_score, mask = score.anomalyScoreFromImage(model, image, mask, stride, patch_size)
     
+    if(filtering=='conv'):
+        as_filter = convFilterScores(as_score, kernel)
+        
+    anom_det = as_filter > model.threshold
+    anom_det = as_filter * 1
+    anom_det = as_filter.astype(np.float32)
+    
+    return as_score, mask, anom_det
     
     
     

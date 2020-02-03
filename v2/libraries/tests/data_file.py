@@ -52,20 +52,20 @@ i = 0
 
 for i_data in data_list:
     i = 0
-    for row in range(100):
-        index_file = i_data['index'].iloc[i]
-        print('Imagen°{}: im_{}'.format(i, index_file))
+    for row in list(i_data.loc[1000:1500].index):
         
-        filename    = i_data.iloc[row].Image_Id
-        enc_pixels  = i_data.iloc[row].Encoded_Pixels
+        print('Imagen°{}: im_{}'.format(i, row))
+        
+        filename    = i_data.loc[row].Image_Id
+        enc_pixels  = i_data.loc[row].Encoded_Pixels
 
         image = cv2.imread(paths.images_path + filename)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = computeMask(enc_pixels, image)  
         masked_image = applyMask(image, mask)
         
-        cv2.imwrite(dest_path + str(defect) + '/' + '{}_{}.png'.format(index_file, filename), image)
-        cv2.imwrite(dest_path + str(defect) + '/' + '{}_{}_MASK.png'.format(index_file, filename), masked_image)
+        cv2.imwrite(dest_path + str(defect) + '/' + '{}_{}.png'.format(row, filename), image)
+        cv2.imwrite(dest_path + str(defect) + '/' + '{}_{}_MASK.png'.format(row, filename), masked_image)
         
         i += 1
         
