@@ -519,6 +519,7 @@ def generateDataloaderPerDefect(opt, adModel, n_samples, stride=8):
     images, targets = getImagesPerClass(n_samples)
  
     as_scores = {1:[], 2:[], 3:[], 4:[]}
+    masks = {1:[], 2:[], 3:[], 4:[]}
     
     dataset = {}
     
@@ -529,10 +530,11 @@ def generateDataloaderPerDefect(opt, adModel, n_samples, stride=8):
             as_score, mask = score.anomalyScoreFromImage(adModel, image, targets[i][j],
                                                                    stride, 32)
             as_scores[i].append(as_score)
+            masks[i].append(mask)
             j+=1
         
         
-        dataset[i] = DefectDataset(as_scores[i], targets[i], opt)
+        dataset[i] = DefectDataset(as_scores[i], masks[i], opt)
     
     dataloader = {x: DataLoader(dataset = dataset[x],
                             batch_size = opt.batch_size,

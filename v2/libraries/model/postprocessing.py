@@ -800,12 +800,27 @@ def anomalyDetection(model, image, mask, stride, patch_size, kernel, filtering='
         as_filter = convFilterScores(as_score, kernel)
         
     anom_det = as_filter > model.threshold
-    anom_det = as_filter * 1
-    anom_det = as_filter.astype(np.float32)
+    anom_det = anom_det * 1
+    anom_det = anom_det.astype(np.float32)
     
     return as_score, mask, anom_det
     
+def detector(as_filter, threshold):
     
+    try:
+        as_filter = as_filter.cpu().detach().numpy()
+#        print(as_filter)
+    except:
+        print('-asasasa---a-sasas--as-')
+    
+    
+#    as_filter = as_filter.cpu().detach().numpy()
+    
+    anom_det = as_filter > threshold
+    anom_det = anom_det * 1
+    anom_det = anom_det.astype(np.float32)
+    
+    return anom_det
     
     
     

@@ -197,10 +197,10 @@ model.threshold = thr
 
 #%% FILTER MODEL
 
-opt = Options(in_channels=1, out_channels=1, batch_size=10)
+opt = Options(in_channels=1, out_channels=1, batch_size=1)
 
-n_samples = 10
-filter_data = generateDataloaderPerDefect(opt, n_samples)
+n_samples = 5
+filter_data = generateDataloaderPerDefect(opt, model, n_samples)
 #%%
 defect = 3
 
@@ -213,7 +213,7 @@ k = 5
 opt.lr = 1e-03
 filter_model = FilterModel(optim, trainloader, validloader, opt, k)
 
-filter_model .train_model(100)
+filter_model .train_model(100, model.threshold)
 
 #%%
 
