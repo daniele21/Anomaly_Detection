@@ -807,20 +807,23 @@ def anomalyDetection(model, image, mask, stride, patch_size, kernel, filtering='
     
 def detector(as_filter, threshold):
     
-    try:
-        as_filter = as_filter.cpu().detach().numpy()
-#        print(as_filter)
-    except:
-        print('-asasasa---a-sasas--as-')
+#    try:
+#        as_filter = as_filter.cpu().detach().numpy()
+##        print(as_filter)
+#    except:
+#        print('-asasasa---a-sasas--as-')
     
     
 #    as_filter = as_filter.cpu().detach().numpy()
+    torch.where(as_filter > threshold, 1, 0)
+    as_filter[as_filter > threshold]=1
+    as_filter[as_filter <= threshold]=0
     
-    anom_det = as_filter > threshold
-    anom_det = anom_det * 1
-    anom_det = anom_det.astype(np.float32)
+#    anom_det = anom_det * 1
+#    anom_det = anom_det.astype(np.float32)
+#    anom_det = anom_det
     
-    return anom_det
+    return as_filter
     
     
     

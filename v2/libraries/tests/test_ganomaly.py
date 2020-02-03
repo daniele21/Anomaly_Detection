@@ -199,8 +199,8 @@ model.threshold = thr
 
 opt = Options(in_channels=1, out_channels=1, batch_size=1)
 
-n_samples = 2
-filter_data = generateDataloaderPerDefect(opt, model, n_samples)
+n_samples = 1
+filter_data = generateDataloaderPerDefect(opt, model, n_samples, stride=32)
 #%%
 defect = 3
 
@@ -212,9 +212,10 @@ validloader = filter_data[defect]
 
 k = 5
 opt.lr = 1e-03
-filter_model = FilterModel(optim, trainloader, validloader, opt, k)
+filter_model = FilterModel(optim, trainloader, validloader, opt, k, thr)
 
 filter_model .train_model(15, model.threshold)
+
 
 #%%
 
