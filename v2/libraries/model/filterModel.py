@@ -14,9 +14,9 @@ from libraries.model import postprocessing as pp
 
 class FilterModel():
     
-    def __init__(self, optmizer, trainloader, validloader, opt, k, thr):
+    def __init__(self, optmizer, trainloader, validloader, opt, k):
         
-        self.model = FilterNN(opt, k, thr).cuda()
+        self.model = FilterNN(opt, k).cuda()
         self.optim = optmizer(self.model.parameters(), opt.lr)
         self.loss_function = binaryCrossEntropy_loss()
         self.trainloader = trainloader
@@ -38,13 +38,8 @@ class FilterModel():
             
             # FORWARD
             out = self.model(x)
-            print(out)
-#            exit(-1)
-#            out = pp.detector(out, thr)
 #            print(out)
             out = out.reshape(-1)
-            print(out.shape)
-            print(labels.shape)
             loss = self.loss_function(out, labels)
             
             # BACKWARD
@@ -81,7 +76,6 @@ class FilterModel():
                 labels = torch.Tensor(labels.float()).cuda()
                 
                 out = self.model(x)
-                out = pp.detector(out, thr)
                 out = out.reshape(-1)
                 loss = self.loss_function(out, labels)
                 

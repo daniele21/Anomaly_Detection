@@ -500,10 +500,8 @@ class FCN_Generator(nn.Module):
     
 class FilterNN(nn.Module):
 
-    def __init__(self, opt, kernel_size, thr):
+    def __init__(self, opt, kernel_size):
         super().__init__()    
-        
-        self.thr = thr
         
         self.conv = nn.Conv2d(opt.in_channels,
                               opt.out_channels,
@@ -512,17 +510,10 @@ class FilterNN(nn.Module):
                               padding=kernel_size//2)
         self.sig = nn.Sigmoid()
         
-#        self.thr = nn.Threshold(thr, 1)
-#        self.thr = nn.Hardshrink(thr)
     def forward(self, x):
         
         h = self.conv(x)
         out = self.sig(h)
-#        out[out>self.thr] = 1
-#        out[out<self.thr] = 0
-
-        out = (out > self.thr).float() * 1  
-        out = torch.Tensor(out).cuda()
 
         return out
     
