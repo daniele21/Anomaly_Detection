@@ -15,11 +15,11 @@ from copy import deepcopy
 from time import time
 import pandas as pd
 
-from libraries.model.options import Options
+#from libraries.model.options import Options
 from libraries.utils import Paths, ensure_folder
 
 paths = Paths()
-opt = Options()
+#opt = Options()
 #%% PATHS
 train_images_dir = paths.images_path
 

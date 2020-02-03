@@ -4,7 +4,7 @@ from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.options import Options
 from libraries.model.dataset import generateDataloaderTL, generateDataloaderPerDefect
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
-from libraries.model.adModel import AnomalyDetectionModel, LR_DECAY, LR_ONECYCLE, loadModel
+from libraries.model.adModel import AnomalyDetectionModel, loadModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
 from libraries.model.filterModel import FilterModel
 from libraries.model import postprocessing as pp
@@ -199,7 +199,7 @@ model.threshold = thr
 
 opt = Options(in_channels=1, out_channels=1, batch_size=1)
 
-n_samples = 5
+n_samples = 2
 filter_data = generateDataloaderPerDefect(opt, model, n_samples)
 #%%
 defect = 3
@@ -209,11 +209,12 @@ trainloader = filter_data[defect]
 validloader = filter_data[defect]
 
 #%%
+
 k = 5
 opt.lr = 1e-03
 filter_model = FilterModel(optim, trainloader, validloader, opt, k)
 
-filter_model .train_model(100, model.threshold)
+filter_model .train_model(15, model.threshold)
 
 #%%
 

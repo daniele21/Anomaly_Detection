@@ -7,7 +7,7 @@ import numpy as np
 from libraries.model.network import FilterNN
 from libraries.model.loss import binaryCrossEntropy_loss
 from libraries.utils import plotMetrics
-from libraries.model import score
+#from libraries.model import score
 from libraries.model import postprocessing as pp
 
 #%%
