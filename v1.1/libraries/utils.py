@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import numpy as np
 from math import floor, ceil
+from matplotlib import pyplot as plt
 #%% PATHS
 class Paths():
     
@@ -32,6 +33,7 @@ class Paths():
         
 #        self.images_path = self.dataset_path + 'images/'
         self.images_path = '../../images/'
+        self.images_defects = '../../defects/'
         self.patches_path = '../../patches/'
         self.normal_patches_path = self.patches_path + 'normals/'
         self.anom_patches_path = self.patches_path + 'anomalous/'
@@ -180,7 +182,18 @@ class LR_decay():
     def __call__(self, decay):
         self.lr = self.lr * decay
     
-                     
+
+def plotMetrics(model):
+    fig, [ax1, ax2] = plt.subplots(2,1, figsize=(6,10))
+    _subplot(ax1, model.train['LOSS'], model.valid['LOSS'], 'Loss')
+    _subplot(ax2, model.train['ACC'], model.valid['ACC'], 'Accuracy')
+    plt.show()
+
+def _subplot(ax, train, val, title):
+    ax.set_title(title)
+    ax.plot(train, color='r', label='Training')
+    ax.plot(val, color='b', label='Validation')
+    ax.legend()               
 #%%
 #opt = Options()
 #saveInfo(opt)
@@ -337,6 +350,7 @@ def getNmeans(array, n):
 #        print(i)
         if(i + slot_size <= num_elem-slot_size):
 #            print('if: ', i)
+#            print(array[i : i+slot_size])
             mean = np.mean(array[i : i+slot_size])
             new_array.append(mean)
             i += slot_size
