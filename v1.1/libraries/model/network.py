@@ -8,11 +8,12 @@ Created on Tue Oct 15 12:34:32 2019
 
 #%% IMPORTS
 
-#import torch
+import torch
 import torch.nn as nn
 from torch.nn.init import xavier_uniform_, xavier_normal_
 from torch.nn.init import kaiming_uniform, kaiming_normal_
 from libraries.torchsummary import summary
+from torchvision import models
 #%% CONSTANTS
 
 KERNEL_SIZE = 4
@@ -43,8 +44,8 @@ def weights_init(mod):
     # HE NORMAL INITIALIZATION --> better with relu / leaky_relu activations
     if isinstance(mod, nn.Conv2d):
         kaiming_normal_(mod.weight.data)
-        if(mod.bias):
-            kaiming_normal_(mod.bias.data)
+#        if(mod.bias):
+#            kaiming_normal_(mod.bias.data)
 
 #model.apply(weights_init)
         
@@ -140,7 +141,58 @@ class Encoder(nn.Module):
        
        return output
     
-   
+class EncoderTL(nn.Module):
+    
+    def __init__(self, opt, z_size=None):
+        super().__init__()
+        
+        if(z_size is None):
+            z_size = opt.z_size
+        else:
+            z_size = z_size
+        
+        print(opt.tl)
+        if(opt.tl == 'vgg16'):
+            tl = models.vgg16(pretrained=True).cuda()
+            
+            # Trainable params -> False
+#            for param in tl.parameters():
+#                param.require_grad = False
+                
+            modules = list(tl.children())[:-2][0]
+            features = list(modules)[:-3]
+            self.net = nn.Sequential(*features)
+            self.net.add_module('Final conv2D', nn.Conv2d(512, z_size, 2))
+            
+            
+        elif(opt.tl == 'resnet18'):
+            tl = models.resnet18(pretrained=True).cuda()
+            
+            for param in tl.parameters():
+                param.require_grad = False
+                
+            modules = list(tl.children())[:-2]
+            net = nn.Sequential(*modules)
+#            net.add_module('Final_Conv2D', nn.Conv2d(256, z_size, 2))
+            net.add_module('Final_Conv2D', nn.Conv2d(512, z_size, 7))
+            
+#            tl.fc = nn.Linear(512, 100)
+            
+#            self.net = tl
+                
+            self.net = net
+        
+    def forward(self, x):
+        
+        x = self.net(x)
+#        print(x.shape)
+#        print(x.reshape(x.size(0), x.size(1), 1, 1).shape)
+#        x = x.reshape(x.size(0), x.size(1), 1, 1)
+        
+        return x
+        
+        
+        
 #%%    
  
     
@@ -265,6 +317,35 @@ class Generator(nn.Module):
         
         return x_prime, z, z_prime
     
+class GeneratorTL(nn.Module):
+    
+    def __init__(self, opt, xavier_init=True):
+        super().__init__()
+        
+        self.encoder1 = EncoderTL(opt)
+        self.decoder  = Decoder(opt)
+        self.encoder2 = Encoder(opt)
+#        self.encoder2 = EncoderTL(opt)
+        
+        # INITIALIZATION
+        if(xavier_init):
+            self.encoder1.apply(weights_init)
+            self.decoder.apply(weights_init)
+            self.encoder2.apply(weights_init)
+        
+    def forward(self, x):
+
+        # LATENT REPRESENTATION
+        z       = self.encoder1(x)
+        
+        # RECONSTRUCTED IMAGE
+        x_prime = self.decoder(z)
+
+        # RECONSTRUCTED LATENT REPRESENTATION
+        z_prime = self.encoder2(x_prime)     
+        
+        return x_prime, z, z_prime    
+    
 class Discriminator(nn.Module):
     
     def __init__(self, opt, xavier_init=True):
@@ -290,13 +371,151 @@ class Discriminator(nn.Module):
 
         return classifier, features
         
+def featureExtraction():
+
+    vgg = models.vgg16_bn(pretrained=True)
+    
+    for param in vgg.parameters():
+        param.requires_grad = False
+
+    modules = list(vgg.children())[:-1]
+    modules.append(nn.Sequential(nn.Conv2d(512, 100, 7)))
+
+    features = nn.Sequential(*modules)
+
+    return features   
+
+def encoderFullyConv():
+    encoder = nn.Sequential(
+            nn.Conv2d(3, 32, 4, stride=2),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(32, 64, 4, stride=2),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(64, 128, 4, stride=2),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(128, 256, 4, stride=2),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(256, 512, 4, stride=2),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(),
+            
+            nn.Conv2d(512, 100, (6,48)),
+            
+            )
+    
+    return encoder
+
+
+def decoderFullyConv():
+    
+    decoder = nn.Sequential(
+            nn.ConvTranspose2d(100, 1024, (4,25)),
+            nn.BatchNorm2d(1024),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(1024, 512, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(512, 256, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(256, 128, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(128, 64, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(64, 32, (4,4), stride=2, padding=1),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(),
+            
+            nn.ConvTranspose2d(32, 3, (2,2), stride=2),
+#
+#            nn.Conv2d(3, 1, (256,1600)),
+#            nn.Tanh()
+            
+            )
+    
+    return decoder
+
+def fully_conv_layer_decoder():
+    
+    layer = nn.Sequential(
+                nn.Conv2d(3, 1, (256,1600)),
+                nn.Tanh())
+    
+    return layer
+
+def final_layer_decoder():
+    
+    layer = nn.Sequential(
+                nn.Tanh())
+    
+    return layer
+
+class FCN_Generator(nn.Module):
+
+    def __init__(self, xavier_init=True):
+
+        super().__init__()
+        
+        self.encoder1 = featureExtraction()
+        self.decoder = decoderFullyConv()               
+        
+        self.fullyConvLayer = fully_conv_layer_decoder()
+        self.finalLayer = final_layer_decoder()
+        
+        self.encoder2 = encoderFullyConv()
+        
+        # INITIALIZATION
+        if(xavier_init):
+            self.encoder1.apply(weights_init)
+            self.decoder.apply(weights_init)
+            self.encoder2.apply(weights_init)
+        
+    def forward(self, x):
+        
+        z = self.encoder1(x)
+        temp = self.decoder(z)
+        
+        x_conv = self.fullyConvLayer(temp)
+        x_prime = self.finalLayer(temp)
+        
+        z_prime = self.encoder2(x_prime)
+        
+        return x_prime, z, z_prime, x_conv
         
     
     
-    
-    
-    
-    
+class FilterNN(nn.Module):
+
+    def __init__(self, opt, kernel_size):
+        super().__init__()    
+        
+        self.conv = nn.Conv2d(opt.in_channels,
+                              opt.out_channels,
+                              kernel_size,
+                              stride=1,
+                              padding=kernel_size//2)
+        self.sig = nn.Sigmoid()
+        
+    def forward(self, x):
+        
+        h = self.conv(x)
+        out = self.sig(h)
+
+        return out
     
     
     
