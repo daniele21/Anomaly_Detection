@@ -15,11 +15,11 @@ from copy import deepcopy
 from time import time
 import pandas as pd
 
-from libraries.model.options import Options
+#from libraries.model.options import Options
 from libraries.utils import Paths, ensure_folder
 
 paths = Paths()
-opt = Options()
+#opt = Options()
 #%% PATHS
 train_images_dir = paths.images_path
 
@@ -768,7 +768,7 @@ def extractPatchesOptimized(train, start, end, nPatches, shape):
 #        print(count)
             
  
-def extractPatchesForTest(train, index, shape, stride, model_name, folder_save=None):
+def extractPatchesForTest(train, index, shape, stride, model_name):
 
     filename    = train.iloc[index].Image_Id
     enc_pixels  = train.iloc[index].Encoded_Pixels
@@ -785,10 +785,7 @@ def extractPatchesForTest(train, index, shape, stride, model_name, folder_save=N
 #        os.mkdir(father_folder)
     ensure_folder(father_folder)
     
-    if(folder_save is not None):
-        img.folder_save = folder_save + str(index) + '_' + filename.split('.')[0] + '/'
-    else:
-        img.folder_save = father_folder + str(index) + '_' + filename.split('.')[0] + '/'
+    img.folder_save = father_folder + str(index) + '_' + filename.split('.')[0] + '/'
 #    directory = paths.test_patched + img.folder_save + '/'
     
 #    if(os.path.exists(img.folder_save) == False):
