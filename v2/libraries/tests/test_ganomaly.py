@@ -199,10 +199,10 @@ model.threshold = thr
 
 opt = Options(in_channels=1, out_channels=1, batch_size=1)
 
-n_samples = 2
+samples = [1000]
 defect = 3
-filter_data = generateDataloaderPerDefect(opt, model, defect,
-                                          n_samples, stride=8)
+filter_data = generateDataloaderPerDefect(opt, model,
+                                          samples, stride=8)
 #%%
 defect = 3
 

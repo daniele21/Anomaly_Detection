@@ -564,20 +564,18 @@ def generateDataloaderAS(opt, adModel, samples, stride=8):
     
     return dataloader
 
-def generateDataloaderPerDefect(opt, adModel, defect, n_samples, stride=8):
+def generateDataloaderPerDefect(opt, adModel, samples, stride=8):
     
-    images, targets = getImagesPerClass(n_samples)
+    images, targets, masked_images = getImagesFromSamples(samples)
  
     as_scores = []
     masks = []
     
     dataset = {}
     
-    
-    print('> Defect: {}'.format(defect))
     j=0
-    for image in tqdm(images[defect], total=len(images[defect])):
-        as_score, mask = score.anomalyScoreFromImage(adModel, image, targets[defect][j],
+    for image in tqdm(images, total=len(images)):
+        as_score, mask = score.anomalyScoreFromImage(adModel, image, targets[j],
                                                                stride, 32)
         as_scores.append(as_score)
         masks.append(mask)
