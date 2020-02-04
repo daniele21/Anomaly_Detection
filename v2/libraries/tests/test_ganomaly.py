@@ -298,13 +298,20 @@ for i in range(len(test_set)):
     plt.imshow(mask)
     plt.show()
     
+    pp.saveMask(mask, sample, save_folders)
+    
     # FILTERING ANOMALY SCORES
 #    conv_filter_model = pp.convFilterScores(as_image, kernel)
+#    pp.saveFilter(sample, conv_filter, save_folders, filter_name='Learned_Conv')
+    
     conv_filter = pp.convFilterScores(as_image, pp.createKernel(3,2))    
-
+    pp.saveFilter(sample, conv_filter, save_folders, filter_name='Costant-Conv')
+    
     # ANOMALY DETECTION AND RESULTS
 #    anom_im, res = pp.compute_filter_anomalies(conv_filter_model, mask, model.threshold)
     anom_im, res = pp.compute_filter_anomalies(conv_filter, mask, model.threshold)   
+
+    pp.saveAnomalyMap(anom_im, sample, save_folders, filter_name='Constant-conv')
 
     plt.imshow(anom_im)
     plt.show()
@@ -313,6 +320,8 @@ for i in range(len(test_set)):
     plt.show()
     
     full_mask = pp.overlapAnomalies_single(anom_im, mask, image)
+
+    pp.saveFullMask(full_mask, sample, save_folders, filter_name='Constant-conv')
 
     plt.imshow(full_mask)
     plt.show()

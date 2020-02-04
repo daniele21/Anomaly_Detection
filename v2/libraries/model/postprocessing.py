@@ -105,6 +105,19 @@ def computeFilters(as_map, params):
     
     return as_maps
 
+def saveFilter(sample, as_filtered, save_folder, figsize=(160,25),
+               filter_name='filter'):
+    
+    start = time()
+    
+    filename = '{}_{}_anomaly score'.format(sample, filter_name.upper())
+    folder = save_folder[str(sample)] + 'filters/'
+    saveImage(as_filtered, folder, filename, figsize)
+            
+    end = time()
+
+    timeSpent(end-start, 'Saving Filtered Anomaly Score')
+
 def saveFilters(maps, save_folder, figsize=(160,25)):
     start = time()
     
@@ -122,6 +135,12 @@ def saveFilters(maps, save_folder, figsize=(160,25)):
 
     timeSpent(end-start, 'Saving Filtered Anomaly Score')   
     
+def saveMask(mask, sample, save_folder):
+
+    image = cv2.resize(mask, (1600,256), interpolation=cv2.INTER_LINEAR)
+    filename = '{}_MASK_anomaly'.format(sample)
+    saveImage(image, save_folder[str(sample)], filename)     
+    
 def saveMasks(masked_map, save_folder):
 
     for f in filters:
@@ -130,6 +149,13 @@ def saveMasks(masked_map, save_folder):
             image = cv2.resize(image, (1600,256), interpolation=cv2.INTER_LINEAR)
             filename = '{}_{}_anomaly'.format(key, f.upper())
             saveImage(image, save_folder[key], filename) 
+
+
+def saveAnomalyMap(anom_im, sample, save_folder, filter_name='filter'):
+        
+    image = cv2.resize(anom_im, (1600,256), interpolation=cv2.INTER_LINEAR)
+    filename = '{}_{}_anomaly_detection'.format(sample, filter_name.upper())
+    saveImage(image, save_folder[str(sample)], filename)
 
 def saveAnomalyMaps(anom_maps, save_folder):
     
@@ -162,6 +188,12 @@ def saveAnomalyMaps(anom_maps, save_folder):
 #            image = cv2.resize(image, (1600,256), interpolation=cv2.INTER_AREA)
 #            filename = '{}_{}_anomaly_detection5'.format(key, f.upper())
 #            saveImage(image, save_folder, filename)
+
+def saveFullMask(full_mask, sample, save_folder, filter_name='filter'):
+
+    filename = '{}_{}_full_mask'.format(sample, filter_name.upper())
+    saveImage(full_mask, save_folder[str(sample)], filename)
+    saveImage(full_mask, save_folder[str(sample)] + '/comparison/', filename)
     
 def saveFullMasked(full_masked_maps, save_folder):
     
