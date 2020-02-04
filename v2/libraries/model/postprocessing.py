@@ -619,7 +619,7 @@ def fillResultTable_single(res, n_image, save_folder):
     res_df.insert(0, 'Image', n_image)
     res_df = res_df.set_index('Image')
     
-    table = pd.concat([table, res_df], sort=False) 
+    table = pd.concat([table, res_df]) 
     table.to_excel(filepath)
 
 

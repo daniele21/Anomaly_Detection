@@ -275,7 +275,7 @@ images = pp.loadDefectImages()
 samples = images['n_images']
 samples
 
-save_folders = pp.setSaveFoldersResults(samples)
+save_folders = pp.setSaveFoldersResults(samples, folder_extra_name='prova')
 save_folders
 
 opt = Options(in_channels=3, batch_size=1)
@@ -329,7 +329,7 @@ for i in range(len(test_set)):
     evaluation = pp.resultsPerEvaluation_single(res)
     evaluation    
     
-    pp.res_table = pp.res_table_init(save_folders['general'])
+#    pp.res_table = pp.res_table_init(save_folders['general'])
     
     pp.fillResultTable_single(res, sample, save_folders)
     

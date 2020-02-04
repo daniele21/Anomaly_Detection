@@ -516,6 +516,21 @@ def generateDataloaderTL(opt):
     
     return dataloader
 
+def generateDataloaderAS_simple(opt, dataset):
+    
+    data = ASDataset(dataset)
+    
+#    data = {}  
+#    data = DefectDataset(as_scores, masks, opt)
+    
+    dataloader = DataLoader(dataset = data,
+                            batch_size = opt.batch_size,
+                            drop_last  = True,
+                            num_workers= opt.n_workers
+                            )
+    
+    return dataloader
+
 def generateDataloaderAS(opt, adModel, samples, stride=8):
     
     dataset = {}
