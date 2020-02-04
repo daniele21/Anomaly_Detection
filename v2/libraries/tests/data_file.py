@@ -77,7 +77,7 @@ for i_data in data_list:
 #    break
         
 #%%
-path = '/media/daniele/Data/Tesi/Thesis/defects/'
+path = '../'
 selected_data = pd.read_excel(path + 'defect.xlsx', index_col=0)    
     
 n_images = selected_data['N° image'].to_list()
@@ -86,7 +86,7 @@ defects = selected_data.index.to_list()
 images = {'Defect':defects,
           'n_images':n_images}
     
-    
+images
     
     
     

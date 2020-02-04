@@ -15,9 +15,11 @@ from copy import deepcopy
 import sys
 import math
 import pandas as pd
-import cv2
+from matplotlib import pyplot as plt
 
 from libraries.utils import Paths, ensure_folder
+from libraries.model import postprocessing as pp
+from libraries.model import score
 
 paths = Paths()
 
@@ -61,6 +63,57 @@ def getImages(start, end):
     
     return images, masks, masked_images
 
+def getImagesPerClass(n_samples):
+    path_file = './libraries/dataset_package/'
+    namefile = 'train_unique.csv'
+    
+    data = pd.read_csv(path_file + namefile, index_col=0)
+    data1 = data.loc[data.Class_Id == '1']
+    data2 = data.loc[data.Class_Id == '2']
+    data3 = data.loc[data.Class_Id == '3']
+    data4 = data.loc[data.Class_Id == '4']
+    
+    data = {1:data1,
+            2:data2,
+            3:data3,
+            4:data4}
+    
+    images = {1:[],
+              2:[],
+              3:[],
+              4:[]}
+    
+    masks = {1:[],
+              2:[],
+              3:[],
+              4:[]}
+    
+    data_list = [data1, data2, data3, data4]
+    defect = 1
+    i = 0
+    
+    for i_data in data_list:
+        i = 0
+        for row in range(n_samples):
+            index_file = i_data['index'].iloc[i]
+            print('Image_n°{}: im_{}'.format(i, index_file))
+            
+            filename    = i_data.iloc[row].Image_Id
+            enc_pixels  = i_data.iloc[row].Encoded_Pixels
+    
+            image = cv2.imread(paths.images_path + filename)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            mask = computeMask(enc_pixels, image)
+            
+            images[defect].append(image)
+            masks[defect].append(mask)
+            
+            i += 1
+    
+        defect += 1
+        
+    return images, masks
+
 def getImagesFromSamples(samples):
     train = pd.read_csv(paths.csv_directory + 'train_unique.csv')
     
@@ -70,8 +123,10 @@ def getImagesFromSamples(samples):
     
     count = 0
     
+    print('\n\nImage n. {} '.format(len(samples)))
+    
     for row in samples:
-        print('Image n. {}'.format(count))
+        
         filename    = train.iloc[row].Image_Id
         enc_pixels  = train.iloc[row].Encoded_Pixels
         
@@ -437,6 +492,94 @@ def generateDataloader(opt):
     
     return dataloader
 
+def generateDataloaderTL(opt):
+    print('\n>Loading Steel Dataset')
+    
+    if(opt.loadedData == False):
+        opt.loadDatasets()
+    
+    dataset = {}
+    dataset['train']       = TLSteelDataset(opt, train=True)
+    dataset['validation']  = TLSteelDataset(opt, valid=True)
+    dataset['test']        = TLSteelDataset(opt, test=True)
+    
+    shuffle = {'train':True, 'validation':True, 'test':True}
+    
+    dataloader = {x: DataLoader(dataset    = dataset[x],
+                                batch_size = opt.batch_size,
+                                drop_last  = True,
+                                shuffle = shuffle[x],
+                                num_workers= opt.n_workers
+                                )
+                  
+                  for x in ['train', 'validation', 'test']}
+    
+    return dataloader
+
+def generateDataloaderAS(opt, adModel, samples, stride=8):
+    
+    dataset = {}
+    dataset['DATA'], dataset['LABELS'], _ = getImagesFromSamples(samples)
+    dataset['SAMPLES'] = samples
+
+    as_scores = []
+    masks = []
+    
+    for i in tqdm(range(len(dataset['DATA'])), total=len(dataset['DATA'])):
+#        print(i)
+        as_score, mask = score.anomalyScoreFromImage(adModel, dataset['DATA'][i],
+                                                     dataset['LABELS'][i],
+                                                               stride, 32)
+        as_scores.append(as_score)  
+        masks.append(mask)
+        
+    dataset['AS'] = as_scores
+    dataset['LABELS'] = masks
+    
+    data = ASDataset(dataset)
+    
+#    data = {}  
+#    data = DefectDataset(as_scores, masks, opt)
+    
+    dataloader = DataLoader(dataset = data,
+                            batch_size = opt.batch_size,
+                            drop_last  = True,
+                            num_workers= opt.n_workers
+                            )
+    
+    return dataloader
+
+def generateDataloaderPerDefect(opt, adModel, defect, n_samples, stride=8):
+    
+    images, targets = getImagesPerClass(n_samples)
+ 
+    as_scores = []
+    masks = []
+    
+    dataset = {}
+    
+    
+    print('> Defect: {}'.format(defect))
+    j=0
+    for image in tqdm(images[defect], total=len(images[defect])):
+        as_score, mask = score.anomalyScoreFromImage(adModel, image, targets[defect][j],
+                                                               stride, 32)
+        as_scores.append(as_score)
+        masks.append(mask)
+        j+=1
+        
+        
+    dataset = DefectDataset(as_scores, masks, opt)
+    
+    dataloader = DataLoader(dataset = dataset,
+                            batch_size = opt.batch_size,
+                            drop_last  = True,
+                            num_workers= opt.n_workers
+                            )
+    
+    return dataloader
+
+
 def generateDataloaderFromDatasets(opt, training_set, validation_set, test_set):
     print('\n>Loading Steel Dataset')
     
@@ -527,22 +670,6 @@ def dataloaderPatchMasks(opt):
                   for x in ['train', 'validation', 'test']}
     
     return dataloader
-
-#def dataloaderSingleSet(start, end, batch_size):
-#    
-#    dataset = {}
-#    dataset['DATA'], dataset['LABELS'], dataset['MASKED'] = getImages(start, end)
-#    
-#    dataset = ImagesDataset(dataset)
-#
-#    dataloader = DataLoader(dataset = dataset,
-#                            batch_size = batch_size,
-#                            drop_last  = True,
-##                            shuffle = shuffle[x],
-#                            num_workers= 8
-#                            )
-#    
-#    return dataloader
 
 def dataloaderSingleSet(samples, batch_size):
     
@@ -716,6 +843,45 @@ def collectAnomalySamples(nImages, anom_per_img=None):
     
     return anomalyTest
 
+
+class DefectDataset(Dataset):
+    
+    def __init__(self, data, targets, opt):
+        self.data = data
+        self.targets = targets
+        
+        self.initTransform(opt)
+        
+    def initTransform(self, opt):
+        self.transforms = Transforms.Compose(
+                            [
+#                                    transforms.Resize(32, interpolation=Image.BILINEAR),
+                                Transforms.Grayscale(num_output_channels = opt.in_channels),
+                                Transforms.ToTensor(),
+                                Transforms.Normalize((0.5,),
+                                                     (0.5,)),
+#                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
+#                                    transforms.ToPILImage()
+                            ]
+                        )
+    def __getitem__(self, index):
+        
+        
+        
+        if torch.is_tensor(index):
+            index = index.tolist()
+            
+        image, target = self.data[index], self.targets[index]
+#        print(image)
+        image = Image.fromarray(image)
+        
+        image = self.transforms(image)
+#        print(image)
+        return image, target
+    
+    def __len__(self):
+        return len(self.data)
+    
 class TestDataset(Dataset):
     
     def __init__(self, data, targets, opt):
@@ -729,8 +895,8 @@ class TestDataset(Dataset):
 #                                    transforms.Resize(32, interpolation=Image.BILINEAR),
                                 Transforms.Grayscale(num_output_channels = opt.in_channels),
                                 Transforms.ToTensor(),
-                                Transforms.Normalize((0.5, 0.5, 0.5),
-                                                     (0.5, 0.5, 0.5)),
+                                Transforms.Normalize((0.5,),
+                                                     (0.5,)),
 #                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
 #                                    transforms.ToPILImage()
                             ]
@@ -754,7 +920,183 @@ class TestDataset(Dataset):
     def __len__(self):
         return len(self.data)
         
+class TLSteelDataset(Dataset):
+    
+    def __init__(self, opt, dataset=None, train=False, valid=False, test=False):
         
+        self.train = train
+        self.valid = valid
+        self.test = test
+        
+        if(dataset is None):
+            if(train and not valid and not test):
+                self.data = opt.training_set['DATA']
+                self.data_TL = opt.training_set['DATA']
+                self.targets = opt.training_set['LABELS']
+            
+            elif(valid and not train and not test):
+                self.data = opt.validation_set['DATA']
+                self.data_TL = opt.training_set['DATA']
+                self.targets = opt.validation_set['LABELS']
+            
+            elif(test and not train and not valid):
+                self.data = opt.test_set['DATA']
+                self.data_TL = opt.training_set['DATA']
+                self.targets = opt.test_set['LABELS']
+                
+        else:
+            if(train and not valid and not test):
+                self.data = dataset['DATA']
+                self.data_TL = opt.training_set['DATA']
+                self.targets = dataset['LABELS']
+            
+            elif(valid and not train and not test):
+                self.data = dataset['DATA']
+                self.data_TL = opt.training_set['DATA']
+                self.targets = dataset['LABELS']
+            
+            elif(test and not train and not valid):
+                self.data = dataset['DATA']
+                self.data_TL = opt.training_set['DATA']
+                self.targets = dataset['LABELS']
+                
+        self.data = np.vstack(self.data).reshape(-1, opt.shape, opt.shape, 3)
+        self.data_TL = np.vstack(self.data_TL).reshape(-1, opt.shape, opt.shape, 3)
+
+        print(self.data.shape)
+        print(opt.augmentation)
+        self.transforms = self.transf_small(opt)
+        self.transforms_TL = self.transf_to_tl_size(opt)
+
+    def transf_to_tl_size(self, opt):
+        if(self.train):
+            if(opt.augmentation==False):
+                    
+                    transforms = Transforms.Compose(
+                                        [
+        #                                    transforms.Resize(32, interpolation=Image.BILINEAR),
+                                            Transforms.Grayscale(num_output_channels = opt.in_channels),
+                                            Transforms.Resize((opt.TL_size,opt.TL_size)),
+                                            Transforms.ToTensor(),
+                                            
+                                            Transforms.Normalize((0.5,),
+                                                                 (0.5,)),
+        #                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
+        #                                    transforms.ToPILImage()
+                                        ]
+                                    )
+            else:
+                    transforms = Transforms.Compose(
+                                        [
+                                            Transforms.Resize((opt.TL_size,opt.TL_size)),
+                                            # AUGMENTATION
+                                            Transforms.ColorJitter(brightness=0.2,
+                                                                    contrast=0.2, 
+                                                                    saturation=0.3, 
+                                                                    hue=0.2),
+                                            
+        #                                    Transforms.RandomRotation(10),
+                                            Transforms.RandomAffine(degrees=10,
+                                                                    scale=(1,2),
+                                                                    shear=0.2),
+                                            
+                                            Transforms.Grayscale(num_output_channels = opt.in_channels),
+#                                            Transforms.Resize((224,224)),
+                                            Transforms.ToTensor(),
+                                            Transforms.Normalize((0.5,),
+                                                                 (0.5,))   
+                                                
+                                        ]
+                                    )  
+                        
+        elif(self.valid or self.test):
+            transforms = Transforms.Compose(
+                                    [
+                                        Transforms.Grayscale(num_output_channels = opt.in_channels),
+                                        Transforms.Resize((opt.TL_size,opt.TL_size)),
+                                        Transforms.ToTensor(),
+                                        Transforms.Normalize((0.5,),
+                                                             (0.5,))  
+                                    ]
+                                )
+        
+        return transforms
+    
+    def transf_small(self, opt):
+        if(self.train):
+#            print(opt)
+            if(opt.augmentation==False):
+                    
+                    transforms = Transforms.Compose(
+                                        [
+        #                                    transforms.Resize(32, interpolation=Image.BILINEAR),
+                                            Transforms.Grayscale(num_output_channels = opt.in_channels),
+    #                                        Transforms.Resize((224,224)),
+                                            Transforms.ToTensor(),
+                                            
+                                            Transforms.Normalize((0.5,),
+                                                                 (0.5,)),
+        #                                    Transforms.Grayscale(num_output_channels = opt.in_channels)
+        #                                    transforms.ToPILImage()
+                                        ]
+                                    )
+            else:
+                    transforms = Transforms.Compose(
+                                        [
+                                            # AUGMENTATION
+                                            Transforms.ColorJitter(brightness=0.2,
+                                                                    contrast=0.2, 
+                                                                    saturation=0.3, 
+                                                                    hue=0.2),
+                                            
+        #                                    Transforms.RandomRotation(10),
+                                            Transforms.RandomAffine(degrees=10,
+                                                                    scale=(0.5,2),
+                                                                    shear=0.2),
+                                            
+                                            Transforms.Grayscale(num_output_channels = opt.in_channels),
+    #                                        Transforms.Resize((224,224)),
+                                            Transforms.ToTensor(),
+                                            Transforms.Normalize((0.5,),
+                                                                 (0.5,))   
+                                                
+                                        ]
+                                    )  
+                            
+        
+        elif(self.valid or self.test):
+            transforms = Transforms.Compose(
+                                    [
+                                        Transforms.Grayscale(num_output_channels = opt.in_channels),
+                                        Transforms.ToTensor(),
+                                        Transforms.Normalize((0.5,),
+                                                             (0.5,))  
+                                    ]
+                                )
+        
+        return transforms
+    
+    def __getitem__(self, index):
+       
+        if torch.is_tensor(index):
+            index = index.tolist()
+            
+        image, image_TL, target = self.data[index], self.data_TL[index], self.targets[index]
+
+#        image = Image.convert('RGB')
+        image = Image.fromarray(image)
+        image_TL = Image.fromarray(image_TL)
+        
+        # GRAYSCALE
+#        image = image.convert('LA')
+           
+        image = self.transforms(image)
+        image_TL = self.transforms_TL(image_TL)
+        
+        return image, image_TL, target
+    
+    def __len__(self):
+        return len(self.data)       
 
 class SteelDataset(Dataset):
     
@@ -960,6 +1302,49 @@ class FullSteelDataset(Dataset):
         return len(self.data)
 
 class ImagesDataset(Dataset):
+    
+    def __init__(self, dataset):
+        self.data = dataset['DATA']
+        self.targets = dataset['LABELS']
+        self.masked = dataset['MASKED']
+        self.samples = dataset['SAMPLES']
+        
+        self.data = np.vstack(self.data).reshape(-1, 256, 1600, 3)
+        print(self.data.shape)
+        
+    def __getitem__(self, index):
+
+        sample, image, target = self.samples[index], self.data[index], self.targets[index]
+        masked = self.masked[index]
+        
+        return sample, image, target, masked
+    
+    def __len__(self):
+        return len(self.data)
+
+class ASDataset(Dataset):
+    
+    def __init__(self, dataset):
+        self.data = dataset['DATA']
+        self.targets = dataset['LABELS']
+        self.score = dataset['AS']
+        self.samples = dataset['SAMPLES']
+        
+        self.data = np.vstack(self.data).reshape(-1, 256, 1600, 3)
+        print(self.data.shape)
+        
+    def __getitem__(self, index):
+
+        sample = self.samples[index] 
+        image, target = self.data[index], self.targets[index]
+        a_score = self.score[index]
+        
+        return sample, image, target, a_score
+    
+    def __len__(self):
+        return len(self.data)
+    
+class TLDataset(Dataset):
     
     def __init__(self, dataset):
         self.data = dataset['DATA']

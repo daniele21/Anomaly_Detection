@@ -299,19 +299,23 @@ for i in range(len(test_set)):
     plt.show()
     
     # FILTERING ANOMALY SCORES
-    conv_filter_model = pp.convFilterScores(as_image, kernel)
+#    conv_filter_model = pp.convFilterScores(as_image, kernel)
     conv_filter = pp.convFilterScores(as_image, pp.createKernel(3,2))    
 
     # ANOMALY DETECTION AND RESULTS
-    anom_im, res = pp.compute_filter_anomalies(conv_filter_model, mask, model.threshold)
+#    anom_im, res = pp.compute_filter_anomalies(conv_filter_model, mask, model.threshold)
     anom_im, res = pp.compute_filter_anomalies(conv_filter, mask, model.threshold)   
 
     plt.imshow(anom_im)
     plt.show()
     
+    plt.imshow(mask)
+    plt.show()
+    
     full_mask = pp.overlapAnomalies_single(anom_im, mask, image)
 
     plt.imshow(full_mask)
+    plt.show()
     
     evaluation = pp.resultsPerEvaluation_single(res)
     evaluation    

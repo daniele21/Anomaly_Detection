@@ -20,16 +20,17 @@ from libraries.model.evaluate import evaluate
 from libraries.model.evaluate import getThreshold, evaluateRoc
 from libraries.model import evaluate as ev
 from libraries.utils import ensure_folder, Paths, timeSpent
+from libraries.model import score
 
 paths = Paths()
 filters = ['standard', 'conv', 'med', 'gauss']
 
-empty_line = pd.DataFrame({'Filter':'--------',
-                           'auc':'--------',
-                           'prec':'--------',
-                           'recall':'--------',
-			   'iou':'--------',
-                           'dice':'--------'}, index=[0])
+empty_line = pd.DataFrame({'Filter':'',
+                           'auc':'',
+                           'prec':'',
+                           'recall':'',
+			               'iou':'',
+                           'dice':''}, index=[0])
 #%% FUNCTIONS
 
 def res_table_init(save_folder):
@@ -76,140 +77,6 @@ def gaussFilterScores(scores, sigma):
     return gauss_scores
 
     
-  
-def distScores(anomaly_scores, gt_labels, performance, figsize=(10,6),
-               folder_save=None, bins=1000, h=None, x_limit=None):
-    
-    try:
-        anomaly_scores = anomaly_scores.cpu()
-        gt_labels = gt_labels.cpu()
-    except:
-        anomaly_scores = anomaly_scores
-        gt_labels = gt_labels
-    
-    anom_indexes = np.where(gt_labels==1)[0]
-    normal_indexes = np.where(gt_labels==0)[0]
-    
-    # CHECK
-    for item in anom_indexes:
-        assert item not in normal_indexes, 'Anomaly in Normal set'   
-    # END CHECK
-    
-    anomalies = [anomaly_scores[i] for i in anom_indexes]
-    normals = [anomaly_scores[i] for i in normal_indexes]
-
-    # PLOTTING
-    plt.figure(figsize=figsize)    
-    
-    # HISTOGRAM
-    values, _, _ = plt.hist([anomalies, normals], bins=bins,
-             label=['Anomaly Scores', 'Normal Scores'], density=True)
-    
-    if(x_limit is None):
-        x_limit = np.mean(anomalies) + np.mean(anomalies)/2
-    
-    if(h is None):
-        h = max(values[1])
-    
-    __plottingThresholds(performance, h)
-    
-    plt.xlim(0, x_limit)
-    plt.ylim(0, h)
-    plt.legend(loc='best')
-    plt.xlabel('Score')
-    plt.show()
-    
-    
-    # DISTRIBUTIONS     
-    plt.figure(figsize=figsize)
-    
-    n_mean, n_std = norm.fit(normals)
-    a_mean, a_std = norm.fit(anomalies)
-    
-    x = np.arange(0, x_limit, x_limit/bins)
-    
-    norm_distr = norm(n_mean, n_std)
-    anom_distr = norm(a_mean, a_std)
-    
-    __plottingDistributions(x, norm_distr, anom_distr)
-   
-    # THRESHOLD
-    __plottingThresholds(performance, h=max(norm_distr.pdf(x)), distr=norm_distr)
-    plt.legend()
-    
-    if(folder_save is not None):
-        ensure_folder(folder_save)
-        print('> Saving Distribution Score at .. {}'.format(folder_save))
-        plt.savefig(folder_save + 'distribution.png')
-    plt.show()
-
-
-    plt.figure(figsize=figsize)
-    
-    __plottingThresholds(performance, h)
-    
-    sn.distplot(anomalies, bins=bins, kde=False,
-                hist=True, norm_hist=True, label='Anomaly Score')
-    sn.distplot(normals, bins=bins, kde=False,
-                hist=True, norm_hist=True,label='Normal Score')
-
-    plt.xlim(0, x_limit)
-    plt.ylim(0, h)
-    plt.legend()
-    
-    if(folder_save is not None):
-        ensure_folder(folder_save)
-        print('> Saving Distribution Score at .. {}'.format(folder_save))
-        plt.savefig(folder_save + 'histogram.png')
-    
-    plt.xlabel('Score')
-    plt.show()
-    
-    return 
-    
-def __plottingDistributions(x, norm_distr, anom_distr, c_norm='#ffcc99', c_anom='#dceaf9'):
-    
-    pdf_norm = norm_distr.pdf(x)
-    pdf_anom = anom_distr.pdf(x)
-    
-    plt.fill_between(x, pdf_anom, color=c_anom, label='Normal Distr')
-    plt.plot(x, pdf_anom, c=c_anom, ls='--')
-    
-    plt.fill_between(x, pdf_norm, color=c_norm, label='Anomaly Distr')
-    plt.plot(x, pdf_norm, c=c_norm)
-
-def __plottingThresholds(performance, h, distr=None):
-
-    
-    thresholds = {'standard' : performance['standard']['Threshold'],
-                  'conv' : performance['conv']['Threshold'],
-                  'median' : performance['median']['Threshold'],
-                  'gauss' : performance['gauss']['Threshold']}
-    
-    aucs = {'standard' : performance['standard']['AUC'],
-              'conv' : performance['conv']['AUC'],
-              'median' : performance['median']['AUC'],
-              'gauss' : performance['gauss']['AUC']}
-    
-    colors = ['r', 'green', 'black', 'brown']
-    i = 0
-    
-    
-    for filter_type in ['standard', 'conv', 'median', 'gauss']:
-        
-        thr = thresholds[filter_type]
-        x, y = [thr, thr], [0, h]
-        
-        if(distr is None):
-            label = 'AUC: {:.3f} - Thr: {:.3f} - {}'.format(aucs[filter_type], thr, filter_type)
-        else:
-            cdf = distr.cdf(thr)
-            label = 'CDF: {:.2f}% - AUC: {:.3f} - Thr: {:.3f} - {}'.format(cdf, aucs[filter_type], thr, filter_type)
-            
-        plt.plot(x, y, marker='o', c=colors[i], label=label)
-        
-        i += 1
-
 def computeFilters(as_map, params):
 
     as_maps = {}
@@ -449,7 +316,29 @@ def tuning_gauss_filter(as_map, gt_map):
             best['sigma'] = sigma
             
     return best
+
+def compute_filter_anomalies(a_score, mask, thr, info='', save_folder=None):
     
+    anom_image = a_score > thr
+    anom_image = anom_image * 1
+    anom_image = anom_image.astype(np.float32)
+    
+    auc = evaluateRoc(a_score.ravel(), mask.ravel(),
+                      info=info, thr=thr, save_folder=save_folder)
+    
+    precision = ev.precision(mask.ravel(), anom_image.ravel())
+    iou = ev.IoU(mask, anom_image)
+    recall = ev.recall(mask.ravel(), anom_image.ravel())
+    dice = ev.dice(mask, anom_image)
+    
+    result = {'auc':auc[0], 
+              'prec':precision,
+	          'recall':recall,
+              'iou':iou,
+              'dice':dice}
+    
+    return anom_image, result
+
 def compute_anomalies(as_map, gt_map, index, thr, info='', save_folder=None):
     
     print('> {} Anomaly Scores'.format(info.upper()))
@@ -496,7 +385,36 @@ def compute_anomalies_all_filters(index, gt_map, as_maps, thrs, save_folder=None
                    thr, info=f.upper(), save_folder=save_folder)
         
     return anomaly_map, results
+
+def resultsPerEvaluation_single(results):
     
+    '''
+        Computing results per evaluation('auc', 'prec', ...)
+    '''
+    
+    
+    auc = {}
+    prec = {}
+    recall = {}
+    iou = {}
+    dice = {}
+    
+    readable_results = {}
+
+    auc = results['auc']
+    prec = results['prec']
+    recall = results['recall']
+    iou = results['iou']
+    dice = results['dice']
+        
+    readable_results  = {'auc':auc,
+                           'prec':prec,
+                           'recall':recall,
+                           'iou':iou,
+                           'dice':dice}
+    
+    return readable_results 
+
 def resultsPerEvaluation(results):
     
     '''
@@ -527,7 +445,7 @@ def resultsPerEvaluation(results):
                            'dice':dice}
     
     return readable_results 
-    
+
 def readEvaluation(criterium, eval_results):
     
     assert criterium in ['auc', 'prec', 'recall', 'iou', 'dice'], 'Evaluation has to be one of these: auc, prec, recall, iou, dice'
@@ -565,7 +483,30 @@ def best_performance(evaluation):
     
     return bests
     
-   
+def overlapAnomalies_single(anom_im, mask, image):
+    h, w, _ = image.shape
+    
+    resized_anom = cv2.resize(anom_im, (w,h),
+                              interpolation=cv2.INTER_LINEAR)
+
+    resized_mask = cv2.resize(mask, (w,h),
+                              interpolation=cv2.INTER_LINEAR)
+
+#    plt.imshow(resized_anom)
+#    plt.show()
+#
+#    plt.imshow(resized_mask)
+#    plt.show()
+
+    masked_im = deepcopy(image)
+    masked_im[resized_anom==1, 0] = 255
+    masked_im[resized_mask==1, 2] = 255
+
+#    plt.imshow(masked_im)
+#    plt.show()
+    
+    return masked_im
+
 def overlapAnomalies(index, masked_maps, anomaly_maps, interp=cv2.INTER_LINEAR):
     keys = list(masked_maps.keys())
     key = keys[index]
@@ -635,6 +576,20 @@ def complete_evaluation(index, gt_map, as_maps, masked_map, thrs, key, save_fold
     fillResultTable(res_per_filter, bests, key, save_folder)
     
     return anomaly_maps, full_masked_maps, res_per_filter, evaluation, bests
+
+def fillResultTable_single(res, n_image, save_folder):
+    filepath = save_folder['general'] + 'Result_table.xlsx'
+    table = pd.read_excel(filepath, index_col=0)
+    
+    res_df = pd.DataFrame([res])
+    res_df = res_df.round(3)   
+       
+    res_df.insert(0, 'Image', n_image)
+    res_df = res_df.set_index('Image')
+    
+    table = pd.concat([table, res_df], sort=False) 
+    table.to_excel(filepath)
+
 
 def fillResultTable(res, bests, key, save_folder):
     filepath = save_folder['general'] + 'Result_table.xlsx'
@@ -789,13 +744,53 @@ def writeResults(res, ev,  bests, key, save_folder):
     f.write(content)
     f.close()
     
+#%% SCORE
+
+def anomalyDetection(model, image, mask, stride, patch_size, kernel, filtering='conv'):
+    
+    as_score, mask = score.anomalyScoreFromImage(model, image, mask, stride, patch_size)
+    
+    if(filtering=='conv'):
+        as_filter = convFilterScores(as_score, kernel)
+        
+    anom_det = as_filter > model.threshold
+    anom_det = anom_det * 1
+    anom_det = anom_det.astype(np.float32)
+    
+    return as_score, mask, anom_det
+    
+#def detector(as_filter, threshold):
+#    
+##    try:
+##        as_filter = as_filter.cpu().detach().numpy()
+###        print(as_filter)
+##    except:
+##        print('-asasasa---a-sasas--as-')
+#    
+#    
+##    as_filter = as_filter.cpu().detach().numpy()
+#    torch.where(as_filter > threshold, 1, 0)
+#    as_filter[as_filter > threshold]=1
+#    as_filter[as_filter <= threshold]=0
+#    
+##    anom_det = anom_det * 1
+##    anom_det = anom_det.astype(np.float32)
+##    anom_det = anom_det
+#    
+#    return as_filter
     
     
+#%%
+def loadDefectImages():
+    path = '../'
+    selected_data = pd.read_excel(path + 'defect.xlsx', index_col=0)    
+        
+    n_images = selected_data['N° image'].to_list()
+    defects = selected_data.index.to_list()
     
+    images = {'Defect':defects,
+              'n_images':n_images}
     
-    
-    
-    
-    
+    return images
     
     
