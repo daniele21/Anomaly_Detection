@@ -48,12 +48,12 @@ data4.to_csv(path_file + 'data_4_unique.csv')
 data_list = [data1, data2, data3, data4]
 #data_list = [data4]
 dest_path = paths.images_defects
-defect = 4
+defect = 1
 i = 0
 
 for i_data in data_list:
     i = 0
-    for row in list(i_data.loc[1700:1900].index):
+    for row in list(i_data.loc[1500:2500].index):
         
         print('Imagen°{}: im_{}'.format(i, row))
         

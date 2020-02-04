@@ -80,7 +80,7 @@ class FilterModel():
                 out = out.reshape(-1)
                 loss = self.loss_function(out, labels)
                 
-                predictions = np.round(out.cpu())
+                predictions = np.round(out.detach().cpu())
                 targets = np.round(labels.cpu())
                 
                 correct += (predictions == targets).sum().item()

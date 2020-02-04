@@ -213,7 +213,7 @@ validloader = filter_data
 #%%
 
 k = 5
-opt.lr = 1e-04
+opt.lr = 1e-02
 filter_model = FilterModel(optim, trainloader, validloader, opt, k)
 
 filter_model.train_model(100, model.threshold)
@@ -238,42 +238,24 @@ plt.imshow(label)
 plt.show()
 
 #%%
-
-as_image, mask = score.anomalyScoreFromImage(model, image, label, 8, 32)
-#%%
-#w, h = 1600,256
-#as_image_resized = cv2.resize(as_image, (w,h), interpolation=cv2.INTER_LINEAR)
-
 conv_filter_model = pp.convFilterScores(image, kernel)
 conv_filter = pp.convFilterScores(image, pp.createKernel(3,2))
+
 #%%
-anom_image = conv_filter > model.threshold
-anom_image = anom_image * 1
-anom_image = anom_image.astype(np.float32)
+hist_params = {'bins':50,
+               'range': (0,0.1),
+               'figsize':(10,5)}
 
-anom_image_model = conv_filter_model > model.threshold
-anom_image_model = anom_image_model * 1
-anom_image_model = anom_image_model.astype(np.float32)
+prob = 0.95
 
-plt.imshow(label)
-plt.show()
-
-plt.imshow(conv_filter)
-plt.show()
-
-plt.imshow(anom_image)
-plt.show()
-
-plt.imshow(conv_filter_model)
-plt.show()
-
-plt.imshow(anom_image_model)
-plt.show()
+thr = pp.computeThreshold(conv_filter_model, kernel, hist_params, prob)
+#pp.computeThreshold(conv_filter_model, kernel, hist_params, prob, save_folders['general'])
 
 #%%
 images = pp.loadDefectImages()
 samples = images['n_images']
-samples
+defects = images['Defect']
+len(samples)
 
 save_folders = pp.setSaveFoldersResults(samples, folder_extra_name='prova')
 save_folders
