@@ -15,7 +15,7 @@ from copy import deepcopy
 import sys
 import math
 import pandas as pd
-import cv2
+from matplotlib import pyplot as plt
 
 from libraries.utils import Paths, ensure_folder
 from libraries.model import postprocessing as pp
@@ -123,8 +123,10 @@ def getImagesFromSamples(samples):
     
     count = 0
     
+    print('\n\nImage n. {} '.format(len(samples)))
+    
     for row in samples:
-        print('Image n. {}'.format(count))
+        
         filename    = train.iloc[row].Image_Id
         enc_pixels  = train.iloc[row].Encoded_Pixels
         
@@ -514,6 +516,39 @@ def generateDataloaderTL(opt):
     
     return dataloader
 
+def generateDataloaderAS(opt, adModel, samples, stride=8):
+    
+    dataset = {}
+    dataset['DATA'], dataset['LABELS'], _ = getImagesFromSamples(samples)
+    dataset['SAMPLES'] = samples
+
+    as_scores = []
+    masks = []
+    
+    for i in tqdm(range(len(dataset['DATA'])), total=len(dataset['DATA'])):
+#        print(i)
+        as_score, mask = score.anomalyScoreFromImage(adModel, dataset['DATA'][i],
+                                                     dataset['LABELS'][i],
+                                                               stride, 32)
+        as_scores.append(as_score)  
+        masks.append(mask)
+        
+    dataset['AS'] = as_scores
+    dataset['LABELS'] = masks
+    
+    data = ASDataset(dataset)
+    
+#    data = {}  
+#    data = DefectDataset(as_scores, masks, opt)
+    
+    dataloader = DataLoader(dataset = data,
+                            batch_size = opt.batch_size,
+                            drop_last  = True,
+                            num_workers= opt.n_workers
+                            )
+    
+    return dataloader
+
 def generateDataloaderPerDefect(opt, adModel, defect, n_samples, stride=8):
     
     images, targets = getImagesPerClass(n_samples)
@@ -526,7 +561,7 @@ def generateDataloaderPerDefect(opt, adModel, defect, n_samples, stride=8):
     
     print('> Defect: {}'.format(defect))
     j=0
-    for image in images[defect]:
+    for image in tqdm(images[defect], total=len(images[defect])):
         as_score, mask = score.anomalyScoreFromImage(adModel, image, targets[defect][j],
                                                                stride, 32)
         as_scores.append(as_score)
@@ -635,22 +670,6 @@ def dataloaderPatchMasks(opt):
                   for x in ['train', 'validation', 'test']}
     
     return dataloader
-
-#def dataloaderSingleSet(start, end, batch_size):
-#    
-#    dataset = {}
-#    dataset['DATA'], dataset['LABELS'], dataset['MASKED'] = getImages(start, end)
-#    
-#    dataset = ImagesDataset(dataset)
-#
-#    dataloader = DataLoader(dataset = dataset,
-#                            batch_size = batch_size,
-#                            drop_last  = True,
-##                            shuffle = shuffle[x],
-#                            num_workers= 8
-#                            )
-#    
-#    return dataloader
 
 def dataloaderSingleSet(samples, batch_size):
     
@@ -847,14 +866,17 @@ class DefectDataset(Dataset):
                         )
     def __getitem__(self, index):
         
+        
+        
         if torch.is_tensor(index):
             index = index.tolist()
             
         image, target = self.data[index], self.targets[index]
+#        print(image)
         image = Image.fromarray(image)
-           
-        image = self.transforms(image)
         
+        image = self.transforms(image)
+#        print(image)
         return image, target
     
     def __len__(self):
@@ -1296,6 +1318,28 @@ class ImagesDataset(Dataset):
         masked = self.masked[index]
         
         return sample, image, target, masked
+    
+    def __len__(self):
+        return len(self.data)
+
+class ASDataset(Dataset):
+    
+    def __init__(self, dataset):
+        self.data = dataset['DATA']
+        self.targets = dataset['LABELS']
+        self.score = dataset['AS']
+        self.samples = dataset['SAMPLES']
+        
+        self.data = np.vstack(self.data).reshape(-1, 256, 1600, 3)
+        print(self.data.shape)
+        
+    def __getitem__(self, index):
+
+        sample = self.samples[index] 
+        image, target = self.data[index], self.targets[index]
+        a_score = self.score[index]
+        
+        return sample, image, target, a_score
     
     def __len__(self):
         return len(self.data)

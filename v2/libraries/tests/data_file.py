@@ -29,7 +29,7 @@ namefile = 'train_unique.csv'
 #%%
 
 data = pd.read_csv(path_file + namefile, index_col=0)
-data.head()
+#data.head()
 
 #data_unique = pd.read_csv(path_file + 'train_unique.csv')
 #%%
@@ -46,13 +46,14 @@ data4.to_csv(path_file + 'data_4_unique.csv')
 
 #%%
 data_list = [data1, data2, data3, data4]
+#data_list = [data4]
 dest_path = paths.images_defects
-defect = 1
+defect = 4
 i = 0
 
 for i_data in data_list:
     i = 0
-    for row in list(i_data.loc[1000:1500].index):
+    for row in list(i_data.loc[1700:1900].index):
         
         print('Imagen°{}: im_{}'.format(i, row))
         
@@ -75,4 +76,19 @@ for i_data in data_list:
     defect += 1
 #    break
         
+#%%
+path = '/media/daniele/Data/Tesi/Thesis/defects/'
+selected_data = pd.read_excel(path + 'defect.xlsx', index_col=0)    
+    
+n_images = selected_data['N° image'].to_list()
+defects = selected_data.index.to_list()
 
+images = {'Defect':defects,
+          'n_images':n_images}
+    
+    
+    
+    
+    
+    
+    

@@ -39,6 +39,7 @@ class FilterModel():
             # FORWARD
             out = self.model(x)
 #            print(out)
+#            exit(-1)
             out = out.reshape(-1)
             loss = self.loss_function(out, labels)
             

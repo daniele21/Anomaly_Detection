@@ -2,7 +2,7 @@
 #%%
 from libraries.MultiTaskLoss import MultiLossWrapper
 from libraries.model.options import Options
-from libraries.model.dataset import generateDataloaderTL, generateDataloaderPerDefect
+from libraries.model.dataset import generateDataloaderTL, generateDataloaderPerDefect, generateDataloaderAS
 from libraries.model.dataset import collectAnomalySamples, collectNormalSamples
 from libraries.model.adModel import AnomalyDetectionModel, loadModel
 from libraries.utils import Paths, getAnomIndexes, computeAnomError, computeNormError
@@ -199,22 +199,24 @@ model.threshold = thr
 
 opt = Options(in_channels=1, out_channels=1, batch_size=1)
 
-n_samples = 1
-filter_data = generateDataloaderPerDefect(opt, model, n_samples, stride=32)
+n_samples = 2
+defect = 3
+filter_data = generateDataloaderPerDefect(opt, model, defect,
+                                          n_samples, stride=8)
 #%%
 defect = 3
 
 optim = torch.optim.Adam
-trainloader = filter_data[defect]
-validloader = filter_data[defect]
+trainloader = filter_data
+validloader = filter_data
 
 #%%
 
 k = 5
-opt.lr = 1e-03
+opt.lr = 1e-04
 filter_model = FilterModel(optim, trainloader, validloader, opt, k)
 
-filter_model .train_model(15, model.threshold)
+filter_model.train_model(100, model.threshold)
 
 
 #%%
@@ -239,12 +241,12 @@ plt.show()
 
 as_image, mask = score.anomalyScoreFromImage(model, image, label, 8, 32)
 #%%
-w, h = 1600,256
-as_image_resized = cv2.resize(as_image, (w,h), interpolation=cv2.INTER_LINEAR)
+#w, h = 1600,256
+#as_image_resized = cv2.resize(as_image, (w,h), interpolation=cv2.INTER_LINEAR)
 
-conv_filter_model = pp.convFilterScores(as_image, kernel)
-conv_filter = pp.convFilterScores(as_image, pp.createKernel(3,2))
-
+conv_filter_model = pp.convFilterScores(image, kernel)
+conv_filter = pp.convFilterScores(image, pp.createKernel(3,2))
+#%%
 anom_image = conv_filter > model.threshold
 anom_image = anom_image * 1
 anom_image = anom_image.astype(np.float32)
@@ -252,6 +254,9 @@ anom_image = anom_image.astype(np.float32)
 anom_image_model = conv_filter_model > model.threshold
 anom_image_model = anom_image_model * 1
 anom_image_model = anom_image_model.astype(np.float32)
+
+plt.imshow(label)
+plt.show()
 
 plt.imshow(conv_filter)
 plt.show()
@@ -265,4 +270,53 @@ plt.show()
 plt.imshow(anom_image_model)
 plt.show()
 
+#%%
+images = pp.loadDefectImages()
+samples = images['n_images']
+samples
 
+save_folders = pp.setSaveFoldersResults(samples)
+save_folders
+
+opt = Options(in_channels=3, batch_size=1)
+test_set = generateDataloaderAS(opt, model, samples[0:1])
+#%%
+as_images = test_set.dataset.score
+masks = test_set.dataset.targets
+images = test_set.dataset.data
+samples = test_set.dataset.samples
+#%%
+for i in range(len(test_set)):
+    
+    image = images[i]
+    as_image = as_images[i]
+    mask = masks[i]
+    sample = samples[i]
+    
+    plt.imshow(as_image)
+    plt.show()
+    plt.imshow(mask)
+    plt.show()
+    
+    # FILTERING ANOMALY SCORES
+    conv_filter_model = pp.convFilterScores(as_image, kernel)
+    conv_filter = pp.convFilterScores(as_image, pp.createKernel(3,2))    
+
+    # ANOMALY DETECTION AND RESULTS
+    anom_im, res = pp.compute_filter_anomalies(conv_filter_model, mask, model.threshold)
+    anom_im, res = pp.compute_filter_anomalies(conv_filter, mask, model.threshold)   
+
+    plt.imshow(anom_im)
+    plt.show()
+    
+    full_mask = pp.overlapAnomalies_single(anom_im, mask, image)
+
+    plt.imshow(full_mask)
+    
+    evaluation = pp.resultsPerEvaluation_single(res)
+    evaluation    
+    
+    pp.res_table = pp.res_table_init(save_folders['general'])
+    
+    pp.fillResultTable_single(res, sample, save_folders)
+    
