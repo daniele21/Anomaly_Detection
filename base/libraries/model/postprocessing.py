@@ -726,7 +726,8 @@ def setSaveFoldersResults(samples, folder_extra_name=None):
         ensure_folder(save_folder + 'comparison/')
         save_folders[str(sample)] = save_folder
         
-    save_folders['general'] = paths.results_path + '{}_images/'.format(str(len(samples)))
+    save_folders['general'] = paths.results_path + '{}/{}_images/'.format(folder_extra_name,
+                                                                str(len(samples)))
     ensure_folder(save_folders['general'])
     ensure_folder(save_folders['general'] + 'histogram/')
     
