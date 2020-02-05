@@ -257,6 +257,27 @@ def hist_data(data, bins, my_range, thr=None, title='', color='r', label='',
     
     return hist
 
+
+def computeThreshold(as_filtered, kernel, hist_params, prob, save_folder=None):
+    
+    # COMPUTE FILTERED ANOMALY SCORES
+    
+    # HISTOGRAM FOR EACH MAP
+    hist = hist_data(as_filtered.ravel(), hist_params['bins'], hist_params['range'],
+                     title='Filtered Score', figsize=hist_params['figsize'], plot=False)
+    
+    # THRESHOLDS FOR EACH MAP
+    thr = getThreshold(as_filtered.ravel(), prob, hist)
+    
+    # HISTOGRAM WITH THRESHOLDS
+    hist_data(as_filtered.ravel(), hist_params['bins'], hist_params['range'], thr=thr,
+              label='Anomaly Score',
+                 title='Filtered Score', color='r', figsize=hist_params['figsize'], plot=True,
+                 save_folder=save_folder, filename='{}_histogram'.format('Filtered Score'))
+    
+    return thr
+
+
 def computeThresholds(as_map, kernel_params, hist_params, prob, save_folder=None):
     
     maps = {}
@@ -619,7 +640,7 @@ def fillResultTable_single(res, n_image, save_folder):
     res_df.insert(0, 'Image', n_image)
     res_df = res_df.set_index('Image')
     
-    table = pd.concat([table, res_df], sort=False) 
+    table = pd.concat([table, res_df]) 
     table.to_excel(filepath)
 
 

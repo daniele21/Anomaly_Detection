@@ -199,7 +199,7 @@ model.threshold = thr
 
 opt = Options(in_channels=1, out_channels=1, batch_size=1)
 
-samples = [1000]
+samples = [1000, 1001]
 defect = 3
 filter_data = generateDataloaderPerDefect(opt, model,
                                           samples, stride=8)
@@ -238,8 +238,27 @@ plt.imshow(label)
 plt.show()
 
 #%%
-conv_filter_model = pp.convFilterScores(image, kernel)
-conv_filter = pp.convFilterScores(image, pp.createKernel(3,2))
+images = pp.loadDefectImages()
+samples = images['n_images']
+defects = images['Defect']
+len(samples)
+
+save_folders = pp.setSaveFoldersResults(samples, folder_extra_name='prova')
+save_folders
+
+opt = Options(in_channels=3, batch_size=1)
+test_set = generateDataloaderAS(opt, model, samples[0:2])
+#%%
+as_images = test_set.dataset.score
+masks = test_set.dataset.targets
+images = test_set.dataset.data
+samples = test_set.dataset.samples
+
+for i in range(len(test_set)):
+    as_image = as_images[i]
+    
+    conv_filter_model = pp.convFilterScores(image, kernel)
+    conv_filter = pp.convFilterScores(image, pp.createKernel(3,2))
 
 #%%
 hist_params = {'bins':50,
