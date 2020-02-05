@@ -67,10 +67,12 @@ def medFilterScores(scores, kernel_size):
 
     return med_scores
 
-def gaussFilterScores(scores, sigma):
+def gaussFilterScores(scores, sigma, dim=3):
     
     kernel = Gaussian2DKernel(sigma).array
-    kernel = kernel.reshape((1, kernel.shape[0], kernel.shape[1]))
+    
+    if(dim==3):
+        kernel = kernel.reshape((1, kernel.shape[0], kernel.shape[1]))
     
     gauss_scores = convolve(scores, kernel)
 
