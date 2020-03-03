@@ -59,26 +59,38 @@ def convFilterScores(scores, kernel):
     return conv_scores
 
 
-def medFilterScores(scores, kernel_size):
+def medFilterScores(scores, kernel_size, dim=2):
     
-    size = (1, kernel_size, kernel_size)
+    assert dim == 2 or dim == 3, 'Wrong dimensione param'
+    
+    if(dim==2):
+        size = np.ones(kernel_size, kernel_size)
+        
+    elif(dim==3):
+        size = np.ones(1, kernel_size, kernel_size)
     
     med_scores = median_filter(scores, size)
 
     return med_scores
 
-def gaussFilterScores(scores, sigma, dim=3):
+def gaussFilterScores(scores, sigma, dim=2):
     
+    assert dim == 2 or dim == 3, 'Wrong dimensione param'
+
     kernel = Gaussian2DKernel(sigma).array
     
-    if(dim==3):
+    if(dim==2):
+        kernel = kernel.reshape((kernel.shape[0], kernel.shape[1]))
+    
+    elif(dim==3):
         kernel = kernel.reshape((1, kernel.shape[0], kernel.shape[1]))
     
     gauss_scores = convolve(scores, kernel)
 
     return gauss_scores
 
-    
+  
+
 def computeFilters(as_map, params):
 
     as_maps = {}
@@ -88,7 +100,7 @@ def computeFilters(as_map, params):
     std_as = np.array(list(as_map.values()))
     keys = list(as_map.keys())
     
-    kernel = createKernel(params['conv'], dim=3)
+    kernel = createKernel(params['conv'], dim=2)
     conv_as = convFilterScores(std_as, kernel)
     conv_map = createMap(keys, conv_as)
     
