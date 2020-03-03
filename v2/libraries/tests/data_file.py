@@ -38,6 +38,7 @@ data2 = data.loc[data.Class_Id == '2']
 data3 = data.loc[data.Class_Id == '3']
 data4 = data.loc[data.Class_Id == '4']
 
+mix_data = data.loc[data.Class_Id != '1']
 #%%
 data1.to_csv(path_file + 'data_1_unique.csv')
 data2.to_csv(path_file + 'data_2_unique.csv')
@@ -53,7 +54,7 @@ i = 0
 
 for i_data in data_list:
     i = 0
-    for row in list(i_data.loc[1500:2500].index):
+    for row in list(i_data.loc[1000:2500].index):
         
         print('Imagen°{}: im_{}'.format(i, row))
         
