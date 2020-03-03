@@ -48,8 +48,8 @@ ORIGINAL_IMAGE = 'original_image'
 MASKED_IMAGE = 'masked_image'
 GRAY_IMAGE = 'gray_image'
 
-BLACK_THRESHOLD_MEDIAN_PATCH = 30
-WHITE_THRESHOLD_MEDIAN_PATCH = 220
+BLACK_THRESHOLD_MEDIAN_PATCH = 40
+WHITE_THRESHOLD_MEDIAN_PATCH = 210
 
 # BGR COLORS
 RED         = (0,0,255)
@@ -731,6 +731,8 @@ def drawPatch(img, patch, color):
 def extractPatchesOptimized(train, start, end, nPatches, shape):
     count = start
     
+    images = []
+    
     for row in train.index[start : end]:
 #    print(row)
         filename    = train.iloc[row].Image_Id
@@ -766,6 +768,10 @@ def extractPatchesOptimized(train, start, end, nPatches, shape):
 
         count += 1
 #        print(count)
+        
+        images.append(img.original_image)
+        
+    return images
             
  
 def extractPatchesForTest(train, index, shape, stride, model_name):

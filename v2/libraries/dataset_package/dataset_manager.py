@@ -770,7 +770,7 @@ def extractPatchesOptimized(train, start, end, nPatches, shape):
 #        print(count)
         
         images.append(img.original_image)
-        
+        print(len(images))
     return images
             
  
