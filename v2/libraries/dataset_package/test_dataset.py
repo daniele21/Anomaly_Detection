@@ -19,7 +19,7 @@ dm.extractPatchesOptimized(train, start, end, nPatches, shape)
 import unittest
 import numpy as np
 from libraries.dataset_package import dataset_manager as dm
-from libraries.dataset_package.dataset_manager import PatchClass, Shape
+from libraries.dataset_package.dataset_manager import PatchClass, Shape, Image
 
 import pandas as pd
 import numpy as np
@@ -298,7 +298,11 @@ def getPatchedImage(img, nPatches, shape, mask, output=None, save=False):
 #img.drawPartition()
 
 #%%
-for row in train.index[0:1]:
+train = pd.read_csv('./libraries/dataset_package/train_unique.csv', index_col=0)
+#%%    
+n = [1022, 1039, 1049, 1077, 1121, 1146]
+
+for row in n:
 #    print(row)
     filename    = train.iloc[row].Image_Id
     enc_pixels  = train.iloc[row].Encoded_Pixels
@@ -311,9 +315,30 @@ for row in train.index[0:1]:
     img = dm.applyMask(img, mask)
     
 #    dm.getPatchedImage(img, 10, shape, mask, output=OPENCV, save=True)
-    dm.getPatchedImage(img, 50, shape, mask, output=None, save=True)
+    #dm.getPatchedImage(img, 50, shape, mask, output=None, save=True)
     
-    img.drawPartition(baseImage=GRAY_IMAGE, output=OPENCV, save=True)
+    #img.drawPartition(baseImage=GRAY_IMAGE, output=OPENCV, save=True)
+
+    plt.imshow(img.original_image)
+    plt.show()
+    
+    plt.imshow(mask)
+    plt.show()
+    
+    #cv2.imwrite('./aaaa.png', mask)
+
+    # Saving
+    save_folder = '/media/daniele/Data/Tesi/Slides Tesi/Images/Samples/'
+    filename = str(row)+'_mask'
+    fig = plt.figure(frameon=False, figsize=(160,25))
+    plt.axis('off')
+    plt.imshow(mask)
+    print('> Saving \'{}\' at {}'.format(filename, save_folder))
+    plt.savefig(save_folder + filename + '.png',
+                bbox_inches='tight', transparent=True,
+                pad_inches=0, dpi=15)
+    plt.close(fig)
+    plt.show()  
 
 #%%
 #points = []
@@ -398,11 +423,64 @@ train = train.reset_index()
 train = train.drop(columns='level_0')    
 train.to_csv('train_unique.csv')
     
+#%%
+from copy import deepcopy
+
+def applyMask(img, mask):
+       
+    img[mask==1, 2] = 255
     
+    return img
     
+def computeMask(enc_pixel, img):
     
+    width = img.shape[0]
+    height= img.shape[1]
     
+    mask= np.zeros( width*height ).astype(np.uint8)
+    if(enc_pixel == 0):
+        return np.zeros((width, height))
     
+    array = np.asarray([int(x) for x in enc_pixel.split()])
+    starts = array[0::2]
+    lengths = array[1::2]
+    
+    current_position = 0
+    for index, start in enumerate(starts):
+        mask[int(start):int(start+lengths[index])] = 1
+        current_position += lengths[index]
+        
+    mask = np.flipud(np.rot90( mask.reshape(height,width), k=1))
+    
+    return mask
+#%%
+train = pd.read_csv('./libraries/dataset_package/train_unique.csv')
+
+start = 1000
+end = 1030
+
+path = ''
+
+for row in train.index[start : end]:
+    filename    = train.iloc[row].Image_Id
+    enc_pixels  = train.iloc[row].Encoded_Pixels
+    img = cv2.imread(train_images_dir + filename)
+    
+    mask = computeMask(enc_pixels, img)    
+    img = applyMask(img, mask)
+    
+    plt.imshow(img)
+    plt.show()
+#    filename = str(count) + '.Original_Image_' + img.filename
+#    saving_path = './{}'.format(row)
+#    cv2.imwrite(saving_path, img.original_image)
+    
+    saving_path = './{}.png'.format(row)
+    cv2.imwrite(saving_path, img)
+    
+   
+    
+
     
     
     

@@ -1012,6 +1012,7 @@ def applyMask(img, mask):
     img.masked_image[mask==1, 0] = 255
     
     return img
+
 def randomPoint(x_ll, x_ul, y_ll, y_ul):
     '''
     
